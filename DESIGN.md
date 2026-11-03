@@ -232,7 +232,7 @@ Warm paper and ink with one blue pen for action, one yellow highlighter for the 
 
 ### Tertiary (status)
 - **Good Green** (good) on **Good Wash** (good-soft): a program that fits, and the "Passed checks" verdict on the how page.
-- **Ask Amber** (ask) on **Ask Wash** (ask-soft): something only a person can confirm. The advisor-check box, unsure chat replies, the advisor suggestion box and the nudge. The 9px status dot for this tone is a brighter amber (#c98a12) so it reads at that size.
+- **Ask Amber** (ask) on **Ask Wash** (ask-soft): something only a person can confirm. The advisor-check box, unsure chat replies, the advisor suggestion box and the nudge. The 9px status dot for this tone uses the brighter Ask Dot token (`--ask-dot`) so it reads at that size.
 - **Miss Red** (miss) on **Miss Wash** (miss-soft): a program that does not fit or a closed path, and the "Replaced" verdict on the how page.
 
 ### Neutral
@@ -355,7 +355,7 @@ Warm Paper fill, 1.5px transparent border, 12px radius, 48px tall, pen caret. Fo
 
 ### How-page tabs and tables
 - **Tabs:** a Warm Paper pill track with 4px padding. Each tab is a 44px pill, Muted 600 at 0.9375rem. The selected tab is Paper with Ink text and the soft lift. Arrow keys move between tabs.
-- **Tables:** no borders, no rules. Zebra rows in Warm Paper with 12px rounded row ends, 14px by 12px cells, Muted 0.8125rem headers. Under 640px each row becomes a Warm Paper block with 14px radius and a Muted label above each value. Verdicts are 600 in Good Green or Miss Red, with problem codes in Muted beneath. Raw payloads open from pen-colored summaries into a Paper mono block.
+- **Tables:** no borders, no rules. Zebra rows in Warm Paper with 12px rounded row ends, 14px by 12px cells, Muted 0.8125rem headers. Under 640px each row becomes a Warm Paper block with 16px radius and a Muted label above each value. Verdicts are 600 in Good Green or Miss Red, with problem codes in Muted beneath. Raw payloads open from pen-colored summaries into a Paper mono block.
 
 ### Motion
 - **Rise:** every screen enters from opacity 0 and 6px lower over 260ms, `cubic-bezier(0.16, 1, 0.3, 1)`.

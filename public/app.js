@@ -293,7 +293,7 @@ function renderPlan() {
       <form class="ask-form" id="ask-form" autocomplete="off">
         <label class="visually-hidden" for="ask-input">Your question</label>
         <input id="ask-input" type="text" maxlength="300" placeholder="Ask a question. It stays on this phone.">
-        <button class="button primary small" type="submit">Ask</button>
+        <button class="button small" type="submit">Ask</button>
       </form>
     </section>`;
   show('plan');
