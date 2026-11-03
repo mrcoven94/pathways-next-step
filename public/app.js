@@ -1,7 +1,7 @@
 // Dani's planner in the browser. Her name and anything she types stay on this phone unless she
 // sends them to an advisor. Questions are matched here and only topic codes go to the server.
 
-import { stepsFor, withName, askRequest, handoffRequest } from './client.js';
+import { stepsFor, withName, askRequest, handoffRequest, suggestionsFor, matchSuggestions, previewQuestion } from './client.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -234,14 +234,24 @@ function programBlock(p) {
   </article>`;
 }
 
-function starters(plan) {
-  const ids = plan.answers.considering;
-  return [
-    ids.includes('PRG-02') && 'How much does Northline pay?',
-    (ids.includes('PRG-01') || ids.includes('PRG-04')) && 'What does Cascade cost?',
-    ids.includes('PRG-03') && 'How long is Riverbend?',
-    'Are there seats left?',
-  ].filter((q) => q && !state.asked.has(q));
+// With nothing typed: a few starters. While she types: the questions that match, with her words in bold.
+function suggestions(text = '') {
+  const bank = suggestionsFor(state.result.plan.answers.considering).filter((q) => !state.asked.has(q));
+  const STARTERS = ['How much does Northline pay?', 'What does Cascade cost?', 'How long is Riverbend?', 'Are there seats left?'];
+  const list = text.trim() ? matchSuggestions(bank, text) : STARTERS.filter((q) => bank.includes(q));
+  const typed = String(text).toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  const bold = (q) => esc(q).replace(/[A-Za-z0-9]+/g, (w) => {
+    const t = typed.find((x) => w.toLowerCase().startsWith(x));
+    return t ? `<b>${w.slice(0, t.length)}</b>${w.slice(t.length)}` : w;
+  });
+  state.suggest = { list, active: -1 };
+  return list.map((q, i) => `<button class="starter" type="button" role="option" id="suggest-${i}" aria-selected="false" data-ask="${esc(q)}">${bold(q)}</button>`).join('');
+}
+
+function renderThread() {
+  $('#thread').innerHTML = state.thread.map(bubble).join('');
+  for (const m of state.thread) m.seen = true; // only new bubbles animate in
+  $('#thread').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function renderPlan() {
@@ -288,14 +298,18 @@ function renderPlan() {
 
     <section class="ask" aria-labelledby="ask-title">
       <h2 id="ask-title">Ask about these programs</h2>
-      <div class="thread" id="thread" aria-live="polite">${state.thread.map(bubble).join('')}</div>
-      <div class="starters" id="starters">${starters(plan).map((q) => `<button class="starter" type="button" data-ask="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+      <div class="thread" id="thread" aria-live="polite"></div>
+      <div class="starters" id="starters" role="listbox" aria-label="Suggested questions"></div>
       <form class="ask-form" id="ask-form" autocomplete="off">
         <label class="visually-hidden" for="ask-input">Your question</label>
-        <input id="ask-input" type="text" maxlength="300" placeholder="Ask a question. It stays on this phone.">
-        <button class="button small" type="submit">Ask</button>
+        <input id="ask-input" type="text" maxlength="300" placeholder="Ask a question" role="combobox" aria-autocomplete="list" aria-controls="starters" aria-expanded="true" aria-describedby="ask-hint">
+        <button class="button small" type="submit" disabled>Ask</button>
       </form>
+      <p class="ask-hint" id="ask-hint" aria-live="polite">${HINT_EMPTY}</p>
     </section>`;
+  $('#starters').innerHTML = suggestions();
+  for (const m of state.thread) m.seen = true;
+  $('#thread').innerHTML = state.thread.map(bubble).join('');
   show('plan');
   // Restart the highlighter stroke every time a plan appears, from a painted empty state.
   const p = $('#plan');
@@ -305,10 +319,12 @@ function renderPlan() {
 }
 
 function bubble(m, i) {
-  if (m.from === 'me') return `<p class="bubble me">${esc(m.text)}</p>`;
+  const fresh = m.seen ? '' : ' fresh';
+  if (m.from === 'me') return `<p class="bubble me${fresh}">${esc(m.text)}</p>`;
+  if (m.typing) return `<div class="bubble them typing${fresh}" role="status" aria-label="Looking that up"><span></span><span></span><span></span></div>`;
   const sources = (m.facts ?? []).reduce((acc, f) => (acc.some((x) => x[0] === f.record_id) ? acc : [...acc, [f.record_id, f.checked]]), []);
-  return `<div class="bubble them${m.kind === 'cannot_confirm' ? ' unsure' : ''}">
-    <p>${esc(withName(m.text, state.name))}</p>
+  return `<div class="bubble them${m.kind === 'cannot_confirm' ? ' unsure' : ''}${fresh}">
+    <p>${esc(withName(m.text, m.greet ? state.name : ''))}</p>
     ${sources.map((s) => source(...s)).join(' ')}
     ${m.kind === 'cannot_confirm' ? `<button class="link" type="button" data-action="advisor" data-thread="${i}">Ask an advisor about this</button>` : ''}
   </div>`;
@@ -320,19 +336,45 @@ async function ask(question) {
   const req = askRequest(text, state.result?.plan.answers.considering);
   if (req.crisis) return showCrisis();
   state.asked.add(text);
-  state.thread.push({ from: 'me', text });
+  // Her name opens the first reply only, the way a person would use it.
+  const greet = !state.thread.some((m) => m.from === 'them' && !m.typing);
+  const typing = { from: 'them', typing: true };
+  state.thread.push({ from: 'me', text }, typing);
+  $('#starters').innerHTML = suggestions();
+  $('#ask-hint').textContent = HINT_EMPTY;
+  renderThread();
   const mine = session;
+  // The answer is ready in milliseconds; a short beat of dots reads as a reply, not a page reload.
+  const beat = new Promise((r) => setTimeout(r, 600 + Math.random() * 400));
+  let reply;
   try {
-    const r = await api('/api/answer', req.body);
-    if (mine !== session) return;
-    state.thread.push({ from: 'them', kind: r.kind, code: r.code, text: r.text, facts: r.facts, question: text });
+    const [r] = await Promise.all([api('/api/answer', req.body), beat]);
+    reply = { from: 'them', kind: r.kind, code: r.code, text: r.text, facts: r.facts, question: text, greet };
   } catch {
-    if (mine !== session) return;
-    state.thread.push({ from: 'them', kind: 'cannot_confirm', text: 'That didn’t go through. Try again, or ask an advisor.', question: text });
+    reply = { from: 'them', kind: 'cannot_confirm', text: 'That didn’t go through. Try again, or ask an advisor.', question: text };
   }
-  $('#thread').innerHTML = state.thread.map(bubble).join('');
-  $('#starters').innerHTML = starters(state.result.plan).map((q) => `<button class="starter" type="button" data-ask="${esc(q)}">${esc(q)}</button>`).join('');
-  $('#thread').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (mine !== session) return;
+  state.thread[state.thread.indexOf(typing)] = reply;
+  renderThread();
+}
+
+const HINT_EMPTY = 'Your question stays on this phone.';
+
+function onType(input) {
+  const text = input.value;
+  $('#starters').innerHTML = suggestions(text);
+  input.removeAttribute('aria-activedescendant');
+  input.form.querySelector('button').disabled = !text.trim();
+  const p = previewQuestion(text, state.result.plan.answers.considering);
+  $('#ask-hint').textContent = !text.trim() ? HINT_EMPTY : !p ? '' : p.kind === 'records' ? `About ${p.about}. The answer comes from the records.` : p.kind === 'advisor' ? 'Only an advisor can answer that one. Ask anyway and we’ll set it up.' : '';
+}
+
+function moveSuggestion(input, step) {
+  const { list } = state.suggest;
+  if (!list.length) return;
+  state.suggest.active = (state.suggest.active + step + list.length) % list.length;
+  document.querySelectorAll('#starters .starter').forEach((b, i) => b.setAttribute('aria-selected', i === state.suggest.active));
+  input.setAttribute('aria-activedescendant', `suggest-${state.suggest.active}`);
 }
 
 // ---------- Rampart Edge: only where text leaves the phone (the advisor note), and only as a suggestion ----------
@@ -500,7 +542,7 @@ document.addEventListener('click', (e) => {
     for (const k of ['age18', 'diploma', 'lean']) delete state.answers[k];
     return renderQuestion();
   }
-  if (t.dataset.ask) return ask(t.dataset.ask);
+  if (t.dataset.ask) { const input = $('#ask-input'); if (input) { input.value = ''; input.form.querySelector('button').disabled = true; } return ask(t.dataset.ask); }
   const actions = {
     next: advance,
     back: () => { if (state.step === 0) show('start'); else { state.step -= 1; renderQuestion(); } },
@@ -540,13 +582,21 @@ document.addEventListener('submit', (e) => {
   }
   if (e.target.id === 'ask-form') {
     const input = $('#ask-input');
-    ask(input.value);
+    const picked = state.suggest?.list[state.suggest.active];
+    ask(picked ?? input.value);
     input.value = '';
+    onType(input);
   }
   if (e.target.id === 'advisor-form') sendHandoff();
 });
 
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#crisis').hidden) $('#crisis').hidden = true; });
+document.addEventListener('input', (e) => { if (e.target.id === 'ask-input') onType(e.target); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$('#crisis').hidden) $('#crisis').hidden = true;
+  if (e.target.id !== 'ask-input') return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); moveSuggestion(e.target, e.key === 'ArrowDown' ? 1 : -1); }
+  if (e.key === 'Escape') { e.target.value = ''; onType(e.target); }
+});
 
 $('#first-name').value = state.name;
 $('#resume').hidden = !store.get('saved');

@@ -1,7 +1,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { startApp } from './helpers.js';
-import { stepsFor, withName } from '../public/client.js';
+import { stepsFor, withName, askRequest, suggestionsFor, matchSuggestions, previewQuestion } from '../public/client.js';
 
 let s;
 before(async () => (s = await startApp()));
@@ -52,4 +52,19 @@ test('AC14 a date that has passed is never offered as the next step (found by th
 test('her name is filled in on the phone, after the reply, and the reply still reads without it', () => {
   assert.equal(withName('{first_name}, apply by Nov 30, 2026.', 'Dani'), 'Dani, apply by Nov 30, 2026.');
   assert.equal(withName('{first_name}, apply by Nov 30, 2026.', ''), 'Apply by Nov 30, 2026.');
+});
+
+test('AC15 every question the box suggests is answered from the records or routed to an advisor, never dropped', async () => {
+  const sets = [['PRG-02'], ['PRG-01', 'PRG-04'], ['PRG-03'], ['PRG-02', 'PRG-01', 'PRG-04', 'PRG-03']];
+  for (const considering of sets) {
+    for (const q of suggestionsFor(considering)) {
+      const req = askRequest(q, considering);
+      assert.notEqual(req.body?.cannot_confirm, 'UNMATCHED_QUESTION', q);
+      const r = await s.ask(q, considering);
+      assert.ok(r.kind === 'answer' ? r.verdict === 'used' && r.facts.length : r.code !== 'NOT_IN_RECORDS', `${q}: ${JSON.stringify(r)}`);
+    }
+  }
+  assert.deepEqual(matchSuggestions(suggestionsFor(['PRG-02']), 'pay'), ['How much does Northline pay?']);
+  assert.deepEqual(previewQuestion('are there seats left', ['PRG-02']), { kind: 'advisor' });
+  assert.deepEqual(previewQuestion('how much does it pay', ['PRG-02']), { kind: 'records', about: 'pay' });
 });
