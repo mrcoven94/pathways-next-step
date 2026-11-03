@@ -13,18 +13,8 @@ function payloadFrom(prompt) {
 // The headline already says what to do and by when. The message adds what she'd want to know next.
 function explainPlan(p) {
   const { action, record_id } = p.next_step;
-  if (action === 'apply_by_deadline') {
-    return {
-      text: "{first_name}, Northline is paid, and it starts at 55% of journey-level wage. It's the first deadline on your road, so it comes first.",
-      cites: ['PRG-02'],
-    };
-  }
-  if (action === 'ask_advisor_then_apply') {
-    const open = p.programs.find((x) => x.record_id === 'PRG-02').reasons.length;
-    return {
-      text: `{first_name}, Northline is paid, and it starts at 55% of journey-level wage. Get the ${open === 1 ? 'question' : 'questions'} below answered before you apply. An advisor answers within 2 business days.`,
-      cites: ['PRG-02', 'ADV-01'],
-    };
+  if (action === 'apply_by_deadline' || action === 'ask_advisor_then_apply') {
+    return { text: '{first_name}, Northline is paid, and its deadline is the first one on your road.', cites: ['PRG-02'] };
   }
   return {
     text: "{first_name}, the FAFSA or state aid application is how you apply for the Evergreen Opportunity Grant. It's income-based, and the award amount varies.",

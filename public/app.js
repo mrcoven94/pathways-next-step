@@ -52,7 +52,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const fmt = (iso) => { const [y, m, d] = iso.split('-').map(Number); return `${MONTHS[m - 1]} ${d}, ${y}`; };
 const short = (iso) => fmt(iso).replace(/, \d{4}$/, '');
 const daysUntil = (iso, today) => Math.round((Date.parse(iso) - Date.parse(today)) / 86400000);
-const source = (id, checked) => `<span class="source">${esc(id)}${checked ? ` · checked ${esc(fmt(checked))}` : ''}</span>`;
+const source = (id, checked) => `<span class="source">${esc(id)} · ${checked ? `checked ${esc(fmt(checked))}` : 'no check date in the records'}</span>`;
 
 // ---------- screens ----------
 function show(id) {
@@ -67,23 +67,25 @@ function renderQuestion() {
   const steps = stepsFor(state.answers);
   const key = steps[state.step];
   const q = QUESTIONS[key];
-  const picked = state.answers.considering ?? [];
+  // Until she picks programs, show the longest path, so the bar only ever gets shorter.
+  const total = state.answers.considering?.length || state.answers.stage !== 'high_school' ? steps.length : 5;
+  const picked = state.notSure ? [] : state.answers.considering ?? [];
   const choices = q.multi
     ? `${PROGRAMS.map(([id, name]) => `<button class="choice${picked.includes(id) ? ' picked' : ''}" type="button" aria-pressed="${picked.includes(id)}" data-toggle="${id}">${esc(name)}</button>`).join('')}
-       <button class="choice${picked.length === PROGRAMS.length ? ' picked' : ''}" type="button" aria-pressed="${picked.length === PROGRAMS.length}" data-toggle="all">I’m not sure yet</button>`
+       <button class="choice${state.notSure ? ' picked' : ''}" type="button" aria-pressed="${!!state.notSure}" data-toggle="all">I’m not sure yet</button>`
     : q.options.map(([value, label]) => `<button class="choice${state.answers[key] === value ? ' picked' : ''}" type="button" data-answer="${value}">${esc(label)}</button>`).join('');
 
   $('#question').innerHTML = `
     <nav class="topbar">
       <button class="link" type="button" data-action="back">Back</button>
-      <p class="progress" role="img" aria-label="Question ${state.step + 1} of ${steps.length}">
-        ${steps.map((_, i) => `<span class="${i <= state.step ? 'on' : ''}"></span>`).join('')}
+      <p class="progress" role="img" aria-label="Question ${state.step + 1} of ${total}">
+        ${Array.from({ length: total }, (_, i) => `<span class="${i <= state.step ? 'on' : ''}"></span>`).join('')}
       </p>
     </nav>
     <h1>${esc(q.title)}</h1>
     ${q.why ? `<p class="why">${esc(q.why)}${q.source ? ` ${source(...q.source)}` : ''}</p>` : ''}
     <div class="choices" role="group" aria-label="${esc(q.title)}">${choices}</div>
-    ${q.multi ? `<button class="button primary continue" type="button" data-action="next" ${picked.length ? '' : 'disabled'}>Continue</button>` : ''}`;
+    ${q.multi ? `<button class="button primary continue" type="button" data-action="next" ${state.answers.considering?.length ? '' : 'disabled'}>Continue</button>` : ''}`;
   show('question');
 }
 
@@ -96,8 +98,8 @@ function advance() {
 function renderOutside() {
   $('#plan').innerHTML = `
     <nav class="topbar"><button class="link" type="button" data-action="back-to-stage">Back</button></nav>
-    <h1>This preview is built for students finishing high school.</h1>
-    <p class="lede-ink">An advisor can help with where you are now. They answer within 2 business days. ${source('ADV-01')}</p>
+    <h1>Pathways is set up for high school seniors for now.</h1>
+    <p class="lede-ink">An advisor can help with where you are. They answer within 2 business days. ${source('ADV-01')}</p>
     <div class="actions">
       <button class="button primary" type="button" data-action="advisor">Ask an advisor</button>
     </div>`;
@@ -126,17 +128,25 @@ async function makePlan() {
 }
 
 // ---------- plan ----------
+const OPEN_NORTHLINE = (reasons) => {
+  const age = reasons.includes('AGE_UNCONFIRMED');
+  const diploma = reasons.includes('DIPLOMA_TIMING_UNKNOWN');
+  return age && diploma ? 'the age rule and when you need your diploma or GED' : age ? 'the age rule' : 'when you need your diploma or GED';
+};
+
 const STATUS = {
   fits_listed_rules: () => ['good', 'Nothing in your way so far'],
-  unknown: () => ['ask', 'Ask an advisor first'],
+  unknown: (p) => ['ask', p.record_id === 'PRG-02' ? `Check ${OPEN_NORTHLINE(p.reasons)} first` : 'Ask an advisor first'],
   misses_a_listed_rule: (p) => ['miss', p.reasons.includes('DEADLINE_PASSED') ? 'Applications closed Nov 30, 2026' : 'Not for the Mar 1, 2027 start'],
 };
 
 function checkList(plan) {
   const items = [];
   const byCode = (code) => plan.escalations.filter((e) => e.code === code).map((e) => e.record_id);
-  if (byCode('AGE_UNCONFIRMED').length) items.push('Will you be 18 by Mar 1, 2027? Northline needs that.');
-  if (byCode('DIPLOMA_TIMING_UNKNOWN').length) items.push('Do you need your diploma or GED when you apply, or only by the Mar 1 start? The records don’t say.');
+  // When asking an advisor is the next step, the headline already names these two.
+  const inHeadline = plan.next_step.action === 'ask_advisor_then_apply';
+  if (!inHeadline && byCode('AGE_UNCONFIRMED').length) items.push('Will you be 18 by Mar 1, 2027? Northline needs that.');
+  if (!inHeadline && byCode('DIPLOMA_TIMING_UNKNOWN').length) items.push('Do you need your diploma or GED when you apply, or only by the Mar 1 start? The records don’t say.');
   if (byCode('AGE_RULE_MISSED').length) items.push('When Northline starts again. You need to be 18 by the start date, and the records only list Mar 1, 2027.');
   for (const id of byCode('DEADLINE_PASSED')) items.push(id === 'PRG-02' ? 'Whether Northline opens again. Applications closed Nov 30, 2026.' : 'Whether Riverbend still takes applications after its Feb 1, 2027 priority deadline.');
   for (const id of byCode('START_DATE_PASSED')) items.push(`When ${SHORT[id]} starts next. The Jan 6, 2027 start has passed.`);
@@ -145,7 +155,10 @@ function checkList(plan) {
     const schools = [...new Set(unlisted.map((id) => (id === 'PRG-03' ? 'Riverbend' : 'Cascade')))].join(' and ');
     items.push(`How and when to apply to ${schools}. The records don’t list an application deadline.`);
   }
-  if (plan.aid.length) items.push('Whether the Evergreen grant covers your program, and how much you’d get.');
+  if (plan.aid.length) {
+    const schools = [...new Set(plan.programs.filter((p) => p.record_id !== 'PRG-02').map((p) => (p.record_id === 'PRG-03' ? 'Riverbend' : 'Cascade')))].join(' or ');
+    items.push(`Whether the Evergreen grant can help pay for ${schools}, and how much you’d get.`);
+  }
   for (const id of byCode('STALE_RECORD')) items.push(`Whether the ${SHORT[id] ?? id} details are still current. They’re more than 45 days old.`);
   return items;
 }
@@ -155,8 +168,7 @@ function headline(plan) {
   const when = plan.next_step.facts.find((f) => f.date);
   if (action === 'apply_by_deadline') return { h1: `Apply to Northline by <mark>${esc(short(when.date))}</mark>`, when };
   if (action === 'ask_advisor_then_apply') {
-    const n = plan.programs[0].reasons.length;
-    return { h1: `Apply to Northline by <mark>${esc(short(when.date))}</mark>`, sub: `First, ask an advisor ${n === 1 ? 'one question' : 'a couple of questions'}.`, when };
+    return { h1: `Apply to Northline by <mark>${esc(short(when.date))}</mark>`, sub: `First, check ${OPEN_NORTHLINE(plan.programs[0].reasons)} with an advisor.`, when };
   }
   if (!when) return { h1: 'Start your FAFSA or state aid application', sub: 'Then ask an advisor about the next start date.' };
   const what = when.record_id === 'PRG-03' ? 'Riverbend’s priority deadline is' : 'Cascade starts';
@@ -236,14 +248,14 @@ function renderPlan() {
     <section class="next" aria-label="Your next step">
       <h1>${head.h1}</h1>
       ${head.sub ? `<p class="sub">${head.subHtml ? head.sub : esc(head.sub)}</p>` : ''}
-      ${head.when ? `<p class="meta">${days ? `${days} days from today · ` : ''}${source(head.when.record_id, head.when.checked)}</p>` : ''}
+      ${head.when ? `<p class="meta">${days ? `<span class="days">${days} days left</span>` : ''}${source(head.when.record_id, head.when.checked)}</p>` : ''}
       <p class="message">${esc(withName(summary.text, state.name))}</p>
       ${actions(plan, head.when)}
       <p class="label">${esc(plan.label)}</p>
     </section>
 
     ${check.length ? `<section class="open" aria-labelledby="open-title">
-      <h2 id="open-title">What an advisor will check</h2>
+      <h2 id="open-title">${plan.next_step.action === 'ask_advisor_then_apply' ? 'Your advisor can also check' : 'What an advisor will check'}</h2>
       <ul>${check.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
     </section>` : ''}
 
@@ -360,7 +372,7 @@ function renderAdvisor() {
   $('#advisor').innerHTML = `
     <nav class="topbar"><button class="link" type="button" data-action="to-plan">Back</button></nav>
     <h1>Ask an advisor</h1>
-    <p class="lede-ink">A person checks what the records can’t, like seats and award amounts. They answer within 2 business days. ${source('ADV-01')}</p>
+    <p class="lede-ink">A person answers within 2 business days. ${source('ADV-01')}</p>
     ${state.pending || check.length ? `<h2>We’ll ask them</h2><ul class="ask-list">
       ${state.pending ? `<li>Your question: “${esc(state.pending.question)}”</li>` : ''}
       ${check.map((t) => `<li>${esc(t)}</li>`).join('')}
@@ -446,9 +458,12 @@ document.addEventListener('click', (e) => {
   }
   if (t.dataset.toggle) {
     const all = PROGRAMS.map(([id]) => id);
-    const picked = new Set(state.answers.considering ?? []);
-    if (t.dataset.toggle === 'all') state.answers.considering = picked.size === all.length ? [] : all;
-    else {
+    const picked = new Set(state.notSure ? [] : state.answers.considering ?? []);
+    if (t.dataset.toggle === 'all') {
+      state.notSure = !state.notSure; // "not sure" means show every program, without ticking them for her
+      state.answers.considering = state.notSure ? all : [];
+    } else {
+      state.notSure = false;
       picked.has(t.dataset.toggle) ? picked.delete(t.dataset.toggle) : picked.add(t.dataset.toggle);
       state.answers.considering = all.filter((id) => picked.has(id));
     }
@@ -460,7 +475,7 @@ document.addEventListener('click', (e) => {
     next: advance,
     back: () => { if (state.step === 0) show('start'); else { state.step -= 1; renderQuestion(); } },
     'back-to-stage': () => { state.step = 0; renderQuestion(); },
-    restart: () => { state.answers = {}; state.step = 0; state.thread = []; state.asked.clear(); state.pending = null; show('start'); },
+    restart: () => { state.answers = {}; state.notSure = false; state.step = 0; state.thread = []; state.asked.clear(); state.pending = null; show('start'); },
     'retry-plan': makePlan,
     calendar: downloadCalendar,
     save: () => {

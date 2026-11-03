@@ -128,7 +128,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 @media (hover: hover) { .choice:hover { background: var(--pen-soft); } }
 .choice:active { transform: scale(0.99); }
-.choice.picked { border-color: var(--pen); background: var(--pen-soft); }
+.choice.picked { background: var(--pen-soft); }
 .choice[aria-pressed] { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; }
 .choice[aria-pressed]::after { content: ''; flex: none; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--line); background: var(--paper); }
 .choice[aria-pressed='true']::after { box-shadow: none; background: var(--pen) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 14px no-repeat; }
@@ -150,6 +150,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .drawn .next h1 mark, .drawn .sub mark { background-size: 100% 80%; }
 .sub { margin-top: 12px; font: 600 1.15rem/1.4 var(--body); color: var(--ink); }
 .meta { margin-top: 10px; font-size: 0.875rem; color: var(--muted); }
+.meta .days { display: block; color: var(--ink); font-weight: 550; font-size: 0.95rem; }
 .meta .source { font-size: inherit; }
 .message { margin-top: 18px; font-size: 1.06rem; color: var(--ink-2); max-width: 60ch; }
 .actions { display: grid; gap: 10px; margin-top: 24px; }
