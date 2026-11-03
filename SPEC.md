@@ -106,4 +106,4 @@ New acceptance criteria:
 15. Every question the box suggests routes to an answer from the records or to an advisor.
 16. "Today" is the date in Pacific time, so a deadline stays open until midnight there (AC5b).
 
-Every acceptance criterion's check is also covered by `npm run mutate`, which breaks the guard behind it and confirms the check fails.
+`npm run mutate` breaks nine guards behind eight of these criteria (AC1, AC3, AC6, AC7, AC8, AC9, AC10, AC14) and confirms the named check fails each time. The other criteria are covered by their tests alone.
