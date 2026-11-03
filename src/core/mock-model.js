@@ -10,32 +10,24 @@ function payloadFrom(prompt) {
   return JSON.parse(prompt.slice(prompt.indexOf('PAYLOAD\n') + 'PAYLOAD\n'.length));
 }
 
-const textOf = (p, id, prefix) => p.facts.find((f) => f.record_id === id && f.text.startsWith(prefix))?.text;
-const after = (text, prefix) => text.slice(prefix.length);
-
+// The headline already says what to do and by when. The message adds what she'd want to know next.
 function explainPlan(p) {
   const { action, record_id } = p.next_step;
   if (action === 'apply_by_deadline') {
-    const close = after(textOf(p, 'PRG-02', 'Applications close '), 'Applications close ');
     return {
-      text: `{first_name}, apply to the Northline Electrical Apprenticeship before applications close ${close}. It's paid, and it starts at 55% of journey-level wage.`,
+      text: "{first_name}, Northline is paid, and it starts at 55% of journey-level wage. It's the first deadline on your road, so it comes first.",
       cites: ['PRG-02'],
     };
   }
   if (action === 'ask_advisor_then_apply') {
-    const close = after(textOf(p, 'PRG-02', 'Applications close '), 'Applications close ');
     const open = p.programs.find((x) => x.record_id === 'PRG-02').reasons.length;
     return {
-      text: `{first_name}, Northline applications close ${close}. There ${open === 1 ? 'is one thing' : 'are a couple of things'} the records can't confirm for you, so ask an advisor first. They answer within 2 business days.`,
+      text: `{first_name}, Northline is paid, and it starts at 55% of journey-level wage. Get the ${open === 1 ? 'question' : 'questions'} below answered before you apply. An advisor answers within 2 business days.`,
       cites: ['PRG-02', 'ADV-01'],
     };
   }
-  const deadline = textOf(p, 'PRG-03', 'Priority deadline ');
-  const start = textOf(p, record_id, 'Next start ');
-  const when = record_id === 'PRG-03' && deadline ? ` Riverbend's priority deadline is ${after(deadline, 'Priority deadline ')}.`
-    : start ? ` Cascade's next start is ${after(start, 'Next start ')}.` : '';
   return {
-    text: `{first_name}, start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant.${when}`,
+    text: "{first_name}, the FAFSA or state aid application is how you apply for the Evergreen Opportunity Grant. It's income-based, and the award amount varies.",
     cites: ['AID-A', record_id],
   };
 }

@@ -19,7 +19,8 @@ test('AC1 next step: yes, yes, earn gets "apply to Northline by Nov 30, 2026", c
   });
   assert.equal(outcome(plan, 'PRG-02'), 'fits_listed_rules');
   assert.equal(plan.label, 'This is your plan, not an application.');
-  assert.match(summary.text, /Nov 30, 2026/);
+  assert.equal(summary.verdict, 'used');
+  assert.deepEqual(summary.cites, ['PRG-02']);
 });
 
 test('AC2 grounding: every fact in all 27 tap combinations cites a real record and its checked date', async () => {

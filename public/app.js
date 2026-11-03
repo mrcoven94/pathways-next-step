@@ -169,7 +169,7 @@ function actions(plan, when) {
   const saved = store.get('saved');
   const save = saved && JSON.stringify(saved.answers) === JSON.stringify(plan.answers) ? 'Saved on this phone' : 'Save this plan';
   const primary = advisorFirst ? ['advisor', 'Ask an advisor now'] : ['calendar', calendar];
-  const secondary = [advisorFirst && calendar ? ['calendar', calendar] : null, ['save', save], advisorFirst ? null : ['advisor', 'Ask an advisor']].filter(Boolean);
+  const secondary = [advisorFirst && calendar ? ['calendar', 'Add to calendar'] : null, ['save', save], advisorFirst ? null : ['advisor', 'Ask an advisor']].filter(Boolean);
   return `<div class="actions">
     <button class="button primary" type="button" data-action="${primary[0]}">${primary[1]}</button>
     <div class="row">${secondary.map(([a, l]) => `<button class="button secondary" type="button" data-action="${a}">${l}</button>`).join('')}</div>
