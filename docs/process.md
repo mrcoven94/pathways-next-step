@@ -82,3 +82,9 @@ Tools: Claude Code (Opus 5.5) as the architect and builder. A Claude subagent re
   - A guard against double sends.
 - **Proof:** 21 checks pass. None of 22 honest topic answers are rejected. Removing the digit rule, letting fact words back into prose, or dropping the apostrophe normalizing each turns a named test red.
 - **What's left:** Prose made only of connecting words and program names can still be false ("Cascade is first on your road"). The headline, the order of programs and the road are all drawn by code, so a sentence like that would contradict the screen around it. The README names this.
+
+## 10. A green build that didn't work (verification, before merge)
+
+- **What happened:** The first Vercel preview built "Ready" but every request returned 500. Vercel's zero-config detection had picked `public/app.js`, the browser script, as a Node server entrypoint, and never built `api/index.js`.
+- **How it was caught:** By checking the preview's real responses before merging, not by trusting the build status. Building it locally (`vercel build`) showed the wrong entrypoint.
+- **What changed:** `vercel.json` pins `"framework": null`, so `api/index.js` is the function and `public/` is served as static files. The preview then passed: pages 200, the gateway source not served (404), and the plan API returning the right step.
