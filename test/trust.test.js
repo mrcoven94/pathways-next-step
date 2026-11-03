@@ -1,17 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { startApp, badModel, ALL_ANSWERS } from './helpers.js';
+import { startApp, badModel, ALL_ANSWERS, dani } from './helpers.js';
 import { checkPayload, PayloadRejected } from '../src/core/gateway.js';
 
 const CLAIM = /\b(eligible|accepted|admitted|enrolled|approved|awarded|you'?re in)\b/i;
-const DANI = { age18: 'yes', diploma: 'yes', lean: 'earn' };
+const DANI = dani({ age18: 'yes', diploma: 'yes', lean: 'earn' });
 
 test('AC7a no reply in any scenario says she is eligible, accepted, enrolled, approved or awarded', async () => {
   const s = await startApp();
   try {
     for (const answers of ALL_ANSWERS) {
       const { summary } = await s.plan(answers);
-      assert.equal(summary.verdict, 'used');
+      assert.equal(summary.verdict, 'used', JSON.stringify([answers, s.app.gateway.calls.at(-1).problems, s.app.gateway.calls.at(-1).received]));
       assert.doesNotMatch(summary.text, CLAIM, JSON.stringify(answers));
     }
     for (const q of ['how much does it pay', 'when do applications close', 'what does cascade cost', 'do i need to be 18', 'diploma?', 'how do i apply for aid', 'how long is it', 'is there an evening option', 'when does it start', 'how fast does an advisor answer']) {
@@ -27,7 +27,12 @@ const BAD = [
   ['claims eligibility', { text: "Great news {first_name}, you're eligible for Northline!", cites: ['PRG-02'] }, 'STATUS_CLAIM'],
   ['says she applied', { text: 'Your application is submitted, {first_name}.', cites: ['PRG-02'] }, 'STATUS_CLAIM'],
   ['invents a dollar figure', { text: 'You could get a 5,000 USD grant. Applications close Nov 30, 2026.', cites: ['PRG-02'] }, 'UNGROUNDED_NUMBER'],
-  ['invents a date', { text: 'Applications close Dec 15, 2026.', cites: ['PRG-02'] }, 'UNGROUNDED_NUMBER'],
+  ['invents a date', { text: 'Applications close Dec 15, 2026.', cites: ['PRG-02'] }, 'UNGROUNDED_DATE'],
+  // Found by the independent review (Sol): each of these passed the first version of the validator.
+  ['moves the deadline by a month, same day and year', { text: 'Applications close Dec 30, 2026.', cites: ['PRG-02'] }, 'UNGROUNDED_DATE'],
+  ['borrows the 18 from the age rule as a wage', { text: 'Northline pays 18 USD an hour.', cites: ['PRG-02'] }, 'UNGROUNDED_NUMBER'],
+  ['says she qualifies', { text: 'You qualify for Northline.', cites: ['PRG-02'] }, 'STATUS_CLAIM'],
+  ['invents a benefit with no number in it', { text: 'Northline provides free housing.', cites: ['PRG-02'] }, 'UNGROUNDED_WORD'],
   ['cites a record that does not exist', { text: 'Apply soon, {first_name}.', cites: ['PRG-99'] }, 'CITES_UNGIVEN_RECORD'],
   ['cites nothing', { text: 'Apply soon, {first_name}.', cites: [] }, 'NO_CITATION'],
   ['asks for a placeholder it was not given', { text: 'Hi {last_name}, apply by Nov 30, 2026.', cites: ['PRG-02'] }, 'UNKNOWN_PLACEHOLDER'],
@@ -65,6 +70,10 @@ test('AC9 allowlist: the gateway refuses a payload with an extra field or a stri
     ['a made-up topic', { ...ok, topic: 'Dani asked about her dad' }],
     ['a made-up reason code', { ...ok, open: ['SHE_SEEMS_SAD'] }],
     ['an unknown task', { ...ok, task: 'chat' }],
+    // Found by the independent review (Sol): inherited property names slipped past `in`.
+    ['a field named like a built-in', { ...ok, constructor: 'CANARY-STUDENT-NAME' }],
+    ['a task named like a built-in', { ...ok, task: 'toString' }],
+    ['a built-in name on a nested fact', { ...ok, facts: [{ record_id: 'PRG-02', text: 'Paid', hasOwnProperty: 'Dani' }] }],
   ];
   for (const [what, payload] of leaks) assert.throws(() => checkPayload(payload), PayloadRejected, what);
 });
@@ -74,7 +83,7 @@ test('AC9b the API answers 400, not 500, when a client sends something outside t
   try {
     assert.equal((await s.post('/api/answer', { topic: 'PAY', record_ids: ['PRG-02'], question: 'hi' })).status, 200); // extra keys are ignored, never forwarded
     assert.equal((await s.post('/api/answer', { topic: 'GOSSIP', record_ids: ['PRG-02'] })).status, 400);
-    assert.equal((await s.post('/api/plan', { answers: { age18: 'maybe', diploma: 'yes', lean: 'earn' } })).status, 400);
+    assert.equal((await s.post('/api/plan', { answers: dani({ age18: 'maybe', diploma: 'yes', lean: 'earn' }) })).status, 400);
   } finally {
     await s.close();
   }

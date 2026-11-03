@@ -6,9 +6,13 @@ const CRISIS = /\b(kill(ing)? myself|suicid\w*|end (it all|my life)|want to die|
 
 const UNKNOWN = [
   ['UNKNOWN_SEATS', /\b(seats?|spots?|openings?|space left|room left|still open|is it full|full yet|capacity|wait ?list)\b/i],
-  ['UNKNOWN_AID_AMOUNT', /\b(how much|what amount|exact(ly)?)\b.{0,40}\b(aid|grant|award|scholarship|funding|financial)\b|\b(will|would|do|can) i get\b.{0,30}\b(aid|grant|money|award|scholarship)\b/i],
-  ['UNKNOWN_PERSONAL_ELIGIBILITY', /\b(am i|i'?m|will i|would i|can i|do i|could i)\b.{0,30}\b(eligible|qualify|get in|be accepted|accepted|make it in|allowed to (apply|join))\b/i],
+  ['UNKNOWN_AID_AMOUNT', /\b(how much|what amount|exact(ly)?)\b.{0,40}\b(aid|grant|award|scholarship|funding|financial)\b|\b(aid|grant|award|scholarship)s? amount\b|\bamount of (aid|grant|award|money)\b|\b(will|would|do|can) i get\b.{0,30}\b(aid|grant|money|award|scholarship)\b/i],
+  ['UNKNOWN_PERSONAL_ELIGIBILITY', /\b(am i|i'?m|will i|would i|can i|do i|could i|should i)\b.{0,30}\b(eligible|qualify|get in|be accepted|accepted|make it in|allowed to (apply|join)|meet)\b|\b(accept|admit|take|let)s? me\b|\b(qualify|eligible|eligibility)\b/i],
 ];
+
+// A question naming a date the records don't list can't be answered from them.
+const MONTH_DAY = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})\b/gi;
+const LISTED_DAYS = new Set(['jan 6', 'feb 1', 'mar 1', 'nov 30']);
 
 const PROGRAM_WORDS = [
   ['PRG-02', /\b(northline|apprentice\w*|electric\w*)\b/i],
@@ -36,7 +40,7 @@ const TOPICS = [
 export const TOPIC_CODES = TOPICS.map(([t]) => t);
 export const TOPIC_KEYS = Object.fromEntries(TOPICS.map(([t, , keys]) => [t, keys]));
 
-// Dani's plan covers these; other records are cited only when she names them.
+// Without a plan yet, Dani's two paths; with one, the programs she picked. Others only when named.
 const DEFAULT_PROGRAMS = ['PRG-02', 'PRG-01', 'PRG-04'];
 const LISTED_STARTS = new Set(['PRG-01', 'PRG-02', 'PRG-04']);
 const UNLISTED_TIME = /\b(fall|summer|spring|next year|20(2[89]|3\d)|next (cycle|round|class|cohort)|later)\b/i;
@@ -54,10 +58,13 @@ function mentionedPrograms(text) {
 /**
  * @returns {{kind:'crisis'} | {kind:'cannot_confirm', code:string} | {kind:'topic', topic:string, record_ids:string[]}}
  */
-export function matchQuestion(text) {
+export function matchQuestion(text, considering = DEFAULT_PROGRAMS) {
   const q = String(text ?? '').slice(0, 500);
   if (CRISIS.test(q)) return { kind: 'crisis' };
   for (const [code, re] of UNKNOWN) if (re.test(q)) return { kind: 'cannot_confirm', code };
+  for (const m of q.matchAll(MONTH_DAY)) {
+    if (!LISTED_DAYS.has(`${m[1].toLowerCase()} ${Number(m[2])}`)) return { kind: 'cannot_confirm', code: 'UNKNOWN_START_DATE' };
+  }
 
   const named = mentionedPrograms(q);
   for (const [topic, re] of TOPICS) {
@@ -69,7 +76,7 @@ export function matchQuestion(text) {
     const record_ids =
       topic === 'AID' ? ['AID-A', ...named.filter((id) => id === 'PRG-03')]
       : topic === 'ADVISOR' ? ['ADV-01']
-      : named.length ? named : DEFAULT_PROGRAMS;
+      : named.length ? named : considering;
     return { kind: 'topic', topic, record_ids };
   }
   return { kind: 'cannot_confirm', code: 'UNMATCHED_QUESTION' };

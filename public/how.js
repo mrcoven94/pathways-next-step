@@ -19,10 +19,10 @@ async function load() {
   document.querySelector('#calls-body').innerHTML = calls.length
     ? calls.slice().reverse().map((c) => `
       <tr>
-        <th scope="row" data-label="#">${c.n}</th>
-        <td data-label="Task">${esc(c.task.replace('_', ' '))}</td>
+        <th scope="row" data-label="#">Call ${c.n}</th>
+        <td data-label="Task">${c.task === 'explain_plan' ? 'Writing the plan' : 'Answering a question'}</td>
         <td data-label="Result"><span class="verdict ${c.verdict}">${c.verdict === 'used' ? 'Passed checks' : 'Replaced'}</span>${c.problems.length ? `<span class="problems">${esc(c.problems.map((p) => p.code).join(', '))}</span>` : ''}</td>
-        <td data-label="Sent and received">
+        <td data-label="Sent and received" class="io">
           <details><summary>Sent</summary><pre>${esc(c.sent)}</pre></details>
           <details><summary>Received</summary><pre>${esc(c.received)}</pre></details>
         </td>

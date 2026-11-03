@@ -1,5 +1,5 @@
 // Every decision about Dani's plan is made here, in code. The model never decides.
-// Inputs are taps (yes / no / unsure), never free text. Output is codes and cited facts.
+// Inputs are taps (program IDs and yes / no / unsure), never free text. Output is codes and cited facts.
 
 import { fact, getRecord } from './records.js';
 
@@ -8,6 +8,11 @@ export const ACTIONS = ['apply_by_deadline', 'ask_advisor_then_apply', 'start_ai
 export const ANSWERS = ['yes', 'no', 'unsure'];
 export const LEANS = ['earn', 'classes', 'unsure'];
 
+// Programs a high school senior can pick from. CDL training (PRG-05) is in the records but
+// built for adults returning to work, which is the other persona.
+export const STUDENT_PROGRAMS = ['PRG-02', 'PRG-01', 'PRG-04', 'PRG-03'];
+const CLASSROOM = ['PRG-01', 'PRG-04', 'PRG-03'];
+
 export const STALE_AFTER_DAYS = 45;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -15,6 +20,30 @@ export class BadAnswers extends Error {}
 
 function daysBetween(fromIso, toIso) {
   return Math.floor((Date.parse(toIso) - Date.parse(fromIso)) / DAY_MS);
+}
+
+/** Which questions to ask, given what she's weighing. The UI asks only these. */
+export function questionsFor(considering) {
+  const q = [];
+  if (considering.includes('PRG-02')) q.push('age18', 'diploma');
+  if (considering.includes('PRG-02') && considering.some((id) => CLASSROOM.includes(id))) q.push('lean');
+  return q;
+}
+
+export function validateAnswers(answers) {
+  const { considering, age18, diploma, lean } = answers ?? {};
+  const picked = Array.isArray(considering) ? [...new Set(considering)] : [];
+  if (!picked.length || !picked.every((id) => STUDENT_PROGRAMS.includes(id))) {
+    throw new BadAnswers(`considering must list one or more of ${STUDENT_PROGRAMS.join(', ')}.`);
+  }
+  const needed = questionsFor(picked);
+  const out = { considering: picked };
+  for (const [key, allowed, value] of [['age18', ANSWERS, age18], ['diploma', ANSWERS, diploma], ['lean', LEANS, lean]]) {
+    if (!needed.includes(key)) continue;
+    if (!allowed.includes(value)) throw new BadAnswers(`${key} must be one of ${allowed.join(', ')}.`);
+    out[key] = value;
+  }
+  return out;
 }
 
 // One program's outcome. `misses_a_listed_rule` beats `unknown` beats `fits_listed_rules`,
@@ -31,73 +60,70 @@ function northline({ age18, diploma }, today) {
     record_id: 'PRG-02',
     outcome,
     reasons: [...missed, ...open],
-    facts: [
-      fact('PRG-02', 'applications_close'),
-      fact('PRG-02', 'program_start'),
-      fact('PRG-02', 'age_rule'),
-      fact('PRG-02', 'diploma_rule'),
-      fact('PRG-02', 'paid'),
-      fact('PRG-02', 'wage'),
-      fact('PRG-02', 'length'),
-    ],
+    facts: ['applications_close', 'program_start', 'age_rule', 'diploma_rule', 'paid', 'wage', 'length'].map((k) => fact('PRG-02', k)),
   };
 }
 
-// Cascade lists no entry rules, so there is nothing to miss. It does not list an
-// application deadline either, which is an unknown an advisor has to fill.
-function cascade(id) {
+// Cascade and Riverbend list no age or diploma rule, so there is nothing to miss.
+// Neither lists how or by when to apply, which is an unknown an advisor fills.
+function classroom(id, today) {
+  const keys = id === 'PRG-03' ? ['priority_deadline', 'aid_application', 'length'] : ['next_start', 'length', 'tuition', 'schedule'];
+  const dated = fact(id, id === 'PRG-03' ? 'priority_deadline' : 'next_start');
+  const passed = today > dated.date ? [id === 'PRG-03' ? 'DEADLINE_PASSED' : 'START_DATE_PASSED'] : [];
   return {
     record_id: id,
-    outcome: 'fits_listed_rules',
-    reasons: ['APPLY_DEADLINE_UNLISTED'],
-    facts: [fact(id, 'next_start'), fact(id, 'length'), fact(id, 'tuition'), fact(id, 'schedule')],
+    outcome: passed.length ? 'unknown' : 'fits_listed_rules',
+    reasons: [...passed, 'APPLY_DEADLINE_UNLISTED'],
+    facts: keys.map((k) => fact(id, k)),
   };
-}
-
-export function validateAnswers(answers) {
-  const { age18, diploma, lean } = answers ?? {};
-  if (!ANSWERS.includes(age18) || !ANSWERS.includes(diploma) || !LEANS.includes(lean)) {
-    throw new BadAnswers('Answers must be yes, no or unsure, and lean must be earn, classes or unsure.');
-  }
-  return { age18, diploma, lean };
 }
 
 /**
  * Build Dani's plan.
- * @param {{age18:string, diploma:string, lean:string}} answers  taps only
+ * @param {{considering:string[], age18?:string, diploma?:string, lean?:string}} answers  taps only
  * @param {string} today  ISO date, injectable so deadlines and staleness are testable
  */
 export function planNextStep(answers, today) {
   const a = validateAnswers(answers);
-  const apprenticeship = northline(a, today);
-  const college = [cascade('PRG-01'), cascade('PRG-04')];
-  const aid = [fact('AID-A', 'basis'), fact('AID-A', 'how_to_apply'), fact('AID-A', 'amount')];
+  let programs = a.considering.map((id) => (id === 'PRG-02' ? northline(a, today) : classroom(id, today)));
 
-  // The eligibility-and-ordering decision. Northline goes first unless a listed rule
-  // rules it out or Dani said she wants classes first, because its deadline comes first.
-  const northlineOpen = apprenticeship.outcome !== 'misses_a_listed_rule';
-  const northlineFirst = northlineOpen && a.lean !== 'classes';
+  // If everything she picked is ruled out, show the paths with no age or diploma rule, marked as suggestions.
+  const suggested = programs.every((p) => p.outcome === 'misses_a_listed_rule');
+  if (suggested) programs = [...programs, ...['PRG-01', 'PRG-04'].filter((id) => !a.considering.includes(id)).map((id) => ({ ...classroom(id, today), suggested: true }))];
+
+  // The ordering decision. Northline goes first when it's still open and she didn't say
+  // classes first, because its deadline (Nov 30, 2026) comes before anything else listed.
+  const apprenticeship = programs.find((p) => p.record_id === 'PRG-02');
+  const northlineFirst = apprenticeship && apprenticeship.outcome !== 'misses_a_listed_rule' && a.lean !== 'classes';
+  const classes = programs.filter((p) => CLASSROOM.includes(p.record_id));
 
   let next_step;
-  if (northlineFirst && apprenticeship.outcome === 'fits_listed_rules') {
-    next_step = { action: 'apply_by_deadline', record_id: 'PRG-02', facts: [fact('PRG-02', 'applications_close')] };
-  } else if (northlineFirst) {
-    next_step = { action: 'ask_advisor_then_apply', record_id: 'PRG-02', facts: [fact('PRG-02', 'applications_close')] };
+  if (northlineFirst) {
+    next_step = {
+      action: apprenticeship.outcome === 'fits_listed_rules' ? 'apply_by_deadline' : 'ask_advisor_then_apply',
+      record_id: 'PRG-02',
+      facts: [fact('PRG-02', 'applications_close')],
+    };
   } else {
-    next_step = { action: 'start_aid_application', record_id: 'AID-A', facts: [fact('AID-A', 'how_to_apply'), fact('PRG-01', 'next_start')] };
+    // A listed deadline beats a start date, so Riverbend's priority deadline leads when she picked it.
+    const dated = classes.some((p) => p.record_id === 'PRG-03') ? fact('PRG-03', 'priority_deadline') : fact(classes[0].record_id, 'next_start');
+    // A date that has already passed is never offered as the thing to put on her calendar.
+    next_step = { action: 'start_aid_application', record_id: dated.record_id, facts: [fact('AID-A', 'how_to_apply'), ...(dated.date >= today ? [dated] : [])] };
   }
 
-  const programs = northlineFirst ? [apprenticeship, ...college] : [...college, apprenticeship];
+  const lead = programs.find((p) => p.record_id === next_step.record_id);
+  const rank = { fits_listed_rules: 0, unknown: 1, misses_a_listed_rule: 2 };
+  programs = [lead, ...programs.filter((p) => p !== lead).sort((x, y) => rank[x.outcome] - rank[y.outcome])];
+  const aid = classes.length ? [fact('AID-A', 'basis'), fact('AID-A', 'how_to_apply'), fact('AID-A', 'amount')] : [];
 
-  const used = new Set([...programs.map((p) => p.record_id), 'AID-A', 'ADV-01']);
+  const used = new Set([...programs.map((p) => p.record_id), ...(aid.length ? ['AID-A'] : [])]);
   const stale = [...used]
     .map(getRecord)
-    .filter((r) => r.checked && daysBetween(r.checked, today) > STALE_AFTER_DAYS)
+    .filter((r) => daysBetween(r.checked, today) > STALE_AFTER_DAYS)
     .map((r) => ({ code: 'STALE_RECORD', record_id: r.id }));
 
   const escalations = [
-    ...apprenticeship.reasons.map((code) => ({ code, record_id: 'PRG-02' })),
-    ...(northlineFirst ? [] : [{ code: 'APPLY_DEADLINE_UNLISTED', record_id: 'PRG-01' }]),
+    ...programs.flatMap((p) => p.reasons.map((code) => ({ code, record_id: p.record_id }))),
     ...stale,
   ];
 

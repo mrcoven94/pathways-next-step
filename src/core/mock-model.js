@@ -2,7 +2,7 @@
 // model would, and writes warm wording from the facts it was handed. Swapping in a real model
 // means replacing `complete`; the gateway's checks stay the same.
 
-import { byRecord } from './templates.js';
+import { sayFact } from './templates.js';
 
 export const MOCK_MODEL_NAME = 'scripted-demo-model (not a real AI)';
 
@@ -11,36 +11,39 @@ function payloadFrom(prompt) {
 }
 
 const textOf = (p, id, prefix) => p.facts.find((f) => f.record_id === id && f.text.startsWith(prefix))?.text;
+const after = (text, prefix) => text.slice(prefix.length);
 
 function explainPlan(p) {
-  const { action } = p.next_step;
+  const { action, record_id } = p.next_step;
   if (action === 'apply_by_deadline') {
-    const close = textOf(p, 'PRG-02', 'Applications close').replace('Applications close ', '');
+    const close = after(textOf(p, 'PRG-02', 'Applications close '), 'Applications close ');
     return {
-      text: `{first_name}, here's your move: apply to the Northline Electrical Apprenticeship. Applications close ${close}, so it comes first. It's paid, and it starts at 55% of journey-level wage.`,
+      text: `{first_name}, apply to the Northline Electrical Apprenticeship before applications close ${close}. It's paid, and it starts at 55% of journey-level wage.`,
       cites: ['PRG-02'],
     };
   }
   if (action === 'ask_advisor_then_apply') {
-    const close = textOf(p, 'PRG-02', 'Applications close').replace('Applications close ', '');
+    const close = after(textOf(p, 'PRG-02', 'Applications close '), 'Applications close ');
     const open = p.programs.find((x) => x.record_id === 'PRG-02').reasons.length;
     return {
-      text: `{first_name}, Northline is worth a real look, and applications close ${close}. ${open === 1 ? 'One thing about you isn\'t' : 'A couple of things about you aren\'t'} in the records, so ask an advisor first. They answer within 2 business days.`,
+      text: `{first_name}, Northline applications close ${close}. There ${open === 1 ? 'is one thing' : 'are a couple of things'} the records can't confirm for you, so ask an advisor first. They answer within 2 business days.`,
       cites: ['PRG-02', 'ADV-01'],
     };
   }
-  const start = textOf(p, 'PRG-01', 'Next start').replace('Next start ', '');
+  const deadline = textOf(p, 'PRG-03', 'Priority deadline ');
+  const start = textOf(p, record_id, 'Next start ');
+  const when = record_id === 'PRG-03' && deadline ? ` Riverbend's priority deadline is ${after(deadline, 'Priority deadline ')}.`
+    : start ? ` Cascade's next start is ${after(start, 'Next start ')}.` : '';
   return {
-    text: `{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start ${start}.`,
-    cites: ['AID-A', 'PRG-01'],
+    text: `{first_name}, start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant.${when}`,
+    cites: ['AID-A', record_id],
   };
 }
 
-
 function answerTopic(p) {
-  const lines = byRecord(p.facts);
-  const open = p.open.includes('DIPLOMA_TIMING_UNKNOWN') ? " The records don't say when you need it by, so that one's for an advisor." : '';
-  return { text: `{first_name}, here is what the records say. ${lines.join(' ')}${open}`, cites: [...new Set(p.facts.map((f) => f.record_id))] };
+  const open = p.open.includes('DIPLOMA_TIMING_UNKNOWN') ? " When you need it by is something the records can't confirm, so ask an advisor." : '';
+  const said = p.facts.map(sayFact).join(' ').replace(/^(The|You|An|They|Pay) /, (w) => w.toLowerCase());
+  return { text: `{first_name}, ${said}${open}`, cites: [...new Set(p.facts.map((f) => f.record_id))] };
 }
 
 export const mockModel = {

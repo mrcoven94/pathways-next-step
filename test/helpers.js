@@ -3,8 +3,9 @@
 import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { createApp } from '../src/app.js';
-import { matchQuestion } from '../src/core/topics.js';
+import { askRequest } from '../public/client.js';
 import { mockModel } from '../src/core/mock-model.js';
+import { STUDENT_PROGRAMS, ANSWERS, LEANS, questionsFor } from '../src/core/planner.js';
 
 export const LOG_FILE = fileURLToPath(new URL('../model-calls.log', import.meta.url));
 export const TODAY = '2026-11-03';
@@ -25,19 +26,24 @@ export async function startApp({ model = mockModel, today = TODAY } = {}) {
     base,
     post,
     plan: async (answers, asOf) => (await post('/api/plan', { answers, ...(asOf && { today: asOf }) })).body,
-    // Mirrors public/app.js: the question is matched on the device and only codes are sent.
-    ask: async (question) => {
-      const m = matchQuestion(question);
-      if (m.kind === 'crisis') return { kind: 'crisis' };
-      if (m.kind === 'cannot_confirm') return (await post('/api/answer', { cannot_confirm: m.code })).body;
-      return (await post('/api/answer', { topic: m.topic, record_ids: m.record_ids })).body;
+    // The browser's own request builder (public/client.js): the question is matched on the phone.
+    ask: async (question, considering) => {
+      const req = askRequest(question, considering);
+      if (req.crisis) return { kind: 'crisis' };
+      return (await post('/api/answer', req.body)).body;
     },
     close: () => new Promise((resolve) => server.close(resolve)),
   };
 }
 
-export const ALL_ANSWERS = ['yes', 'no', 'unsure'].flatMap((age18) =>
-  ['yes', 'no', 'unsure'].flatMap((diploma) => ['earn', 'classes', 'unsure'].map((lean) => ({ age18, diploma, lean }))),
+// Dani is weighing Northline and community college. Tests pass only the taps that change.
+export const dani = (taps = {}) => ({ considering: ['PRG-02', 'PRG-01', 'PRG-04'], ...taps });
+
+// Every valid set of taps: each non-empty mix of programs, times every answer to the questions it asks.
+const subsets = STUDENT_PROGRAMS.reduce((acc, id) => [...acc, ...acc.map((s) => [...s, id])], [[]]).filter((s) => s.length);
+const OPTIONS = { age18: ANSWERS, diploma: ANSWERS, lean: LEANS };
+export const ALL_ANSWERS = subsets.flatMap((considering) =>
+  questionsFor(considering).reduce((combos, q) => combos.flatMap((c) => OPTIONS[q].map((v) => ({ ...c, [q]: v }))), [{ considering }]),
 );
 
 /** A stand-in for a model that misbehaves in one specific way. */

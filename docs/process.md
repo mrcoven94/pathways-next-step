@@ -29,3 +29,30 @@ Tools: Claude Code (Opus 5.5) as the architect and builder. A Claude subagent re
 - **Asked:** "Use pstack."
 - **AI did:** Loaded the `setup-pstack` skill, which writes a Cursor model-routing config.
 - **Decision:** Skipped it. It doesn't apply to this repo. pstack here means the delivery standard: a spec before code, a verify script and CI, a PR with a review section, and a check on the live URL before calling it done.
+
+## 5. "[removed]" in her own chat (David, after the first build)
+
+- **AI built:** Rampart Edge ran on the question box and replaced detected names and phone numbers with "[removed]" in the chat thread, with a note saying it took them out.
+- **What David said:** "Good UX should not interfere with privacy, both can exist. The [removed] is not helpful."
+- **Why he was right:** The question never leaves her phone; only a topic code does. Mangling her own words on her own screen protected nothing and made the product feel like it was scolding her.
+- **What changed:** Her words show as typed. Rampart runs only where text actually leaves the device (the advisor note), and there it suggests, it never edits.
+
+## 6. System language on a teenager's screen (David)
+
+- **AI wrote:** Status lines like "Fits what they list. An advisor confirms the rest." and "Nothing listed rules you out." Accurate to the code's three outcomes, but written for the engineer, not for Dani.
+- **What changed:** Every status is rewritten per case in plain words, and the code's outcome names stay in the code.
+
+## 7. Asking her birthday before knowing who she is (David)
+
+- **AI built:** The flow opened with "Will you be 18 by March 1, 2027?", assuming every user is Dani and already weighing Northline.
+- **What David said:** "How do we know what Dani is pursuing before we engage with them? We are asking their date and whatnot without knowing anything about who is using."
+- **What changed:** The flow now asks where she is and what she's weighing first. The age and diploma questions only appear if she picks Northline, with the reason attached. Someone who isn't finishing high school is told plainly that this preview is built for students and offered an advisor.
+
+## 8. An independent model broke my validator (Sol 6.1, via Codex)
+
+- **Asked:** A second model (Sol 6.1, through Codex, read-only) to review the branch against SPEC.md and try to break the boundary.
+- **What I had shipped:** A reply validator that checked each number in the model's text by looking for it as a substring of the cited facts, plus a short blacklist of status words.
+- **What Sol produced:** Four replies that passed as "used": "Applications close Dec 30, 2026." (30 and 2026 both appear in the real date), "Northline pays 18 USD an hour." (the 18 came from the age rule), "You qualify for Northline." (not on the blacklist) and "Northline provides free housing." (no number, so nothing to check). It also found that `k in keys` accepts inherited names like `constructor`, so a field called `constructor` carrying a name would have reached the model.
+- **What changed:** Dates must match a cited fact exactly. Numbers must appear together with the word after them. The reply's vocabulary is closed: every word must come from a given fact, a record name or a short list of connecting words, with negations left out on purpose. The allowlist uses `Object.hasOwn`. All five cases are now tests, and a mutation run (undoing each fix in a scratch copy) turns the matching test red.
+- **What I rejected:** Nothing material. I declined to make the vocabulary check the only defense. It still can't catch allowed words recombined into a false sentence, and the README says so.
+- **Also from the same review, fixed:** crisis words in the name field were not caught, and a crisis note still got sent; questions like "Will Northline accept me" fell through to a model answer; a passed Cascade start date could become the calendar target; the advisor hand-off dropped the question that triggered it; the tests checked a helper rather than the browser's own request builder (now `public/client.js`, shared by the page and the tests).

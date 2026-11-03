@@ -13,7 +13,7 @@ import { mockModel } from './core/mock-model.js';
 
 const PUBLIC = fileURLToPath(new URL('../public/', import.meta.url));
 const CORE = fileURLToPath(new URL('./core/', import.meta.url));
-const BROWSER_MODULES = new Set(['topics.js']); // the only core code the browser loads
+const BROWSER_MODULES = new Set(['topics.js', 'planner.js', 'records.js']); // pure modules the browser shares; never the gateway
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json' };
 
 const toPayloadFact = ({ record_id, text }) => ({ record_id, text });
@@ -69,12 +69,13 @@ export function createApp({ model = mockModel, logFile = null, today = () => new
     return { kind: 'answer', topic, ...reply, facts, open, advisor: advisorFacts() };
   }
 
-  function handoff({ first_name = '', note = '', reasons = [], next_step = null }) {
+  function handoff({ first_name = '', note = '', question = '', reasons = [], next_step = null }) {
     const clean = (s, n) => String(s ?? '').slice(0, n);
     const request = {
       code: newHandoffCode(),
       first_name: clean(first_name, 40),
       note: clean(note, 1000),
+      question: clean(question, 300),
       reasons: (Array.isArray(reasons) ? reasons : []).map((r) => clean(r, 40)).slice(0, 12),
       next_step: next_step ? clean(next_step, 40) : null,
       at: new Date().toISOString(),
@@ -82,7 +83,7 @@ export function createApp({ model = mockModel, logFile = null, today = () => new
     handoffs.push(request);
     return {
       code: request.code,
-      crisis: isCrisis(request.note),
+      crisis: [request.first_name, request.note, request.question].some(isCrisis),
       response: fact('ADV-01', 'response'),
       label: 'This is a request for an advisor, not an application.',
     };
@@ -90,8 +91,8 @@ export function createApp({ model = mockModel, logFile = null, today = () => new
 
   async function serveStatic(pathname, res) {
     let file;
-    if (pathname.startsWith('/core/')) {
-      const name = pathname.slice('/core/'.length);
+    if (pathname.startsWith('/src/core/')) {
+      const name = pathname.slice('/src/core/'.length);
       if (!BROWSER_MODULES.has(name)) return send(res, 404, { error: 'Not found' });
       file = join(CORE, name);
     } else {

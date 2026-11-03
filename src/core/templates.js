@@ -3,10 +3,36 @@
 
 import { getRecord } from './records.js';
 
-export function byRecord(facts) {
-  const groups = new Map();
-  for (const f of facts) groups.set(f.record_id, [...(groups.get(f.record_id) ?? []), f.text]);
-  return [...groups].map(([id, texts]) => `${getRecord(id).short}: ${texts.join('. ')}.`);
+// One plain sentence per canonical fact, so answers read like a person and not a database row.
+const SAY = [
+  [/^Paid$/, (s) => `${s} is paid.`],
+  [/^Starts at (.+)$/, (s, m) => `Pay starts at ${m[1]}.`],
+  [/^Applications close (.+)$/, (s, m) => `${s} applications close ${m[1]}.`],
+  [/^Program starts (.+)$/, (s, m) => `${s} starts ${m[1]}.`],
+  [/^Next start (.+)$/, (s, m) => `${s} starts next on ${m[1]}.`],
+  [/^Estimated total tuition (.+)$/, (s, m) => `${s} is about ${m[1]} in total tuition.`],
+  [/^(\d+ (quarters|years|weeks))$/, (s, m) => `${s} takes ${m[1]}.`],
+  [/^Applicants must be (.+)$/, (s, m) => `${s} applicants must be ${m[1]}.`],
+  [/^HS diploma or GED required$/, (s) => `${s} requires an HS diploma or GED.`],
+  [/^Day classes only$/, (s) => `${s} has day classes only.`],
+  [/^Evening online option$/, (s) => `${s} has an evening online option.`],
+  [/^Evening cohort available$/, (s) => `${s} has an evening cohort.`],
+  [/^Priority deadline (.+)$/, (s, m) => `${s} has a priority deadline of ${m[1]}.`],
+  [/^FAFSA or state aid application required$/, (s) => `${s} requires the FAFSA or state aid application.`],
+  [/^Income-based$/, (s) => `The ${s} is income-based.`],
+  [/^Apply through FAFSA or the state aid application$/, () => 'You apply through FAFSA or the state aid application.'],
+  [/^Award amount varies$/, () => 'The award amount varies.'],
+  [/^Advisors confirm/, () => 'An advisor can check seats and award amounts with you.'],
+  [/^Response within (.+)$/, (s, m) => `They answer within ${m[1]}.`],
+];
+
+export function sayFact(f) {
+  const short = getRecord(f.record_id).short;
+  for (const [re, say] of SAY) {
+    const m = f.text.match(re);
+    if (m) return say(short, m);
+  }
+  return `${short}: ${f.text}.`;
 }
 
 const factFor = (payload, id) => payload.facts.filter((f) => f.record_id === id).map((f) => f.text);
@@ -19,21 +45,21 @@ export function templateReply(payload) {
       return { text: `{first_name}, your next step is to apply to the Northline Electrical Apprenticeship. ${close}.`, cites: ['PRG-02'] };
     }
     if (action === 'ask_advisor_then_apply') {
-      return { text: `{first_name}, your next step is to ask an advisor about what the records can't confirm, then apply to Northline. ${close}.`, cites: ['PRG-02'] };
+      return { text: `{first_name}, your next step is to ask an advisor what the records can't confirm, then apply to Northline. ${close}.`, cites: ['PRG-02'] };
     }
-    const apply = factFor(payload, record_id)[0] ?? '';
-    return { text: `{first_name}, your next step is to start your aid application. ${apply}.`, cites: [record_id] };
+    const apply = factFor(payload, 'AID-A').find((t) => t.startsWith('Apply through')) ?? '';
+    const when = factFor(payload, record_id).find((t) => /^(Next start|Priority deadline)/.test(t));
+    return { text: `{first_name}, your next step is to start your aid application. ${apply}.${when ? ` ${getRecord(record_id).short}: ${when}.` : ''}`, cites: ['AID-A', record_id] };
   }
 
-  const lines = byRecord(payload.facts);
-  return { text: `Here's what the records say. ${lines.join(' ')}`, cites: [...new Set(payload.facts.map((f) => f.record_id))] };
+  return { text: payload.facts.map(sayFact).join(' '), cites: [...new Set(payload.facts.map((f) => f.record_id))] };
 }
 
 export const CANNOT_CONFIRM = {
-  UNKNOWN_SEATS: "I can't confirm how many seats are left. The records don't track that. An advisor can check.",
-  UNKNOWN_PERSONAL_ELIGIBILITY: "I can't confirm whether you'll qualify or get in. Only an advisor can check that for you, person to person.",
-  UNKNOWN_AID_AMOUNT: "I can't confirm how much aid you'd get. The grant amount varies, and an advisor confirms award amounts.",
-  UNKNOWN_START_DATE: "I can't confirm that start date. It isn't in the records I have. An advisor can check.",
+  UNKNOWN_SEATS: "I can't confirm how many seats are left. The records don't track that, but an advisor can check.",
+  UNKNOWN_PERSONAL_ELIGIBILITY: "I can't confirm whether you'll get in. That's a person-to-person question, and an advisor can check it with you.",
+  UNKNOWN_AID_AMOUNT: "I can't confirm how much aid you'd get. The award amount varies, and an advisor can check it with you.",
+  UNKNOWN_START_DATE: "I can't confirm that date. It isn't in the records I have, but an advisor can check.",
   UNMATCHED_QUESTION: "I can't confirm that from the records I have. An advisor can answer it.",
   NOT_IN_RECORDS: "The records don't say. An advisor can check that for you.",
 };

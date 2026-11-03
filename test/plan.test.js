@@ -1,6 +1,6 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { startApp, ALL_ANSWERS } from './helpers.js';
+import { startApp, ALL_ANSWERS, dani } from './helpers.js';
 import { getRecord } from '../src/core/records.js';
 
 let s;
@@ -11,7 +11,7 @@ const outcome = (plan, id) => plan.programs.find((p) => p.record_id === id).outc
 const codes = (plan) => plan.escalations.map((e) => e.code);
 
 test('AC1 next step: yes, yes, earn gets "apply to Northline by Nov 30, 2026", cited to PRG-02', async () => {
-  const { plan, summary } = await s.plan({ age18: 'yes', diploma: 'yes', lean: 'earn' });
+  const { plan, summary } = await s.plan(dani({ age18: 'yes', diploma: 'yes', lean: 'earn' }));
   assert.equal(plan.next_step.action, 'apply_by_deadline');
   assert.equal(plan.next_step.record_id, 'PRG-02');
   assert.deepEqual(plan.next_step.facts[0], {
@@ -37,7 +37,7 @@ test('AC2 grounding: every fact in all 27 tap combinations cites a real record a
 });
 
 test('AC3 age rule: not 18 by Mar 1, 2027 misses PRG-02 and moves Cascade to the front', async () => {
-  const { plan } = await s.plan({ age18: 'no', diploma: 'yes', lean: 'earn' });
+  const { plan } = await s.plan(dani({ age18: 'no', diploma: 'yes', lean: 'earn' }));
   assert.equal(outcome(plan, 'PRG-02'), 'misses_a_listed_rule');
   assert.ok(codes(plan).includes('AGE_RULE_MISSED'));
   assert.deepEqual(plan.programs.slice(0, 2).map((p) => p.record_id), ['PRG-01', 'PRG-04']);
@@ -45,13 +45,13 @@ test('AC3 age rule: not 18 by Mar 1, 2027 misses PRG-02 and moves Cascade to the
 });
 
 test('AC4 unknowns: "not sure" on age, or no diploma yet, gives unknown and sends her to an advisor first', async () => {
-  const unsureAge = (await s.plan({ age18: 'unsure', diploma: 'yes', lean: 'earn' })).plan;
+  const unsureAge = (await s.plan(dani({ age18: 'unsure', diploma: 'yes', lean: 'earn' }))).plan;
   assert.equal(outcome(unsureAge, 'PRG-02'), 'unknown');
   assert.ok(codes(unsureAge).includes('AGE_UNCONFIRMED'));
   assert.equal(unsureAge.next_step.action, 'ask_advisor_then_apply');
 
   for (const diploma of ['no', 'unsure']) {
-    const plan = (await s.plan({ age18: 'yes', diploma, lean: 'earn' })).plan;
+    const plan = (await s.plan(dani({ age18: 'yes', diploma, lean: 'earn' }))).plan;
     assert.equal(outcome(plan, 'PRG-02'), 'unknown');
     assert.ok(codes(plan).includes('DIPLOMA_TIMING_UNKNOWN'));
     assert.equal(plan.next_step.action, 'ask_advisor_then_apply');
@@ -61,7 +61,7 @@ test('AC4 unknowns: "not sure" on age, or no diploma yet, gives unknown and send
 test('AC5 clock: after Nov 30, 2026 the deadline has passed; 46 days after a check the record is stale', async () => {
   const late = await startApp({ today: '2026-12-01' });
   try {
-    const { plan } = await late.plan({ age18: 'yes', diploma: 'yes', lean: 'earn' });
+    const { plan } = await late.plan(dani({ age18: 'yes', diploma: 'yes', lean: 'earn' }));
     assert.equal(outcome(plan, 'PRG-02'), 'misses_a_listed_rule');
     assert.ok(codes(plan).includes('DEADLINE_PASSED'));
     assert.notEqual(plan.next_step.record_id, 'PRG-02');
@@ -69,8 +69,8 @@ test('AC5 clock: after Nov 30, 2026 the deadline has passed; 46 days after a che
     await late.close();
   }
 
-  const fresh = (await s.plan({ age18: 'yes', diploma: 'yes', lean: 'earn' }, '2026-12-04')).plan; // Oct 20 + 45 days
+  const fresh = (await s.plan(dani({ age18: 'yes', diploma: 'yes', lean: 'earn' }), '2026-12-04')).plan; // Oct 20 + 45 days
   assert.ok(!fresh.escalations.some((e) => e.code === 'STALE_RECORD' && e.record_id === 'PRG-02'));
-  const stale = (await s.plan({ age18: 'yes', diploma: 'yes', lean: 'earn' }, '2026-12-05')).plan;
+  const stale = (await s.plan(dani({ age18: 'yes', diploma: 'yes', lean: 'earn' }), '2026-12-05')).plan;
   assert.ok(stale.escalations.some((e) => e.code === 'STALE_RECORD' && e.record_id === 'PRG-02'));
 });
