@@ -78,8 +78,10 @@ test('AC5 clock: after Nov 30, 2026 the deadline has passed; 46 days after a che
 });
 
 test('AC5b the deadline stays open until midnight Pacific on Nov 30, not 4pm when UTC rolls over', async () => {
-  assert.equal(todayIn('America/Los_Angeles', new Date('2026-12-01T07:30:00Z')), '2026-11-30'); // 11:30pm Pacific
-  const { plan } = await s.plan(dani({ age18: 'yes', diploma: 'yes', lean: 'earn' }), todayIn('America/Los_Angeles', new Date('2026-12-01T07:30:00Z')));
+  // The app's own default, with no time zone passed: this is what production uses.
+  const lastEvening = todayIn(undefined, new Date('2026-12-01T07:30:00Z')); // 11:30pm Pacific on Nov 30
+  assert.equal(lastEvening, '2026-11-30');
+  const { plan } = await s.plan(dani({ age18: 'yes', diploma: 'yes', lean: 'earn' }), lastEvening);
   assert.equal(plan.next_step.action, 'apply_by_deadline');
-  assert.equal(todayIn('America/Los_Angeles', new Date('2026-12-01T08:30:00Z')), '2026-12-01'); // 12:30am Pacific
+  assert.equal(todayIn(undefined, new Date('2026-12-01T08:30:00Z')), '2026-12-01'); // 12:30am Pacific
 });

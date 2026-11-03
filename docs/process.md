@@ -117,3 +117,9 @@ Tools: Claude Code (Opus 5.5) as the architect and builder. A Claude subagent re
   - SPEC.md is updated in place, with "(amended)" marks.
   - The README has an honest "How long it took", and Section B leads with my own three redirections.
 - **What I didn't change:** the scope. The slice ran end to end at 09:10, 23 minutes after the repo started. Everything after came from reviews I'd have to answer for in front of a state agency, and the README says so instead of hiding it.
+
+## 13. The mutation script caught a test that tested the wrong thing
+
+- **What happened:** Extending `npm run mutate` to every acceptance criterion, one mutation survived. It changed the app's default time zone from Pacific to UTC, and AC5b still passed.
+- **Why:** AC5b called `todayIn('America/Los_Angeles', ...)` with the time zone spelled out, so it proved the function works for Pacific when asked. It never proved the app asks for Pacific. That default is exactly the line that keeps Northline open on its last evening.
+- **What changed:** AC5b now uses the app's own default. The mutation is caught, and every acceptance criterion has a guard that `npm run mutate` breaks on purpose.

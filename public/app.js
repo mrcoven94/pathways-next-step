@@ -42,9 +42,9 @@ const QUESTIONS = {
     options: [['yes', 'Yes'], ['no', 'No'], ['unsure', 'Not sure']],
   },
   lean: {
-    title: 'Earn right away, or start with classes?',
+    title: 'Learn by doing, or start in a classroom?',
     why: 'We’ll put that path first.',
-    options: [['earn', 'Earn right away'], ['classes', 'Classes first'], ['unsure', 'Not sure yet']],
+    options: [['earn', 'Learn by doing, and get paid'], ['classes', 'Start in a classroom'], ['unsure', 'Not sure yet']],
   },
 };
 
@@ -178,7 +178,10 @@ function headline(plan) {
   const when = plan.next_step.facts.find((f) => f.date);
   if (action === 'apply_by_deadline') return { h1: `Apply to Northline by <mark>${esc(short(when.date))}</mark>`, when };
   if (action === 'ask_advisor_then_apply') {
-    return { h1: `Apply to Northline by <mark>${esc(short(when.date))}</mark>`, sub: `First, check ${OPEN_NORTHLINE(plan.programs[0].reasons)} with an advisor.`, when };
+    const adv = plan.next_step.advisor;
+    const by = adv && esc(fmt(adv.answer_by).replace(/, \d{4}$/, ''));
+    const timing = !adv ? '' : adv.before_deadline ? ` You’ll hear back by ${by}, before the deadline.` : ` You may not hear back until ${by}, after the deadline, so ask today.`;
+    return { h1: `Apply to Northline by <mark>${esc(short(when.date))}</mark>`, sub: `This week, check ${OPEN_NORTHLINE(plan.programs[0].reasons)} with an advisor.${timing}`, when, subHtml: true };
   }
   if (!when) return { h1: 'Start your FAFSA or state aid application', sub: 'Then ask an advisor about the next start date.' };
   const what = when.record_id === 'PRG-03' ? 'Riverbend’s priority deadline is' : 'Cascade starts';
@@ -272,6 +275,7 @@ function renderPlan() {
       <h1>${head.h1}</h1>
       ${head.sub ? `<p class="sub">${head.subHtml ? head.sub : esc(head.sub)}</p>` : ''}
       ${head.when ? `<p class="meta">${days ? `<span class="days">${days} days left</span>` : ''}${source(head.when.record_id, head.when.checked)}</p>` : ''}
+      ${plan.next_step.why.includes('SHE_PREFERS_LEARNING_BY_DOING') ? '<p class="why-first">You said you’d rather learn by doing, and Northline’s deadline is the first one on your road.</p>' : ''}
       <p class="message">${esc(withName(summary.text, state.name))}</p>
       ${summary.cites.filter((id) => id !== head.when?.record_id).map((id) => source(id, plan.programs.find((p) => p.record_id === id)?.facts[0].checked ?? plan.aid.find((f) => f.record_id === id)?.checked)).join(' ')}
       ${actions(plan, head.when)}
