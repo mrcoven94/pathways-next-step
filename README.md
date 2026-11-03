@@ -66,9 +66,9 @@ Each finding was a gap I'd have to answer for in front of a state agency, so I f
 
 | Decision | Where | Who decides |
 |---|---|---|
-| Northline's age and diploma rules, and the deadline | `src/core/planner.js:51` (`northline`), age rule at line 55 | Code |
-| Which step comes first | `src/core/planner.js:97` | Code |
-| Which questions she is asked, from what she's weighing | `src/core/planner.js:26` (`questionsFor`) | Code |
+| Northline's age and diploma rules, and the deadline | `src/core/planner.js:66` (`northline`), age rule at line 70 | Code |
+| Which step comes first | `src/core/planner.js:112` | Code |
+| Which questions she is asked, from what she's weighing | `src/core/planner.js:41` (`questionsFor`) | Code |
 | Typed text becomes a topic code on the phone | `public/client.js:21` (`askRequest`) | Code |
 | Nothing outside the closed set reaches the model | `src/core/gateway.js:63` (`checkPayload`), called at line 173 before every call | Code |
 | A reply is used or replaced | `src/core/gateway.js:103` (`checkReply`) | Code |
