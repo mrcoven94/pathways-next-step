@@ -80,4 +80,9 @@ test('AC17 her next step is concrete for this week: when the advisor answers, an
   assert.equal(late.next_step.advisor.answer_by, '2026-12-01');
   assert.equal(late.next_step.advisor.before_deadline, false);
   assert.deepEqual(late.next_step.why, ['EARLIEST_DEADLINE']);
+
+  // Asked Wed Nov 25: Thanksgiving doesn't count, so the answer comes Mon Nov 30, the deadline day itself.
+  const thanksgiving = (await s.plan({ considering: ['PRG-02'], age18: 'yes', diploma: 'no' }, '2026-11-25')).plan;
+  assert.equal(thanksgiving.next_step.advisor.answer_by, '2026-11-30');
+  assert.equal(thanksgiving.next_step.advisor.before_deadline, false);
 });

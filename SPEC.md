@@ -61,7 +61,7 @@ The replacement is a plain template built by code, logged as `replaced`.
 1. Start. "Let's find your next step before winter break." First name, optional.
 2. Where are you right now? Finishing high school, out of school and looking for work, or something else. Only the first continues; the others get an honest "built for seniors for now" and the advisor (amended).
 3. What are you weighing? Pick any of Northline, the two Cascade certificates and Riverbend, or "not sure yet" (amended).
-4. Only if she picked Northline: Will you be 18 by Mar 1, 2027? Will you have a diploma or GED by then? Only if she also picked a classroom program: earn right away, or classes first? Each answer is yes, no or not sure (amended).
+4. Only if she picked Northline: Will you be 18 by Mar 1, 2027? Will you have a diploma or GED by then? Only if she also picked a classroom program: learn by doing, or start in a classroom? Each answer is yes, no or not sure (amended).
 5. Plan. One next step with its date, what's still open, the road of dates, and her options.
 6. Three actions: ask an advisor, add the date to her calendar (.ics), save the plan on this device.
 7. A question box answered from the records, or routed to an advisor.
@@ -106,6 +106,6 @@ New acceptance criteria:
 15. Every question the box suggests routes to an answer from the records or to an advisor.
 16. "Today" is the date in Pacific time, so a deadline stays open until midnight there (AC5b).
 
-17. Her next step is concrete for this week. When asking an advisor comes first, code works out when the answer arrives (ADV-01: 2 business days) and says whether that's before the deadline. If she said she'd rather learn by doing, the plan says that's why Northline comes first.
+17. Her next step is concrete for this week. When asking an advisor comes first, code works out when the answer arrives (ADV-01: 2 business days, skipping weekends and federal holidays) and says whether that's before the deadline. If she said she'd rather learn by doing, the plan says that's why Northline comes first.
 
-`npm run mutate` breaks at least one guard behind every criterion above (22 in all) and confirms the named check fails each time.
+`npm run mutate` breaks at least one guard behind every criterion above (23 in all) and confirms the named check fails each time.
