@@ -18,12 +18,17 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 export class BadAnswers extends Error {}
 
-/** The date `n` business days after `iso` (Mon to Fri; holidays aren't in the records, so they're not counted). */
+// Federal holidays through the pilot window. Not in the records, but "business days" (ADV-01) can't
+// include them: asked the day before Thanksgiving, an answer can't be promised for Thanksgiving.
+export const HOLIDAYS = new Set(['2026-11-11', '2026-11-26', '2026-12-25', '2027-01-01', '2027-01-18', '2027-02-15']);
+
+/** The date `n` business days after `iso`: weekdays that aren't federal holidays. */
 export function addBusinessDays(iso, n) {
   const d = new Date(`${iso}T12:00:00Z`);
   while (n > 0) {
     d.setUTCDate(d.getUTCDate() + 1);
-    if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6) n -= 1;
+    const day = d.toISOString().slice(0, 10);
+    if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6 && !HOLIDAYS.has(day)) n -= 1;
   }
   return d.toISOString().slice(0, 10);
 }

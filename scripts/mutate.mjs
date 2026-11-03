@@ -54,6 +54,8 @@ const MUTATIONS = [
     "[null, 'How fast does an advisor answer?'],", "[null, 'How fast?'],", 'AC15'],
   ['The advisor answer date is wrong', 'src/core/planner.js',
     'const answer_by = addBusinessDays(today, 2);', 'const answer_by = addBusinessDays(today, 20);', 'AC17'],
+  ['Thanksgiving counts as a business day', 'src/core/planner.js',
+    "'2026-11-26', ", '', 'AC17'],
 ];
 
 let survived = 0;
