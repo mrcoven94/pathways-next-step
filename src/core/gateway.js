@@ -4,10 +4,12 @@
 // 3. Log exactly what was sent and what came back, every time.
 
 import { appendFileSync } from 'node:fs';
-import { CANONICAL_FACT_TEXT, getRecord } from './records.js';
+import { CANONICAL_FACT_TEXT, RECORDS, getRecord } from './records.js';
+
+const KEYS = [...new Set(RECORDS.flatMap((r) => r.facts.map((f) => f.key)))];
 import { ACTIONS, OUTCOMES } from './planner.js';
 import { TOPIC_CODES } from './topics.js';
-import { templateReply } from './templates.js';
+import { templateReply, sayFact } from './templates.js';
 
 export const REASON_CODES = [
   'AGE_UNCONFIRMED', 'AGE_RULE_MISSED', 'DIPLOMA_TIMING_UNKNOWN', 'DEADLINE_PASSED',
@@ -35,7 +37,13 @@ const shape = (keys) => (v, path) => {
   for (const [k, check] of Object.entries(keys)) check(v[k], `${path}.${k}`);
 };
 
-const FACT = shape({ record_id: recordId, text: factText });
+// A fact is its record, its key and its exact wording, all three matching records.js.
+const FACT = (v, path) => {
+  shape({ record_id: recordId, key: oneOf(KEYS), text: factText })(v, path);
+  if (getRecord(v.record_id).facts.find((f) => f.key === v.key)?.text !== v.text) {
+    throw new PayloadRejected(`${path}: ${v.record_id}.${v.key} does not say that`);
+  }
+};
 
 const SCHEMAS = {
   explain_plan: shape({
@@ -59,35 +67,34 @@ export function checkPayload(payload) {
   return payload;
 }
 
-const INSTRUCTIONS = `You write two or three short, warm sentences for a high school student, using only the facts given.
+const INSTRUCTIONS = `You write two or three short, warm sentences for a high school student.
 Rules:
+- You never write a fact yourself. To use a fact, write its slot, {fact:RECORD-ID:key}, and code fills in the exact wording from the records.
+- Your own words may greet, connect and encourage. They may not contain numbers, dates, money, or anything about a program that is not in a slot.
 - Decisions are already made in the payload. Do not change them or add new ones.
 - Never say the student is eligible, accepted, enrolled, approved or awarded anything.
-- Use only numbers and dates that appear in the facts.
 - To address the student, write {first_name}. You do not know their name.
-- Reply as JSON: {"text": "...", "cites": ["RECORD-ID", ...]}`;
+- Reply as JSON: {"text": "..."}`;
 
 export function renderPrompt(payload) {
   return `${INSTRUCTIONS}\n\nPAYLOAD\n${JSON.stringify(payload, null, 2)}`;
 }
 
 const CLAIMS = /\b(eligible|eligibility|qualif(y|ies|ied)|accept(s|ed)?|admit(s|ted)?|enrolled|approved|awarded|guarantee[sd]?|you('re| are) (in|set|a fit|a match)|you got in|you meet|(you('ll| will)|you can) (get in|join|start)|application (is )?(submitted|sent|complete)|you('ve| have) applied|signed you up|registered)\b/i;
+const SLOT = /\{fact:([A-Z]+-[A-Z0-9]+):([a-z_]+)\}/g;
+const MONTH = /\b(jan(uary)?|feb(ruary)?|mar(ch)?|apr(il)?|may|june?|july?|aug(ust)?|sep(t(ember)?)?|oct(ober)?|nov(ember)?|dec(ember)?)\b/i;
+const WRITTEN_NUMBER = /\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|hundred|thousand|million|half|dozen|once|twice)\b/i;
 
-const DATE = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.? (\d{1,2}), (\d{4})\b/g;
-
-// Words a reply may use without a fact behind them: how to say something, never what is true.
-// Anything else must appear in a fact or record name the model was given, or the reply is replaced.
-// Negations ("not", "isn't", "no") are left out on purpose: a reply can't flip a fact.
-const CONNECTIVES = new Set(`a about advisor advisors after also an and answer answers any apply are as ask at be because before but by can can't check answered below comes confirm confirms could couple day days deadline do does first for from get go good had has have here here's how i if in into is it it's its just know let's look make more move need next now of on one or our out over pay plan programs question questions records requires right road so some something start starts step still take takes than that that's the their them then there these they they'll thing things this those through to too total two up us want way we we'll what when where which while who will with within would yes you you'll you're your`.split(' '));
+// The model's own words: how to say something, never what is true. Program names it was given are
+// allowed so it can say which program it means. Fact words ("paid", "evening", "tuition") are not:
+// those only arrive through slots. Negations are left out on purpose: a reply can't flip a fact.
+const CONNECTIVES = new Set(`a about advisor advisors after also an and answer answered answers any apply are as ask at be because before below but by can can't check comes confirm could day deadline do does first for from get go good has have here here's how i if in is it it's its just know let's look make more move need next now of on or our out plan program programs question questions records right road so something start step still take than that that's the their them then there these they this those through to too up us want way we we'll what when where which while who will with would yes you you'll you're your`.split(' '));
 
 function vocabulary(payload) {
   const words = new Set(CONNECTIVES);
-  const add = (t) => (t.toLowerCase().match(/[a-z][a-z'-]*/g) ?? []).forEach((w) => words.add(w));
-  for (const f of payload.facts) {
-    add(f.text);
-    const r = getRecord(f.record_id);
-    add(r.name);
-    add(r.short);
+  for (const id of new Set(payload.facts.map((f) => f.record_id))) {
+    const r = getRecord(id);
+    for (const w of `${r.name} ${r.short}`.toLowerCase().match(/[a-z][a-z'-]*/g) ?? []) words.add(w);
   }
   return words;
 }
@@ -102,39 +109,44 @@ export function checkReply(raw, payload) {
   }
   const problems = [];
   const text = typeof reply?.text === 'string' ? reply.text : '';
-  const cites = Array.isArray(reply?.cites) ? reply.cites : [];
   if (!text) problems.push({ code: 'EMPTY' });
   if (text.length > 600) problems.push({ code: 'TOO_LONG' });
 
-  const given = new Set(payload.facts.map((f) => f.record_id));
-  if (!cites.length) problems.push({ code: 'NO_CITATION' });
-  for (const id of cites) if (!given.has(id)) problems.push({ code: 'CITES_UNGIVEN_RECORD', detail: id });
-  const cited = payload.facts.filter((f) => cites.includes(f.record_id)).map((f) => f.text);
+  // Every slot must name a fact the model was actually handed.
+  const given = new Set(payload.facts.map((f) => `${f.record_id}:${f.key}`));
+  const slots = [...text.matchAll(SLOT)];
+  if (!slots.length) problems.push({ code: 'NO_CITATION' });
+  for (const m of slots) if (!given.has(`${m[1]}:${m[2]}`)) problems.push({ code: 'CITES_UNGIVEN_FACT', detail: `${m[1]}:${m[2]}` });
 
-  // Dates must match a cited fact exactly, not just share a day or a year with one.
-  const citedDates = new Set(cited.flatMap((t) => [...t.matchAll(DATE)].map((m) => m[0])));
-  for (const m of text.matchAll(DATE)) if (!citedDates.has(m[0])) problems.push({ code: 'UNGROUNDED_DATE', detail: m[0] });
-
-  // Every other number must appear with the word after it, so "18 USD" can't borrow the 18 from the age rule.
-  const rest = text.replace(DATE, ' ');
-  for (const m of rest.matchAll(/(\d[\d,.]*\d|\d)(%| [a-z-]+)?/gi)) {
-    const phrase = m[0].trim();
-    if (!cited.some((t) => t.includes(phrase))) problems.push({ code: 'UNGROUNDED_NUMBER', detail: phrase });
-  }
-
-  // Closed vocabulary: a word that is in no given fact and isn't plain connective language is a new claim.
+  // Everything outside the slots is the model's own prose, and prose may not state facts.
+  const prose = text.replace(SLOT, ' ').replace(/\{first_name\}/g, ' ');
+  for (const p of prose.match(/\{[^}]*\}/g) ?? []) problems.push({ code: 'UNKNOWN_PLACEHOLDER', detail: p });
+  const digits = prose.match(/\d[\d,.%]*/);
+  if (digits) problems.push({ code: 'UNGROUNDED_NUMBER', detail: digits[0] });
+  const written = prose.match(WRITTEN_NUMBER);
+  if (written) problems.push({ code: 'UNGROUNDED_NUMBER', detail: written[0] });
+  const month = prose.match(MONTH);
+  if (month) problems.push({ code: 'UNGROUNDED_DATE', detail: month[0] });
   const words = vocabulary(payload);
-  for (const raw of rest.replace(/\{first_name\}/g, ' ').toLowerCase().replace(/[\u2018\u2019]/g, "'").match(/[a-z][a-z'-]*/g) ?? []) {
+  for (const raw of prose.toLowerCase().replace(/[‘’]/g, "'").match(/[a-z][a-z'-]*/g) ?? []) {
     const w = raw.replace(/'s$/, '');
     if (!words.has(w)) problems.push({ code: 'UNGROUNDED_WORD', detail: w });
   }
-
-  for (const p of text.match(/\{[^}]*\}/g) ?? []) {
-    if (p !== '{first_name}') problems.push({ code: 'UNKNOWN_PLACEHOLDER', detail: p });
-  }
-  const claim = text.match(CLAIMS);
+  const claim = prose.match(CLAIMS);
   if (claim) problems.push({ code: 'STATUS_CLAIM', detail: claim[0] });
   return problems;
+}
+
+/** Slots become the records' own wording, written by code. */
+function renderReply(text, payload) {
+  const cites = new Set();
+  const out = text.replace(SLOT, (_, id, key, at) => {
+    cites.add(id);
+    const said = sayFact(payload.facts.find((f) => f.record_id === id && f.key === key));
+    // After "{first_name}, " a sentence that opens with a plain word continues in lower case.
+    return text.slice(0, at).endsWith(', ') ? said.replace(/^(The|You|An|They|Pay) /, (w) => w.toLowerCase()) : said;
+  });
+  return { text: out.replace(/\s{2,}/g, ' ').trim(), cites: [...cites] };
 }
 
 function formatEntry(e) {
@@ -168,7 +180,7 @@ export function createGateway({ model, logFile = null, now = () => new Date() })
     }
     const problems = received.startsWith('[model error]') ? [{ code: 'MODEL_ERROR' }] : checkReply(received, payload);
     const verdict = problems.length ? 'replaced' : 'used';
-    const reply = verdict === 'used' ? JSON.parse(received) : templateReply(payload);
+    const reply = verdict === 'used' ? renderReply(JSON.parse(received).text, payload) : templateReply(payload);
     const entry = {
       n: ++count,
       at: now().toISOString(),

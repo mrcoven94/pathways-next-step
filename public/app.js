@@ -11,6 +11,7 @@ const store = {
   set(key, value) { try { localStorage.setItem(`pathways.${key}`, JSON.stringify(value)); } catch {} },
 };
 
+let session = 0; // bumped by Start over, so a reply that arrives late is dropped
 const state = { name: store.get('name') ?? '', answers: {}, step: 0, result: null, thread: [], asked: new Set(), pending: null, handoff: store.get('handoff') };
 
 const PROGRAMS = [
@@ -120,7 +121,10 @@ async function makePlan() {
     const { stage, ...answers } = state.answers;
     // ?today=2026-12-05 replays the plan on another date, to see deadlines pass and records go stale.
     const asOf = new URLSearchParams(location.search).get('today');
-    state.result = await api('/api/plan', { answers, ...(/^\d{4}-\d{2}-\d{2}$/.test(asOf ?? '') && { today: asOf }) });
+    const mine = session;
+    const result = await api('/api/plan', { answers, ...(/^\d{4}-\d{2}-\d{2}$/.test(asOf ?? '') && { today: asOf }) });
+    if (mine !== session) return;
+    state.result = result;
     renderPlan();
   } catch {
     $('#plan').innerHTML = `<h1>That didn’t load.</h1><p class="lede-ink">Your answers are still here. Check your connection and try again.</p><div class="actions"><button class="button primary" type="button" data-action="retry-plan">Try again</button></div>`;
@@ -250,6 +254,7 @@ function renderPlan() {
       ${head.sub ? `<p class="sub">${head.subHtml ? head.sub : esc(head.sub)}</p>` : ''}
       ${head.when ? `<p class="meta">${days ? `<span class="days">${days} days left</span>` : ''}${source(head.when.record_id, head.when.checked)}</p>` : ''}
       <p class="message">${esc(withName(summary.text, state.name))}</p>
+      ${summary.cites.filter((id) => id !== head.when?.record_id).map((id) => source(id, plan.programs.find((p) => p.record_id === id)?.facts[0].checked ?? plan.aid.find((f) => f.record_id === id)?.checked)).join(' ')}
       ${actions(plan, head.when)}
       <p class="label">${esc(plan.label)}</p>
     </section>
@@ -305,10 +310,13 @@ async function ask(question) {
   if (req.crisis) return showCrisis();
   state.asked.add(text);
   state.thread.push({ from: 'me', text });
+  const mine = session;
   try {
     const r = await api('/api/answer', req.body);
+    if (mine !== session) return;
     state.thread.push({ from: 'them', kind: r.kind, code: r.code, text: r.text, facts: r.facts, question: text });
   } catch {
+    if (mine !== session) return;
     state.thread.push({ from: 'them', kind: 'cannot_confirm', text: 'That didn’t go through. Try again, or ask an advisor.', question: text });
   }
   $('#thread').innerHTML = state.thread.map(bubble).join('');
@@ -390,7 +398,18 @@ function renderAdvisor() {
   (window.requestIdleCallback ?? setTimeout)(() => loadGate());
 }
 
+let sending = false;
 async function sendHandoff({ skipScreen = false } = {}) {
+  if (sending) return;
+  sending = true;
+  try {
+    await sendHandoffOnce(skipScreen);
+  } finally {
+    sending = false;
+  }
+}
+
+async function sendHandoffOnce(skipScreen) {
   const plan = state.result?.plan;
   const name = $('#adv-name').value;
   const note = $('#adv-note').value;
@@ -475,7 +494,7 @@ document.addEventListener('click', (e) => {
     next: advance,
     back: () => { if (state.step === 0) show('start'); else { state.step -= 1; renderQuestion(); } },
     'back-to-stage': () => { state.step = 0; renderQuestion(); },
-    restart: () => { state.answers = {}; state.notSure = false; state.step = 0; state.thread = []; state.asked.clear(); state.pending = null; show('start'); },
+    restart: () => { session += 1; state.result = null; state.answers = {}; state.notSure = false; state.step = 0; state.thread = []; state.asked.clear(); state.pending = null; show('start'); },
     'retry-plan': makePlan,
     calendar: downloadCalendar,
     save: () => {

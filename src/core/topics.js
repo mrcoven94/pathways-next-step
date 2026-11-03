@@ -2,17 +2,25 @@
 // this module returns codes and record IDs only, and runs in the browser before any request.
 // Order matters: crisis first, then the four unknowns the records can't answer, then topics.
 
-const CRISIS = /\b(kill(ing)? myself|suicid\w*|end (it all|my life)|want to die|don'?t want to (live|be here)|hurt(ing)? myself|self[- ]?harm|cutting myself|being abused|abus(e|ing) me|not safe at home|unsafe at home|someone (is )?hurting me)\b/i;
+const CRISIS = /\b(kill(ing)? myself|kms|suicid\w*|end (it all|my life|myself)|want to die|(don'?t|do not|dont) want to (live|be (here|alive))|no reason to live|better off dead|hurt(ing)? myself|self[- ]?harm|cutting myself|being abused|abus(e|ing) me|not safe at home|unsafe at home|someone (is )?hurting me)\b/i;
+
+// Phones type curly apostrophes and extra spaces. Match on one plain form.
+const plain = (text) => String(text ?? '').replace(/[\u2018\u2019\u02bc]/g, "'").replace(/\s+/g, ' ').slice(0, 500);
 
 const UNKNOWN = [
-  ['UNKNOWN_SEATS', /\b(seats?|spots?|openings?|space left|room left|still open|is it full|full yet|capacity|wait ?list)\b/i],
-  ['UNKNOWN_AID_AMOUNT', /\b(how much|what amount|exact(ly)?)\b.{0,40}\b(aid|grant|award|scholarship|funding|financial)\b|\b(aid|grant|award|scholarship)s? amount\b|\bamount of (aid|grant|award|money)\b|\b(will|would|do|can) i get\b.{0,30}\b(aid|grant|money|award|scholarship)\b/i],
-  ['UNKNOWN_PERSONAL_ELIGIBILITY', /\b(am i|i'?m|will i|would i|can i|do i|could i|should i)\b.{0,30}\b(eligible|qualify|get in|be accepted|accepted|make it in|allowed to (apply|join)|meet)\b|\b(accept|admit|take|let)s? me\b|\b(qualify|eligible|eligibility)\b/i],
+  ['UNKNOWN_SEATS', /\b(seats?|spots?|openings?|space left|room left|still open|full|capacity|wait ?list|sold out)\b/i],
+  ['UNKNOWN_AID_AMOUNT', /\b(how much|what amount|exact(ly)?)\b.{0,40}\b(aid|grant|award|scholarship|funding|financial|fafsa)\b|\b(give|pay) me\b|\b(aid|grant|award|scholarship)s? amount\b|\bamount of (aid|grant|award|money)\b|\b(will|would|do|can) i get\b.{0,30}\b(aid|grant|money|award|scholarship)\b/i],
+  ['UNKNOWN_PERSONAL_ELIGIBILITY', /\b(am i|i'?m|will i|would i|can i|do i|could i|should i)\b.{0,30}\b(eligible|qualify|get in|be accepted|accepted|make it in|allowed to (apply|join)|meet|get into)\b|\b(accept|admit|take|let)s? me\b|\bget into\b|\b(qualify|eligible|eligibility)\b/i],
 ];
 
-// A question naming a date the records don't list can't be answered from them.
-const MONTH_DAY = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})\b/gi;
-const LISTED_DAYS = new Set(['jan 6', 'feb 1', 'mar 1', 'nov 30']);
+// A question naming a date can only be answered when that date is listed for the program she named.
+const MONTH_DAY = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:,?\s+(\d{4}))?\b/gi;
+const LISTED_DATES = {
+  'PRG-02': ['nov 30 2026', 'mar 1 2027'],
+  'PRG-01': ['jan 6 2027'],
+  'PRG-04': ['jan 6 2027'],
+  'PRG-03': ['feb 1 2027'],
+};
 
 const PROGRAM_WORDS = [
   ['PRG-02', /\b(northline|apprentice\w*|electric\w*)\b/i],
@@ -59,14 +67,18 @@ function mentionedPrograms(text) {
  * @returns {{kind:'crisis'} | {kind:'cannot_confirm', code:string} | {kind:'topic', topic:string, record_ids:string[]}}
  */
 export function matchQuestion(text, considering = DEFAULT_PROGRAMS) {
-  const q = String(text ?? '').slice(0, 500);
+  const q = plain(text);
   if (CRISIS.test(q)) return { kind: 'crisis' };
   for (const [code, re] of UNKNOWN) if (re.test(q)) return { kind: 'cannot_confirm', code };
-  for (const m of q.matchAll(MONTH_DAY)) {
-    if (!LISTED_DAYS.has(`${m[1].toLowerCase()} ${Number(m[2])}`)) return { kind: 'cannot_confirm', code: 'UNKNOWN_START_DATE' };
-  }
 
   const named = mentionedPrograms(q);
+  const scope = (named.length ? named : Object.keys(LISTED_DATES)).flatMap((id) => LISTED_DATES[id] ?? []);
+  for (const m of q.matchAll(MONTH_DAY)) {
+    const [, mon, day, year] = m;
+    const listed = scope.some((d) => d.startsWith(`${mon.toLowerCase()} ${Number(day)} `) && (!year || d.endsWith(year)));
+    if (!listed) return { kind: 'cannot_confirm', code: 'UNKNOWN_START_DATE' };
+  }
+
   for (const [topic, re] of TOPICS) {
     if (!re.test(q)) continue;
     if (topic === 'START') {
@@ -83,5 +95,5 @@ export function matchQuestion(text, considering = DEFAULT_PROGRAMS) {
 }
 
 export function isCrisis(text) {
-  return CRISIS.test(String(text ?? ''));
+  return CRISIS.test(plain(text));
 }

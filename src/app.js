@@ -16,13 +16,13 @@ const CORE = fileURLToPath(new URL('./core/', import.meta.url));
 const BROWSER_MODULES = new Set(['topics.js', 'planner.js', 'records.js']); // pure modules the browser shares; never the gateway
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json' };
 
-const toPayloadFact = ({ record_id, text }) => ({ record_id, text });
+const toPayloadFact = ({ record_id, key, text }) => ({ record_id, key, text });
 const withChecked = (f) => ({ ...f, checked: getRecord(f.record_id).checked });
 const advisorFacts = () => [fact('ADV-01', 'confirms'), fact('ADV-01', 'response')];
 
 function dedupe(facts) {
   const seen = new Set();
-  return facts.filter((f) => !seen.has(f.record_id + f.text) && seen.add(f.record_id + f.text));
+  return facts.filter((f) => !seen.has(f.record_id + f.key) && seen.add(f.record_id + f.key));
 }
 
 function newHandoffCode() {
@@ -53,7 +53,9 @@ export function createApp({ model = mockModel, logFile = null, today = () => new
   async function answer(body) {
     if (body.cannot_confirm) {
       const code = body.cannot_confirm in CANNOT_CONFIRM ? body.cannot_confirm : 'UNMATCHED_QUESTION';
-      return { kind: 'cannot_confirm', code, text: CANNOT_CONFIRM[code], advisor: advisorFacts() };
+      // The one code-written answer that states a fact carries that fact's source.
+      const facts = code === 'UNKNOWN_AID_AMOUNT' ? [fact('AID-A', 'amount')] : [];
+      return { kind: 'cannot_confirm', code, text: CANNOT_CONFIRM[code], facts, advisor: advisorFacts() };
     }
     const { topic, record_ids } = body;
     if (!TOPIC_CODES.includes(topic) || !Array.isArray(record_ids) || !record_ids.every(getRecord)) {
@@ -62,7 +64,7 @@ export function createApp({ model = mockModel, logFile = null, today = () => new
     const keys = TOPIC_KEYS[topic];
     const facts = record_ids.flatMap((id) => getRecord(id).facts.filter((f) => keys.includes(f.key)).map((f) => fact(id, f.key)));
     if (!facts.length) {
-      return { kind: 'cannot_confirm', code: 'NOT_IN_RECORDS', text: CANNOT_CONFIRM.NOT_IN_RECORDS, advisor: advisorFacts() };
+      return { kind: 'cannot_confirm', code: 'NOT_IN_RECORDS', text: CANNOT_CONFIRM.NOT_IN_RECORDS, facts: [], advisor: advisorFacts() };
     }
     const open = topic === 'DIPLOMA_RULE' ? ['DIPLOMA_TIMING_UNKNOWN'] : [];
     const reply = await gateway.callModel({ task: 'answer_topic', topic, open, facts: facts.map(toPayloadFact) });

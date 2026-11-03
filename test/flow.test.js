@@ -37,6 +37,16 @@ test('AC14 a date that has passed is never offered as the next step (found by th
   const { plan } = await s.plan({ considering: ['PRG-02', 'PRG-01', 'PRG-04'], age18: 'no', diploma: 'yes', lean: 'earn' }, '2027-02-01');
   assert.ok(plan.next_step.facts.every((f) => !f.date || f.date >= plan.today), JSON.stringify(plan.next_step.facts));
   assert.ok(plan.escalations.some((e) => e.code === 'START_DATE_PASSED' && e.record_id === 'PRG-01'));
+
+  // Even when the model fails and code writes the reply, the passed date stays out (second review).
+  const broken = await startApp({ model: { name: 'broken', complete: async () => 'not json' }, today: '2027-02-01' });
+  try {
+    const { summary } = await broken.plan({ considering: ['PRG-01'] });
+    assert.equal(summary.verdict, 'replaced');
+    assert.doesNotMatch(summary.text, /Jan 6, 2027/);
+  } finally {
+    await broken.close();
+  }
 });
 
 test('her name is filled in on the phone, after the reply, and the reply still reads without it', () => {

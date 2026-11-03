@@ -47,12 +47,13 @@ export function templateReply(payload) {
     if (action === 'ask_advisor_then_apply') {
       return { text: `{first_name}, your next step is to ask an advisor what the records can't confirm, then apply to Northline. ${close}.`, cites: ['PRG-02'] };
     }
-    const apply = factFor(payload, 'AID-A').find((t) => t.startsWith('Apply through')) ?? '';
-    const when = factFor(payload, record_id).find((t) => /^(Next start|Priority deadline)/.test(t));
-    return { text: `{first_name}, your next step is to start your aid application. ${apply}.${when ? ` ${getRecord(record_id).short}: ${when}.` : ''}`, cites: ['AID-A', record_id] };
+    // The planner already left out any date that has passed, and the headline shows the one that hasn't.
+    const apply = factFor(payload, 'AID-A').find((t) => t.startsWith('Apply through'));
+    return { text: `{first_name}, your next step is to start your aid application. ${apply}.`, cites: ['AID-A', record_id] };
   }
 
-  return { text: payload.facts.map(sayFact).join(' '), cites: [...new Set(payload.facts.map((f) => f.record_id))] };
+  const caveat = payload.open.includes('DIPLOMA_TIMING_UNKNOWN') ? " The records don't say when you need it by, so ask an advisor." : '';
+  return { text: payload.facts.map(sayFact).join(' ') + caveat, cites: [...new Set(payload.facts.map((f) => f.record_id))] };
 }
 
 export const CANNOT_CONFIRM = {
