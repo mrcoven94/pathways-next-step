@@ -89,3 +89,18 @@ One seam does most of the work: the HTTP API (`/api/plan`, `/api/ask`, `/api/han
 ## Out of scope
 
 Marcus (the planner takes his inputs without changes; see the README), accounts, real advisor messaging, real application links, Spanish and other languages, analytics, and anything not in the records table.
+
+## Amendments (2026-11-03, after the first build)
+
+The brief above is what the agents got first. These changes came from David's review of the first build and two independent model reviews. `docs/process.md` has the story behind each.
+
+1. **Context first.** The flow asks where she is and what she's weighing before anything else. Age and diploma questions appear only when she picks Northline. The earn-or-classes question appears only when she picks Northline and a classroom program. Someone not finishing high school is told this preview is built for seniors and offered an advisor. Riverbend (PRG-03) is now selectable too.
+2. **Her words stay hers.** Nothing redacts or rewrites text on her own screen. The personal-info detector runs only on the advisor note, the one piece of text that leaves the phone, and it only suggests.
+3. **The model points, code writes.** Replies reference facts as `{fact:RECORD-ID:key}` slots, and code renders each fact's sentence from `records.js`. The model's own words may not contain a digit, a written number, a month or a word from any fact.
+4. **Passed dates.** A start or deadline that has passed is never offered as the next step or the calendar date.
+
+New acceptance criteria:
+
+12. Someone weighing only Cascade is never asked her age, and the server refuses a Northline plan without the age and diploma taps.
+13. Every path reaches a dated next step from the records, including a Riverbend-only path and a path where everything she picked is ruled out.
+14. A date that has passed is never the next step, even in the code-written fallback.

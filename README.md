@@ -4,7 +4,7 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 
 - **Live:** https://pathways-next-step.vercel.app (the model-call table is at [/how](https://pathways-next-step.vercel.app/how))
 - **Run:** `npm start`, then open http://localhost:3000
-- **Test:** `npm test` (20 checks, prints pass or fail, writes `model-calls.log`)
+- **Test:** `npm test` (21 checks, prints pass or fail, writes `model-calls.log`)
 - Node 20 or newer. No `npm install`, no API key, no accounts, no database.
 
 `SPEC.md` is the brief the coding agents got before writing code. `docs/process.md` records every time a person or a check corrected the AI.
@@ -15,11 +15,11 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 
 **Real versus mocked.** The planner, question routing, reply checks, advisor queue and log are real. The model is a scripted stand-in, labeled on every screen. The advisor queue lives in memory, and no person receives the request.
 
-**Biggest trade-off.** The model writes two sentences, and code checks every date, number and word against the facts it was handed. A real model would hit the plain fallback more often. For minors, a plainer sentence beats an invented one.
+**Biggest trade-off.** The model never writes a fact. It points at facts by ID, and code writes them from the records. A real model would feel less fluent. For minors, a plainer sentence beats an invented one.
 
 **What the checks prove.**
 - **AC8** plants a canary name, note and question. It proves the advisor gets all three and `model-calls.log` gets none.
-- **AC7b** feeds a misbehaving model twelve bad answers. Every one is caught and replaced.
+- **AC7b** feeds a misbehaving model sixteen bad answers. Every one is caught and replaced.
 - **AC6** proves that seats, her own eligibility, aid amounts and unlisted dates get "I can't confirm that" without calling the model.
 
 **One thing they miss.** The model can't write a fact, only point at one, but its connecting words can still mislead: "Cascade is first on your road" passes, though code draws the real order on screen.
@@ -38,7 +38,8 @@ I worked with Claude Code (Opus 5.5) as the builder, Codex (Sol 6.1) as an indep
   - "You qualify for Northline."
   - "Northline provides free housing." No number, so nothing was checked.
   It also found that `k in keys` let a field named `constructor` through the allowlist.
-- **Did:** Dates must now match exactly. Numbers must appear with the word after them. Every word must come from the given facts or a short list of connecting words, with negations left out on purpose. The allowlist uses `Object.hasOwn`. All five cases are tests now. I then undid each fix in a scratch copy and confirmed the matching test fails.
+- **Did:** Tightened the rules (exact dates, numbers with units, a closed vocabulary, `Object.hasOwn`) and made all five cases tests. A second Sol pass broke that too: "Applications close Mar 1, 2027" used only real words and a real date, but pinned the date to the wrong event.
+- **What I did instead:** Stopped patching rules over free text and changed who writes facts. The model now points at facts with slots like `{fact:PRG-02:paid}`, and code writes each fact's sentence from the records. The model's own words may not contain a number, a month or any fact word. Every case from both reviews is a test, and undoing each fix in a scratch copy turns its test red.
 
 **2. Asking her birthday before knowing who she is.**
 - **Asked:** Claude to build the flow from the spec.
@@ -62,14 +63,16 @@ I worked with Claude Code (Opus 5.5) as the builder, Codex (Sol 6.1) as an indep
 | Northline's age and diploma rules, and the deadline | `src/core/planner.js:51` (`northline`), age rule at line 55 | Code |
 | Which step comes first | `src/core/planner.js:97` | Code |
 | Typed text becomes a topic code on the phone | `public/client.js:21` (`askRequest`) | Code |
-| Nothing outside the closed set reaches the model | `src/core/gateway.js:55` (`checkPayload`), called at line 161 before every call | Code |
-| A reply is used or replaced | `src/core/gateway.js:96` (`checkReply`) | Code |
+| Which questions she is asked, from what she's weighing | `src/core/planner.js:26` (`questionsFor`) | Code |
+| Nothing outside the closed set reaches the model | `src/core/gateway.js:63` (`checkPayload`), called at line 173 before every call | Code |
+| A reply is used or replaced | `src/core/gateway.js:103` (`checkReply`) | Code |
+| Facts are written from the records, not by the model | `src/core/gateway.js:141` (`renderReply`) | Code |
 | Her name is filled in | `public/client.js:14` (`withName`), in the browser | Code |
-| Two warm sentences | `src/core/mock-model.js` | The (scripted) model |
+| Which facts to mention, and the warm words around them | `src/core/mock-model.js` | The (scripted) model |
 
 ## The checks
 
-`npm test` runs 20 checks, one per acceptance criterion in `SPEC.md`, through the real HTTP API and the browser's own request builder (`public/client.js`). Every model call they make is written to `model-calls.log`, with the exact text sent, the exact reply and the verdict. `npm run verify` adds a smoke test of the running app. With `BASE_URL` set, it checks the live deployment instead.
+`npm test` runs 21 checks, one per acceptance criterion in `SPEC.md`, through the real HTTP API and the browser's own request builder (`public/client.js`). Every model call they make is written to `model-calls.log`, with the exact text sent, the exact reply and the verdict. `npm run verify` adds a smoke test of the running app. With `BASE_URL` set, it checks the live deployment instead.
 
 To replay a plan on another date (deadline passed, stale records), add `?today=2026-12-05` to the URL.
 

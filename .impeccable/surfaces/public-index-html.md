@@ -17,10 +17,10 @@ OWN-WORLD: Mano's kitchen table, held to Front Door's structure. White paper and
 
 STORY: Dani answers three taps, sees one step with its date, understands why it comes first and what is still unconfirmed, then acts: calendar, save, or advisor.
 
-FIRST VIEWPORT: Plan screen at 390px: "Dani, here's your next step" heading; the step card with the deadline highlighted and days left; the model's two warm sentences; primary "Add Nov 30 to my calendar" in thumb reach.
+FIRST VIEWPORT: Plan screen at 390px: the step as the h1 with its date highlighted ("Apply to Northline by Nov 30"), the one open question named under it, days left with source, one short model message, and the primary action matching the step (advisor first when something must be confirmed, calendar otherwise) in thumb reach.
 
-FORM: Pinned by David in grilling Q13 (Mano palette, Front Door structure). seed: none (pinned)
+FORM: Pinned by the product owner in grilling Q13 ("Mano palette and warmth, Front Door structure, calm motion"), so no concept roll ran. seed: none (unavailable)
 
-SIGNATURE MOVE: the road, a vertical date rail from Today to Mar 1, 2027 with every stop cited to its record, and the highlighter stroke drawing across the next step's date when the plan appears.
+SIGNATURE MOVE: the road, a vertical date rail from Today to Mar 1, 2027 with every stop cited to its record and the stretch from today to the next step drawn in pen blue, plus the highlighter stroke drawing across the next step's date each time a plan appears.
 
 FINISH: unreviewed and undocumented is unfinished.

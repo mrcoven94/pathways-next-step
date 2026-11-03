@@ -1,4 +1,4 @@
-.how { max-width: 64rem; }
+#app.how { max-width: 64rem; }
 body[data-screen='how'] .site-footer { max-width: 64rem; }
 .how h1 { margin-bottom: 14px; }
 .how .lede-ink { max-width: 46ch; }
@@ -33,7 +33,7 @@ body[data-screen='how'] .site-footer { max-width: 64rem; }
 .verdict.replaced { color: var(--miss); }
 .problems { display: block; font-size: 0.8125rem; color: var(--muted); margin-top: 2px; }
 details + details { margin-top: 6px; }
-summary { cursor: pointer; color: var(--pen); font-weight: 550; min-height: 28px; }
+summary { cursor: pointer; color: var(--pen); font-weight: 550; min-height: 44px; display: flex; align-items: center; }
 pre { white-space: pre-wrap; word-break: break-word; font: 0.8125rem/1.5 ui-monospace, 'SF Mono', Menlo, monospace; background: var(--paper); border-radius: 10px; padding: 12px; margin: 8px 0 0; max-height: 26rem; overflow: auto; color: var(--ink-2); }
 
 @media (max-width: 640px) {
@@ -48,3 +48,4 @@ pre { white-space: pre-wrap; word-break: break-word; font: 0.8125rem/1.5 ui-mono
   .calls .verdict { display: inline; }
   .calls .problems { display: inline; margin-left: 6px; }
 }
+.records td:last-child { white-space: nowrap; }

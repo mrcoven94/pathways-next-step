@@ -69,7 +69,7 @@ function renderQuestion() {
   const key = steps[state.step];
   const q = QUESTIONS[key];
   // Until she picks programs, show the longest path, so the bar only ever gets shorter.
-  const total = state.answers.considering?.length || state.answers.stage !== 'high_school' ? steps.length : 5;
+  const total = state.answers.considering?.length || (state.answers.stage && state.answers.stage !== 'high_school') ? steps.length : 5;
   const picked = state.notSure ? [] : state.answers.considering ?? [];
   const choices = q.multi
     ? `${PROGRAMS.map(([id, name]) => `<button class="choice${picked.includes(id) ? ' picked' : ''}" type="button" aria-pressed="${picked.includes(id)}" data-toggle="${id}">${esc(name)}</button>`).join('')}
@@ -127,7 +127,12 @@ async function makePlan() {
     state.result = result;
     renderPlan();
   } catch {
-    $('#plan').innerHTML = `<h1>That didn’t load.</h1><p class="lede-ink">Your answers are still here. Check your connection and try again.</p><div class="actions"><button class="button primary" type="button" data-action="retry-plan">Try again</button></div>`;
+    $('#plan').innerHTML = `
+      <nav class="topbar"><p class="wordmark ink">Pathways</p><button class="link" type="button" data-action="restart">Start over</button></nav>
+      <h1>That didn’t load.</h1>
+      <p class="lede-ink">Your answers are still here. Check your connection and try again.</p>
+      <div class="actions"><button class="button primary" type="button" data-action="retry-plan">Try again</button></div>`;
+    show('plan');
   }
 }
 
@@ -206,9 +211,11 @@ function road(plan) {
   return stops
     .filter((s) => { const k = s.date + s.text; return !seen.has(k) && seen.add(k); })
     .sort((a, b) => a.date.localeCompare(b.date))
-    .map((s) => {
+    .map((s, i, all) => {
       const past = !s.today && s.date < plan.today;
-      return `<li class="${s.today ? 'today' : ''}${s.date === target ? ' target' : ''}${past ? ' past' : ''}">
+      // The stretch from today to her next step is drawn in pen: the part of the road she's on now.
+      const walked = target && s.date >= plan.today && s.date < target && i < all.length - 1;
+      return `<li class="${s.today ? 'today' : ''}${s.date === target ? ' target' : ''}${past ? ' past' : ''}${walked ? ' walked' : ''}">
         <time datetime="${s.date}">${esc(fmt(s.date))}</time>
         <span class="stop">${esc(s.text)}${past ? ', passed' : ''}</span>
         ${s.record_id ? source(s.record_id, s.checked) : ''}
@@ -290,7 +297,11 @@ function renderPlan() {
       </form>
     </section>`;
   show('plan');
-  requestAnimationFrame(() => $('#plan').classList.add('drawn'));
+  // Restart the highlighter stroke every time a plan appears, from a painted empty state.
+  const p = $('#plan');
+  p.classList.remove('drawn');
+  void p.offsetWidth;
+  requestAnimationFrame(() => requestAnimationFrame(() => p.classList.add('drawn')));
 }
 
 function bubble(m, i) {
