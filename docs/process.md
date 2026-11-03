@@ -88,3 +88,13 @@ Tools: Claude Code (Opus 5.5) as the architect and builder. A Claude subagent re
 - **What happened:** The first Vercel preview built "Ready" but every request returned 500. Vercel's zero-config detection had picked `public/app.js`, the browser script, as a Node server entrypoint, and never built `api/index.js`.
 - **How it was caught:** By checking the preview's real responses before merging, not by trusting the build status. Building it locally (`vercel build`) showed the wrong entrypoint.
 - **What changed:** `vercel.json` pins `"framework": null`, so `api/index.js` is the function and `public/` is served as static files. The preview then passed: pages 200, the gateway source not served (404), and the plan API returning the right step.
+
+## 11. Making the question box feel like a conversation (David)
+
+- **Asked by David:** "Make the search more interactive, and some typing indicator like iMessage." He also showed a screenshot where the student's name opened every single reply.
+- **What changed:**
+  - Suggestions filter as she types, with her words in bold. They are scoped to the programs she picked, and the arrow keys work.
+  - A line under the box says, as she types, whether the records answer this or an advisor will. That's matched on the phone too.
+  - A typing indicator plays for a short beat while the answer loads.
+  - Her name opens only the first reply.
+- **Kept honest:** A new test (AC15) checks that every suggested question routes to an answer from the records or to an advisor, so a suggestion can't lead to a dead end.

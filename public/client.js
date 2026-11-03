@@ -33,3 +33,53 @@ export function handoffRequest({ name = '', note = '', question = '', reasons = 
   if ([name, note, question].some(isCrisis)) return { crisis: true };
   return { body: { first_name: name.trim(), note: note.trim(), question: question.trim(), reasons: [...new Set(reasons)], next_step: nextStep } };
 }
+
+// Questions the box can suggest as she types, scoped to what she's weighing. Every one routes to
+// a topic the records answer or to an advisor; a test holds that true.
+const QUESTION_BANK = [
+  [['PRG-02'], 'How much does Northline pay?'],
+  [['PRG-02'], 'When do Northline applications close?'],
+  [['PRG-02'], 'When does Northline start?'],
+  [['PRG-02'], 'How long is the Northline apprenticeship?'],
+  [['PRG-02'], 'Do I need my diploma for Northline?'],
+  [['PRG-02'], 'Do I need to be 18 for Northline?'],
+  [['PRG-01', 'PRG-04'], 'What does Cascade cost?'],
+  [['PRG-01', 'PRG-04'], 'When does Cascade start?'],
+  [['PRG-01', 'PRG-04'], 'Does Cascade have evening classes?'],
+  [['PRG-01', 'PRG-04'], 'How long are the Cascade certificates?'],
+  [['PRG-03'], 'How long is Riverbend?'],
+  [['PRG-03'], 'When is the Riverbend priority deadline?'],
+  [null, 'How do I apply for the Evergreen grant?'],
+  [null, 'How much aid will I get?'],
+  [null, 'Are there seats left?'],
+  [null, 'How fast does an advisor answer?'],
+];
+
+export function suggestionsFor(considering = []) {
+  return QUESTION_BANK.filter(([ids]) => !ids || ids.some((id) => considering.includes(id))).map(([, q]) => q);
+}
+
+/** Suggestions whose words start with every word she has typed so far, best first. */
+export function matchSuggestions(list, text, max = 4) {
+  const typed = String(text).toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  if (!typed.length) return [];
+  const hits = list.filter((q) => {
+    const words = q.toLowerCase().match(/[a-z0-9]+/g);
+    return q.toLowerCase() !== String(text).trim().toLowerCase() && typed.every((t) => words.some((w) => w.startsWith(t)));
+  });
+  return hits.slice(0, max);
+}
+
+const TOPIC_WORDS = {
+  AID: 'financial aid', COST: 'cost', PAY: 'pay', DEADLINE: 'deadlines', START: 'start dates', AGE_RULE: 'the age rule',
+  DIPLOMA_RULE: 'the diploma rule', LENGTH: 'how long it takes', SCHEDULE: 'schedules', ADVISOR: 'advisors',
+};
+
+/** A live read of what she's typing, matched on the phone: answered from the records, or by a person. */
+export function previewQuestion(text, considering) {
+  if (String(text).trim().length < 6) return null;
+  if (isCrisis(text)) return { kind: 'crisis' };
+  const m = matchQuestion(text, considering?.length ? considering : undefined);
+  if (m.kind === 'topic') return { kind: 'records', about: TOPIC_WORDS[m.topic] };
+  return m.code === 'UNMATCHED_QUESTION' ? null : { kind: 'advisor' };
+}

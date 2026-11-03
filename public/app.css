@@ -199,6 +199,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .hint-ink { color: var(--muted); font-size: 0.875rem; }
 .thread { display: grid; gap: 10px; margin-top: 16px; }
 .thread:empty { display: none; }
+.starters:empty { display: none; }
 .bubble { max-width: 88%; padding: 12px 15px; border-radius: 20px; margin: 0; }
 .bubble.me { justify-self: end; background: var(--pen); color: var(--on-pen); border-bottom-right-radius: 8px; }
 .bubble.them { justify-self: start; background: var(--paper-2); color: var(--ink); border-bottom-left-radius: 8px; }
@@ -209,6 +210,20 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .starter { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 0; background: var(--pen-soft); color: var(--pen-deep); font: 550 0.9375rem var(--body); cursor: pointer; }
 @media (hover: hover) { .starter:hover { background: var(--pen-soft-2); } }
 .ask-form { display: flex; gap: 8px; margin-top: 12px; }
+.ask-form .button:disabled { background: var(--paper-3); color: var(--muted); cursor: default; }
+.ask-hint { margin-top: 8px; min-height: 1.4em; font-size: 0.875rem; color: var(--muted); }
+.starter b { font-weight: 750; color: inherit; }
+.starter[aria-selected='true'] { background: var(--pen); color: var(--on-pen); }
+.starter[aria-selected='true'] b { color: var(--on-pen); }
+.bubble.fresh { animation: pop 220ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.bubble.me { transform-origin: bottom right; }
+.bubble.them { transform-origin: bottom left; }
+@keyframes pop { from { opacity: 0; transform: translateY(6px) scale(0.96); } }
+.typing { display: inline-flex; align-items: center; gap: 5px; padding: 14px 16px; min-height: 44px; }
+.typing span { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); animation: blink 1.2s ease-in-out infinite; }
+.typing span:nth-child(2) { animation-delay: 0.15s; }
+.typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes blink { 0%, 60%, 100% { opacity: 0.35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
 .nudge { margin-top: 10px; font-size: 0.9375rem; color: var(--ask); background: var(--ask-soft); padding: 10px 12px; border-radius: 12px; }
 
 /* ---------- advisor ---------- */
@@ -246,4 +261,5 @@ body[data-screen='start'] .site-footer { color: var(--on-pen-2); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; transition-delay: 0ms !important; }
+  .typing span { animation: none !important; opacity: 0.6; }
 }
