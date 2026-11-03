@@ -5,7 +5,7 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 - **Live:** https://pathways-next-step.vercel.app (records and every model call are at [/how](https://pathways-next-step.vercel.app/how))
 - **Run:** `npm start`, then open http://localhost:3000
 - **Test:** `npm test` (23 checks, prints pass or fail, writes `model-calls.log` with a summary at the top)
-- **Prove the tests bite:** `npm run mutate` breaks nine guards one at a time in a scratch copy, and confirms the named check fails each time.
+- **Prove the tests bite:** `npm run mutate` breaks nine guards (behind eight acceptance criteria) one at a time in a scratch copy, and confirms the named check fails each time.
 - Node 20 or newer. No `npm install`, no API key, no accounts, no database.
 
 `SPEC.md` is the brief the coding agents got, with dated amendments. `docs/process.md` records every time a person or a check corrected the AI.
@@ -53,7 +53,7 @@ I worked with Claude Code (Opus 5.5) as the builder, Codex (Sol 6.1) as an indep
 
 ## How long it took
 
-The repo started at 08:47. The spec, planner, gateway and checks were committed at 08:57. The slice ran end to end at 09:10 (commit `d12279a`). That's the 30-minute build. Everything after it came from reviews, on purpose:
+Before any code: a design interview (three rounds of questions with me, logged in `docs/process.md`). Then the repo started at 08:47, and the spec, planner, gateway and checks were committed at 08:57. The slice ran end to end at 09:10 (commit `d12279a`). That's the 30-minute build, counted from the repo. Everything after it came from reviews, on purpose:
 - my three redirects above;
 - two rounds of Sol finding real holes in the boundary;
 - two design critiques and a finish review;
@@ -81,33 +81,131 @@ Each finding was a gap I'd have to answer for in front of a state agency, so I f
 
 "Today" is the date in Pacific time, so Northline stays open until midnight on Nov 30 (AC5b). To replay a plan on another date, add `?today=2026-12-05` to the URL. The screen then says it's showing a replay.
 
-## Taking it to 100,000 students, and protecting their data
+## System design
 
-**The model inputs are finite, so every reply can be reviewed before launch.**
-- A plan payload is built only from taps and record facts. That makes 205 possible plans per date, plus a few hundred possible question payloads.
-- At scale, a hosted model under zero retention and no training generates each one once. The same checks run, a person reviews the set, and the approved replies are cached.
-- A student is never shown model text a person hasn't seen.
-- Cost is a few thousand model calls per records update, not per student. Latency is a cache read.
+How the slice is built today, and how it changes for a statewide pilot of about 100,000 students. The parts that protect students stay the same; the parts around them grow. Where today and production differ, it says which. For example, today the gateway calls the model on every request, and the reviewed reply cache is the production design.
 
-**Load.** About 100,000 students, each with a plan and a few questions, is about 400,000 requests a season. It's static files on a CDN plus a stateless function, with no database on the student path.
+### Requirements
 
-**Records become a service.**
-- Agencies publish programs with a source and check date on every fact.
-- Facts older than 45 days are flagged on screen, as they are here, and the owner is alerted.
+**Functional**
+- Move one student to one dated next step from the records, with three ways to act on it: ask an advisor, add it to a calendar, or save the plan.
+- Answer questions from the records, with a source ID and check date on every fact. Anything the records can't answer gets "I can't confirm that" and an advisor.
+- Hand off to a person with the reasons attached. Crisis words show 988 and 911 on the phone at once.
+
+**Non-functional**
+- **Safety:**
+  - No name, age, typed text or advisor note reaches the model, provable from the log.
+  - No fact appears that isn't in the records.
+  - Never "eligible", "accepted", "enrolled", "approved" or "awarded".
+- **Latency:** the plan appears in under a second on a school phone on cellular data.
+- **Availability:** it works through a model outage. If the model fails, code writes the reply instead.
+- **Cost:** model spend is paid per records update, not per student.
+- **Auditability:** a state reviewer can check the boundary themselves.
+
+**Constraints**
+- No dependencies.
+- No accounts, database or paid services in the slice.
+- Many users are minors.
+- The buyer is a state agency, and the pilot is next month.
+
+### High-level design
+
+```
+ Student's phone (browser)                         Server (one stateless function)
+ ┌──────────────────────────────┐                  ┌───────────────────────────────────────┐
+ │ Name, plan, typed questions  │                  │ planner.js   decides fit, order, dates │
+ │ stay here (localStorage)     │  taps + codes    │ topics.js    shared with the browser   │
+ │                              │ ───────────────► │ records.js   the only facts            │
+ │ client.js                    │  /api/plan       │                    │                   │
+ │  · question → topic code     │  /api/answer     │                    ▼ codes + record text
+ │  · crisis words → 988 / 911  │                  │ gateway.js ── TRUST BOUNDARY ──────────┐
+ │  · fills in {first_name}     │ ◄─────────────── │  · closed allowlist on every payload   │
+ │                              │  plan + reply    │  · reply checks; slots → record text   │
+ │ Rampart Edge on advisor note │                  │  · template if a reply fails           │
+ │                              │  name, note,     │  · model-calls.log                     │
+ │                              │  question        │                    │                   │
+ │                              │ ───────────────► │ handoff queue ─────┼─► advisor (person) │
+ └──────────────────────────────┘  /api/handoff    │                    ▼                   │
+                                                   │            model (scripted now)        │
+                                                   └────────────────────────────────────────┘
+```
+
+Two paths leave the phone, and they never meet:
+- **Taps and codes** go to the planner and on to the model.
+- **The name, the note and the question** go only to the hand-off queue, which reaches a person and never the model.
+
+Typed text is turned into a topic code before any request is made.
+
+**API contracts**
+
+| Endpoint | Accepts | Returns |
+|---|---|---|
+| `POST /api/plan` | `answers`: program IDs plus yes, no or not sure taps. Optional `today` for replays | the plan (next step, programs, open questions, road), every fact with its source and check date, and the reply |
+| `POST /api/answer` | a `topic` code and record IDs, or a `cannot_confirm` code | the reply with its cited facts, or a can't-confirm message with the advisor |
+| `POST /api/handoff` | first name, note, question, reason codes, next-step action | a request code. It is never readable over HTTP |
+| `GET /api/records` | nothing | the eight records |
+| `GET /api/log` | nothing | recent model calls, exactly as sent and received. They hold no student data, so they can be public |
+
+Anything outside these shapes returns 400. A request body over 20 KB is refused.
+
+**Storage**
+- The records are a module in code.
+- The plan and name live on the device.
+- The hand-off queue and the recent-call table live in memory.
+- The model log is a file.
+- There is no database. Nothing a student enters is stored on the server, except in the hand-off.
+
+### Deep dive
+
+**Data model.** A record has an ID, a name, a check date and keyed facts. A fact is the triple `(record_id, key, exact text)`. The gateway refuses any fact whose three parts don't match `records.js`, so text can't be smuggled in as a fact. The planner's output is codes: three outcomes, three actions and seven reason codes.
+
+**The model contract.** The model gets the payload and must answer as JSON. It points at facts with `{fact:RECORD:key}` slots, and code writes each fact's sentence. The model's own words may not contain a digit, a written number, a month or any word from a fact. It may write `{first_name}`, which the phone fills in.
+
+**Caching (production design).** The payload is built only from taps and record facts, so the input space is finite. There are 205 possible plans per date (counted in `test/helpers.js` as `ALL_ANSWERS`), and each question payload is one of ten topic codes plus record facts. Every reply can be generated once, read by a person, and served from a cache keyed by the payload's hash.
+
+**Errors and retries.** A model reply that fails a check, isn't JSON or times out is replaced with code-written text, and the log marks it "replaced". If the plan request itself fails, the phone keeps her answers and offers "Try again". The advisor send is guarded so a double tap sends once. A reply that arrives after "Start over" is dropped.
+
+**Queues.** The slice has one queue: advisor hand-offs, in memory. In production it becomes a durable queue that feeds the district's case tool. Each reason code routes to an advisor who can answer it.
+
+### Scale and reliability
+
+**Load.** About 100,000 students with a plan and a few questions each is about 400,000 requests a season, peaking in the weeks before deadlines like Nov 30.
+- The pages are static files on a CDN.
+- The API is one stateless function, so it scales sideways with no shared state on the student path.
+- The model is called per records update, not per request: a few thousand calls, each reviewed.
+
+**Failover.** With the reply cache, a model outage changes nothing for students. Without it, the code-written fallback keeps every answer correct, just plainer. Crisis handling and can't-confirm answers never depend on the model.
+
+**Records.**
+- Agencies publish programs through a pipeline that stamps every fact with its source and check date.
+- Facts older than 45 days are flagged on screen, as they are now, and the owner is alerted.
 - A records change regenerates and re-reviews only the replies that cite it.
 
-**Advisors get a real queue.**
-- Hand-offs land in the district's case tool, behind the district's sign-in, so we never collect a student's phone or email.
-- The reply comes back inside Pathways.
-- A crisis phrase shows 988 and 911 on the phone first, and flags the hand-off for same-day review.
+**Advisors.** Hand-offs land in the district's case tool behind the district's sign-in, so we never collect a student's phone or email. The reply comes back inside Pathways. Crisis hand-offs are flagged for same-day review.
 
-**Data for minors.**
-- No student account is needed to plan, and the name and plan stay on the device.
+**Minors' data.**
+- No account is needed to plan.
 - Hand-off records stay in region and encrypted, are deleted 90 days after they're resolved, and are never used for training.
+- The model provider is under zero retention and no training.
 - The model log holds no student data by construction, so it can be kept for audit.
 - FERPA and COPPA review happens before the pilot.
 
-**Proof at scale.** The checks and the mutation run on every pull request. A daily canary student walks the live flow and checks the log for leaks.
+**Monitoring and alerts.**
+- The acceptance checks and `npm run mutate` run on every pull request.
+- A daily canary student walks the live flow, then searches the log for its own canary name.
+- Alerts fire on: any replaced reply in production, any 400 from a payload outside the allowlist (a client bug or a probe), stale records, hand-offs past 2 business days, and a crisis hand-off.
+
+### Trade-offs
+
+| Decision | What we gain | What it costs | Revisit when |
+|---|---|---|---|
+| Code decides; the model only points at facts | No invented facts, and a boundary you can test | Replies sound plainer than a free-writing model | A state asks for more conversational help. Add it behind the same slots |
+| Typed text matched on the phone, never sent | Her words can't leak to the model or the server logs | Pattern matching misses questions it doesn't know; those go to an advisor | Unmatched questions pile up. Grow the topic list from advisor hand-offs |
+| Name filled in on the phone | Personal, and the model never knows who she is | The model can't use her name in reasoning (it shouldn't) | Never |
+| No database, no accounts | Nothing to breach on the student path; zero setup | No saved plan across devices | Districts want plans to follow a student. Use their sign-in, not ours |
+| Scripted model in the slice | Runs anywhere for free, and the tests are deterministic | Says nothing about how a real model behaves | First step after the pilot is approved: a real model behind the gateway, measuring the replace rate |
+| Pre-review every reply | Students never see unreviewed model text | Review work for each records update | Records change faster than people can review. Review only replies whose cited facts changed |
+| Zero dependencies | `git clone` and run, nothing to audit | Hand-built UI and a test runner instead of a framework | The team grows past a few people |
 
 ## What I left out, and why
 

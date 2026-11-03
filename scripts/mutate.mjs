@@ -12,7 +12,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const MUTATIONS = [
   ['The browser sends her typed words with the topic', 'public/client.js',
     'return { body: { topic: m.topic, record_ids: m.record_ids } };', 'return { body: { topic: m.topic, record_ids: m.record_ids, question: text } };', 'AC8'],
-  ['The server forwards her name to the model', 'src/app.js',
+  ['The server tries to send her name to the model (the gateway refuses it, so the plan fails)', 'src/app.js',
     'next_step: { action: p.next_step.action, record_id: p.next_step.record_id },', "next_step: { action: p.next_step.action, record_id: p.next_step.record_id }, first_name: 'Dani',", 'AC1'],
   ['The allowlist accepts inherited names like "constructor"', 'src/core/gateway.js',
     'if (!Object.hasOwn(keys, k))', 'if (!(k in keys))', 'AC9'],
