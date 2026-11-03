@@ -13,7 +13,8 @@ function payloadFrom(prompt) {
 function explainPlan(p) {
   const { action } = p.next_step;
   if (action === 'apply_by_deadline' || action === 'ask_advisor_then_apply') {
-    return { text: '{first_name}, {fact:PRG-02:paid} Its deadline is the first on your road.' };
+    // No claims of its own: the order of dates is drawn by code on the road, not asserted here.
+    return { text: '{first_name}, {fact:PRG-02:paid} {fact:PRG-02:wage}' };
   }
   return { text: "{first_name}, {fact:AID-A:how_to_apply} That's how you apply for the Evergreen Opportunity Grant. {fact:AID-A:basis} {fact:AID-A:amount}" };
 }

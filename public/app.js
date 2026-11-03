@@ -121,8 +121,9 @@ async function makePlan() {
     const { stage, ...answers } = state.answers;
     // ?today=2026-12-05 replays the plan on another date, to see deadlines pass and records go stale.
     const asOf = new URLSearchParams(location.search).get('today');
+    state.asOf = /^\d{4}-\d{2}-\d{2}$/.test(asOf ?? '') ? asOf : null;
     const mine = session;
-    const result = await api('/api/plan', { answers, ...(/^\d{4}-\d{2}-\d{2}$/.test(asOf ?? '') && { today: asOf }) });
+    const result = await api('/api/plan', { answers, ...(state.asOf && { today: state.asOf }) });
     if (mine !== session) return;
     state.result = result;
     renderPlan();
@@ -266,6 +267,7 @@ function renderPlan() {
       <button class="link" type="button" data-action="restart">Start over</button>
     </nav>
 
+    ${state.asOf ? `<p class="replay">Showing this plan as of ${esc(fmt(state.asOf))}, to see how dates change it. <a href="/">Back to today</a></p>` : ''}
     <section class="next" aria-label="Your next step">
       <h1>${head.h1}</h1>
       ${head.sub ? `<p class="sub">${head.subHtml ? head.sub : esc(head.sub)}</p>` : ''}

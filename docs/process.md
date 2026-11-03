@@ -98,3 +98,22 @@ Tools: Claude Code (Opus 5.5) as the architect and builder. A Claude subagent re
   - A typing indicator plays for a short beat while the answer loads.
   - Her name opens only the first reply.
 - **Kept honest:** A new test (AC15) checks that every suggested question routes to an answer from the records or to an advisor, so a suggestion can't lead to a dead end.
+
+## 12. A rubric grader caught claims the build didn't back up (independent Claude grader)
+
+- **Asked:** A fresh agent to grade the submission against Provn's rubric, given only the challenge, the repo and the live URL, not my view of it. It scored 80.3 out of 100.
+- **What it caught that I had missed:**
+  - The README said the planner "takes Marcus's inputs". It doesn't; the live API returns 400.
+  - "Today" was the UTC date, so Northline would show as closed from 4pm Pacific on Nov 30, its last day.
+  - The scripted model's own sentence "Its deadline is the first on your road" was a claim the validator let through.
+  - The mutation claim had no script behind it, the check counts were stale, the spec had drifted from the flow, and nothing said the build ran well past 30 minutes.
+  - Section B led with an AI-versus-AI story instead of my own redirections.
+- **What changed:**
+  - The Marcus line now says what his branch would need.
+  - "Today" is computed in Pacific time, with a test at 11:30pm on Nov 30 (AC5b).
+  - The scripted prose makes no claims.
+  - `npm run mutate` breaks nine guards and confirms each named check fails, and it runs in CI.
+  - `model-calls.log` opens with a summary of every replaced call.
+  - SPEC.md is updated in place, with "(amended)" marks.
+  - The README has an honest "How long it took", and Section B leads with my own three redirections.
+- **What I didn't change:** the scope. The slice ran end to end at 09:10, 23 minutes after the repo started. Everything after came from reviews I'd have to answer for in front of a state agency, and the README says so instead of hiding it.

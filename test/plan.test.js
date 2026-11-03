@@ -2,6 +2,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { startApp, ALL_ANSWERS, dani } from './helpers.js';
 import { getRecord } from '../src/core/records.js';
+import { todayIn } from '../src/app.js';
 
 let s;
 before(async () => (s = await startApp()));
@@ -74,4 +75,11 @@ test('AC5 clock: after Nov 30, 2026 the deadline has passed; 46 days after a che
   assert.ok(!fresh.escalations.some((e) => e.code === 'STALE_RECORD' && e.record_id === 'PRG-02'));
   const stale = (await s.plan(dani({ age18: 'yes', diploma: 'yes', lean: 'earn' }), '2026-12-05')).plan;
   assert.ok(stale.escalations.some((e) => e.code === 'STALE_RECORD' && e.record_id === 'PRG-02'));
+});
+
+test('AC5b the deadline stays open until midnight Pacific on Nov 30, not 4pm when UTC rolls over', async () => {
+  assert.equal(todayIn('America/Los_Angeles', new Date('2026-12-01T07:30:00Z')), '2026-11-30'); // 11:30pm Pacific
+  const { plan } = await s.plan(dani({ age18: 'yes', diploma: 'yes', lean: 'earn' }), todayIn('America/Los_Angeles', new Date('2026-12-01T07:30:00Z')));
+  assert.equal(plan.next_step.action, 'apply_by_deadline');
+  assert.equal(todayIn('America/Los_Angeles', new Date('2026-12-01T08:30:00Z')), '2026-12-01'); // 12:30am Pacific
 });
