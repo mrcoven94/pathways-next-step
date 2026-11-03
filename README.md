@@ -4,8 +4,9 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 
 - **Live:** https://pathways-next-step.vercel.app (records and every model call are at [/how](https://pathways-next-step.vercel.app/how))
 - **Run:** `npm start`, then open http://localhost:3000
-- **Test:** `npm test` (23 checks, prints pass or fail, writes `model-calls.log` with a summary at the top)
-- **Prove the tests bite:** `npm run mutate` breaks nine guards (behind eight acceptance criteria) one at a time in a scratch copy, and confirms the named check fails each time.
+- **Test:** `npm test` (24 checks, prints pass or fail, writes `model-calls.log` with a summary at the top)
+- **Prove the tests bite:** `npm run mutate` breaks 22 guards, at least one behind every acceptance criterion, one at a time in a scratch copy. It confirms the named check fails each time.
+- **The 30-minute version:** tag [`v0.1-30min`](https://github.com/mrcoven94/pathways-next-step/tree/v0.1-30min) is the slice as it stood 23 minutes after the repo started, before any review. To run it: `git checkout v0.1-30min && npm test && npm start` (15 checks, all passing). Compare it with `main` to see what review added.
 - Node 20 or newer. No `npm install`, no API key, no accounts, no database.
 
 `SPEC.md` is the brief the coding agents got, with dated amendments. `docs/process.md` records every time a person or a check corrected the AI.
@@ -53,7 +54,7 @@ I worked with Claude Code (Opus 5.5) as the builder, Codex (Sol 6.1) as an indep
 
 ## How long it took
 
-Before any code: a design interview (three rounds of questions with me, logged in `docs/process.md`). Then the repo started at 08:47, and the spec, planner, gateway and checks were committed at 08:57. The slice ran end to end at 09:10 (commit `d12279a`). That's the 30-minute build, counted from the repo. Everything after it came from reviews, on purpose:
+Before any code: a design interview (three rounds of questions with me, logged in `docs/process.md`). Then the repo started at 08:47, and the spec, planner, gateway and checks were committed at 08:57. The slice ran end to end at 09:10 (commit `d12279a`, tagged `v0.1-30min`, still runnable). That's the 30-minute build, counted from the repo. Everything after it came from reviews, on purpose:
 - my three redirects above;
 - two rounds of Sol finding real holes in the boundary;
 - two design critiques and a finish review;
@@ -75,9 +76,28 @@ Each finding was a gap I'd have to answer for in front of a state agency, so I f
 | Her name is filled in | `public/client.js:14` (`withName`), in the browser | Code |
 | Which facts to mention, and the words around them | `src/core/mock-model.js` | The (scripted) model |
 
+## Student data inventory
+
+Every piece of student data the slice touches, checked against the code. "Model" means anything inside a payload to `callModel` in `src/core/gateway.js`, and AC8 and AC9 test that column.
+
+| Data | Where it lives | Who can see it | Reaches the model? | Deleted when |
+|---|---|---|---|---|
+| First name | Her phone (`localStorage` `pathways.name`). Sent only in the advisor request | Her, and the advisor if she sends a request | **Never.** The model writes `{first_name}`, and the phone fills it in | She clears site data. On the server, when the in-memory queue restarts (production: 90 days after the request is resolved) |
+| Where she is ("finishing high school") | Her phone only. It's removed before the plan request | Her | **Never.** Only an `OUTSIDE_PREVIEW` code goes with an advisor request | With the page |
+| Programs she's weighing | Her phone, then `/api/plan` | Her and the planner | Only as record IDs, which are public program IDs | Not stored on the server |
+| Age, diploma, learn-by-doing taps | Her phone, then `/api/plan` | Her and the planner | **Never the taps.** Only the planner's codes (`AGE_UNCONFIRMED`, `DIPLOMA_TIMING_UNKNOWN`, `AGE_RULE_MISSED`). These say how a listed rule applies to her, never her age | Not stored on the server |
+| Typed question | Her phone. Matched to a topic there | Her. Also the advisor, only if she taps "Ask an advisor about this" | **Never.** Only a topic code and record IDs | With the page. If sent to an advisor, as for the first name |
+| Advisor note | Her phone, then `/api/handoff` | The advisor | **Never.** The hand-off never touches the gateway (AC8) | As for the first name |
+| Saved plan | Her phone (`localStorage` `pathways.saved`): her taps and a timestamp | Her | No | She clears site data |
+| Advisor request code | Her phone (`pathways.handoff`, which also keeps the question she sent) and the server's in-memory queue | Her and the advisor | No | As for the first name |
+| Model log | `model-calls.log` and the "What the model saw" table | Anyone: it's public at `/how` | It is the record of what the model saw: codes and record text only | Kept for audit. Safe to keep, because it holds no student data by construction |
+| Network metadata (IP address, user agent) | Vercel's request logs. The CDN (jsdelivr) and Hugging Face also see it when the browser loads Rampart Edge for the advisor note | Platform operators | No | Platform retention. In production, Rampart is self-hosted so no third party sees the request |
+
+What isn't collected at all: age or birth date, last name, phone, email, address, school, or any account. The app never asks for them. If she types contact details into the advisor note, Rampart Edge suggests taking them out, because the advisor replies inside Pathways.
+
 ## The checks
 
-`npm test` runs 23 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim.
+`npm test` runs 24 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim: 22 deliberate breaks, every one caught. Writing it caught one weak test. AC5b had only checked the time zone it was handed, never the app's default (`docs/process.md`, entry 13).
 
 "Today" is the date in Pacific time, so Northline stays open until midnight on Nov 30 (AC5b). To replay a plan on another date, add `?today=2026-12-05` to the URL. The screen then says it's showing a replay.
 

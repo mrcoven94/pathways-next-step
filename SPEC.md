@@ -106,4 +106,6 @@ New acceptance criteria:
 15. Every question the box suggests routes to an answer from the records or to an advisor.
 16. "Today" is the date in Pacific time, so a deadline stays open until midnight there (AC5b).
 
-`npm run mutate` breaks nine guards behind eight of these criteria (AC1, AC3, AC6, AC7, AC8, AC9, AC10, AC14) and confirms the named check fails each time. The other criteria are covered by their tests alone.
+17. Her next step is concrete for this week. When asking an advisor comes first, code works out when the answer arrives (ADV-01: 2 business days) and says whether that's before the deadline. If she said she'd rather learn by doing, the plan says that's why Northline comes first.
+
+`npm run mutate` breaks at least one guard behind every criterion above (22 in all) and confirms the named check fails each time.

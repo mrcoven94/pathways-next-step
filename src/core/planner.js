@@ -18,6 +18,16 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 export class BadAnswers extends Error {}
 
+/** The date `n` business days after `iso` (Mon to Fri; holidays aren't in the records, so they're not counted). */
+export function addBusinessDays(iso, n) {
+  const d = new Date(`${iso}T12:00:00Z`);
+  while (n > 0) {
+    d.setUTCDate(d.getUTCDate() + 1);
+    if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6) n -= 1;
+  }
+  return d.toISOString().slice(0, 10);
+}
+
 function daysBetween(fromIso, toIso) {
   return Math.floor((Date.parse(toIso) - Date.parse(fromIso)) / DAY_MS);
 }
@@ -110,6 +120,19 @@ export function planNextStep(answers, today) {
     // A date that has already passed is never offered as the thing to put on her calendar.
     next_step = { action: 'start_aid_application', record_id: dated.record_id, facts: [fact('AID-A', 'how_to_apply'), ...(dated.date >= today ? [dated] : [])] };
   }
+
+  // This week's move. If she needs an advisor first, code works out when the answer arrives
+  // (ADV-01: within 2 business days) and whether that's still before the deadline.
+  const deadline = next_step.facts.find((f) => f.date)?.date;
+  if (next_step.action === 'ask_advisor_then_apply') {
+    const answer_by = addBusinessDays(today, 2);
+    next_step.advisor = { answer_by, before_deadline: answer_by < deadline, fact: fact('ADV-01', 'response') };
+  }
+  // Why this step comes first, in her own terms: what she told us, then what the records say.
+  next_step.why = [
+    ...(northlineFirst && a.lean === 'earn' ? ['SHE_PREFERS_LEARNING_BY_DOING'] : []),
+    ...(northlineFirst ? ['EARLIEST_DEADLINE'] : []),
+  ];
 
   const lead = programs.find((p) => p.record_id === next_step.record_id);
   const rank = { fits_listed_rules: 0, unknown: 1, misses_a_listed_rule: 2 };

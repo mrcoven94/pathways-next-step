@@ -159,6 +159,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .meta { margin-top: 10px; font-size: 0.875rem; color: var(--muted); }
 .meta .days { display: block; color: var(--ink); font-weight: 550; font-size: 0.95rem; }
 .meta .source { font-size: inherit; }
+.why-first { margin-top: 16px; color: var(--ink); font-weight: 500; }
 .message { margin-top: 18px; font-size: 1.06rem; color: var(--ink-2); max-width: 60ch; }
 .actions { display: grid; gap: 10px; margin-top: 24px; }
 .actions .row { display: flex; gap: 10px; }

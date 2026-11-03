@@ -68,3 +68,16 @@ test('AC15 every question the box suggests is answered from the records or route
   assert.deepEqual(previewQuestion('are there seats left', ['PRG-02']), { kind: 'advisor' });
   assert.deepEqual(previewQuestion('how much does it pay', ['PRG-02']), { kind: 'records', about: 'pay' });
 });
+
+test('AC17 her next step is concrete for this week: when the advisor answers, and whether that beats the deadline', async () => {
+  const { plan } = await s.plan({ considering: ['PRG-02', 'PRG-01', 'PRG-04'], age18: 'yes', diploma: 'no', lean: 'earn' });
+  // Tue Nov 3 + 2 business days (ADV-01) = Thu Nov 5, before Nov 30.
+  assert.deepEqual(plan.next_step.advisor, { answer_by: '2026-11-05', before_deadline: true, fact: { record_id: 'ADV-01', key: 'response', text: 'Response within 2 business days', checked: null } });
+  assert.deepEqual(plan.next_step.why, ['SHE_PREFERS_LEARNING_BY_DOING', 'EARLIEST_DEADLINE']);
+
+  // Asked on Fri Nov 27, the answer comes Tue Dec 1: after the deadline, and the plan says so.
+  const late = (await s.plan({ considering: ['PRG-02'], age18: 'yes', diploma: 'no' }, '2026-11-27')).plan;
+  assert.equal(late.next_step.advisor.answer_by, '2026-12-01');
+  assert.equal(late.next_step.advisor.before_deadline, false);
+  assert.deepEqual(late.next_step.why, ['EARLIEST_DEADLINE']);
+});
