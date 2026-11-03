@@ -1,0 +1,14 @@
+{
+  "name": "pathways-next-step",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A mobile-first slice of Pathways that moves Dani, 17, to a real next step. Grounded in records, safe for minors, no dependencies.",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node scripts/test.mjs",
+    "verify": "node scripts/verify.mjs"
+  }
+}

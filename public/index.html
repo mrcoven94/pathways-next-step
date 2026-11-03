@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pathways · Your next step</title>
+  <meta name="description" content="Find your next step after high school, from programs we've checked, with a real advisor one tap away.">
+  <meta name="theme-color" content="#2443D6">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/schibstedgrotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/app.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body data-screen="start">
+  <main id="app">
+    <section class="screen start" id="start" aria-labelledby="start-title">
+      <p class="wordmark">Pathways</p>
+      <h1 id="start-title">Let’s find your next step before winter break.</h1>
+      <p class="lede">A few quick taps. Then one clear step with a date on it, and an advisor if you need one.</p>
+      <form id="start-form" class="start-form" autocomplete="off">
+        <label for="first-name">What should we call you?</label>
+        <input id="first-name" name="first_name" type="text" inputmode="text" maxlength="40" placeholder="First name, if you want" autocapitalize="words" spellcheck="false">
+        <p class="hint">Stays on this phone unless you send it to an advisor.</p>
+        <button class="button on-pen" type="submit">Start</button>
+      </form>
+      <p class="resume" id="resume" hidden><button class="link on-pen" type="button" data-action="open-saved">Open my saved plan</button></p>
+    </section>
+
+    <section class="screen question" id="question" hidden aria-live="polite"></section>
+    <section class="screen plan" id="plan" hidden></section>
+    <section class="screen advisor" id="advisor" hidden></section>
+  </main>
+
+  <aside class="crisis" id="crisis" hidden role="alert" aria-labelledby="crisis-title">
+    <h2 id="crisis-title">You don’t have to handle this alone.</h2>
+    <p>If you’re in danger right now, call <a href="tel:911">911</a>.</p>
+    <p>If you’re thinking about hurting yourself, call or text <a href="tel:988">988</a>. It’s free, private and open all day and night.</p>
+    <button class="button" type="button" data-action="close-crisis">Close</button>
+  </aside>
+
+  <footer class="site-footer">
+    <p class="safety">Need help now? Call or text <a href="tel:988">988</a>. In danger, call <a href="tel:911">911</a>.</p>
+    <p class="demo">Demo: synthetic programs and a scripted stand-in for the AI. <a href="/how">How this works</a></p>
+  </footer>
+</body>
+</html>

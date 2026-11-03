@@ -1,0 +1,601 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-03T17:44:58.819Z",
+  "title": "Design System: Pathways",
+  "extensions": {
+    "colorMeta": {
+      "pen": {
+        "role": "primary",
+        "displayName": "Pen Blue",
+        "canonical": "#2443d6",
+        "cssVar": "--pen",
+        "tonalRamp": [
+          "oklch(15% 0.061 266.8)",
+          "oklch(26% 0.108 266.8)",
+          "oklch(38% 0.155 266.8)",
+          "oklch(49% 0.202 266.8)",
+          "oklch(61% 0.202 266.8)",
+          "oklch(72% 0.155 266.8)",
+          "oklch(84% 0.108 266.8)",
+          "oklch(95% 0.061 266.8)"
+        ]
+      },
+      "pen-deep": {
+        "role": "primary",
+        "displayName": "Deep Pen",
+        "canonical": "#1a33a8",
+        "cssVar": "--pen-deep",
+        "tonalRamp": [
+          "oklch(15% 0.051 266.8)",
+          "oklch(26% 0.090 266.8)",
+          "oklch(38% 0.129 266.8)",
+          "oklch(49% 0.168 266.8)",
+          "oklch(61% 0.168 266.8)",
+          "oklch(72% 0.129 266.8)",
+          "oklch(84% 0.090 266.8)",
+          "oklch(95% 0.051 266.8)"
+        ]
+      },
+      "pen-soft": {
+        "role": "primary",
+        "displayName": "Pen Wash",
+        "canonical": "#e9edfc",
+        "cssVar": "--pen-soft",
+        "tonalRamp": [
+          "oklch(15% 0.006 274.0)",
+          "oklch(26% 0.010 274.0)",
+          "oklch(38% 0.014 274.0)",
+          "oklch(49% 0.018 274.0)",
+          "oklch(61% 0.018 274.0)",
+          "oklch(72% 0.014 274.0)",
+          "oklch(84% 0.010 274.0)",
+          "oklch(95% 0.006 274.0)"
+        ]
+      },
+      "on-pen": {
+        "role": "primary",
+        "displayName": "On Pen",
+        "canonical": "#ffffff",
+        "cssVar": "--on-pen",
+        "tonalRamp": [
+          "oklch(15% 0.000 52.9)",
+          "oklch(26% 0.000 52.9)",
+          "oklch(38% 0.000 52.9)",
+          "oklch(49% 0.000 52.9)",
+          "oklch(61% 0.000 52.9)",
+          "oklch(72% 0.000 52.9)",
+          "oklch(84% 0.000 52.9)",
+          "oklch(95% 0.000 52.9)"
+        ]
+      },
+      "on-pen-2": {
+        "role": "primary",
+        "displayName": "On Pen Quiet",
+        "canonical": "#dfe5ff",
+        "cssVar": "--on-pen-2",
+        "tonalRamp": [
+          "oklch(15% 0.010 275.4)",
+          "oklch(26% 0.017 275.4)",
+          "oklch(38% 0.025 275.4)",
+          "oklch(49% 0.032 275.4)",
+          "oklch(61% 0.032 275.4)",
+          "oklch(72% 0.025 275.4)",
+          "oklch(84% 0.017 275.4)",
+          "oklch(95% 0.010 275.4)"
+        ]
+      },
+      "hl": {
+        "role": "secondary",
+        "displayName": "Highlighter Yellow",
+        "canonical": "#ffe14a",
+        "cssVar": "--hl",
+        "tonalRamp": [
+          "oklch(15% 0.045 97.6)",
+          "oklch(26% 0.079 97.6)",
+          "oklch(38% 0.113 97.6)",
+          "oklch(49% 0.148 97.6)",
+          "oklch(61% 0.148 97.6)",
+          "oklch(72% 0.113 97.6)",
+          "oklch(84% 0.079 97.6)",
+          "oklch(95% 0.045 97.6)"
+        ]
+      },
+      "good": {
+        "role": "tertiary",
+        "displayName": "Good Green",
+        "canonical": "#1f7a4d",
+        "cssVar": "--good",
+        "tonalRamp": [
+          "oklch(15% 0.030 156.8)",
+          "oklch(26% 0.053 156.8)",
+          "oklch(38% 0.076 156.8)",
+          "oklch(49% 0.099 156.8)",
+          "oklch(61% 0.099 156.8)",
+          "oklch(72% 0.076 156.8)",
+          "oklch(84% 0.053 156.8)",
+          "oklch(95% 0.030 156.8)"
+        ]
+      },
+      "good-soft": {
+        "role": "tertiary",
+        "displayName": "Good Wash",
+        "canonical": "#e3efe8",
+        "cssVar": "--good-soft",
+        "tonalRamp": [
+          "oklch(15% 0.004 160.6)",
+          "oklch(26% 0.008 160.6)",
+          "oklch(38% 0.011 160.6)",
+          "oklch(49% 0.014 160.6)",
+          "oklch(61% 0.014 160.6)",
+          "oklch(72% 0.011 160.6)",
+          "oklch(84% 0.008 160.6)",
+          "oklch(95% 0.004 160.6)"
+        ]
+      },
+      "ask": {
+        "role": "tertiary",
+        "displayName": "Ask Amber",
+        "canonical": "#7a4a00",
+        "cssVar": "--ask",
+        "tonalRamp": [
+          "oklch(15% 0.027 68.1)",
+          "oklch(26% 0.048 68.1)",
+          "oklch(38% 0.069 68.1)",
+          "oklch(49% 0.089 68.1)",
+          "oklch(61% 0.089 68.1)",
+          "oklch(72% 0.069 68.1)",
+          "oklch(84% 0.048 68.1)",
+          "oklch(95% 0.027 68.1)"
+        ]
+      },
+      "ask-soft": {
+        "role": "tertiary",
+        "displayName": "Ask Wash",
+        "canonical": "#fdf1d8",
+        "cssVar": "--ask-soft",
+        "tonalRamp": [
+          "oklch(15% 0.010 85.4)",
+          "oklch(26% 0.017 85.4)",
+          "oklch(38% 0.024 85.4)",
+          "oklch(49% 0.032 85.4)",
+          "oklch(61% 0.032 85.4)",
+          "oklch(72% 0.024 85.4)",
+          "oklch(84% 0.017 85.4)",
+          "oklch(95% 0.010 85.4)"
+        ]
+      },
+      "miss": {
+        "role": "tertiary",
+        "displayName": "Miss Red",
+        "canonical": "#a3341c",
+        "cssVar": "--miss",
+        "tonalRamp": [
+          "oklch(15% 0.041 33.7)",
+          "oklch(26% 0.072 33.7)",
+          "oklch(38% 0.104 33.7)",
+          "oklch(49% 0.135 33.7)",
+          "oklch(61% 0.135 33.7)",
+          "oklch(72% 0.104 33.7)",
+          "oklch(84% 0.072 33.7)",
+          "oklch(95% 0.041 33.7)"
+        ]
+      },
+      "miss-soft": {
+        "role": "tertiary",
+        "displayName": "Miss Wash",
+        "canonical": "#fbe4dd",
+        "cssVar": "--miss-soft",
+        "tonalRamp": [
+          "oklch(15% 0.007 37.6)",
+          "oklch(26% 0.013 37.6)",
+          "oklch(38% 0.019 37.6)",
+          "oklch(49% 0.024 37.6)",
+          "oklch(61% 0.024 37.6)",
+          "oklch(72% 0.019 37.6)",
+          "oklch(84% 0.013 37.6)",
+          "oklch(95% 0.007 37.6)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#ffffff",
+        "cssVar": "--paper",
+        "tonalRamp": [
+          "oklch(15% 0.000 52.9)",
+          "oklch(26% 0.000 52.9)",
+          "oklch(38% 0.000 52.9)",
+          "oklch(49% 0.000 52.9)",
+          "oklch(61% 0.000 52.9)",
+          "oklch(72% 0.000 52.9)",
+          "oklch(84% 0.000 52.9)",
+          "oklch(95% 0.000 52.9)"
+        ]
+      },
+      "paper-2": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "canonical": "#f6f5f2",
+        "cssVar": "--paper-2",
+        "tonalRamp": [
+          "oklch(15% 0.001 91.4)",
+          "oklch(26% 0.002 91.4)",
+          "oklch(38% 0.003 91.4)",
+          "oklch(49% 0.004 91.4)",
+          "oklch(61% 0.004 91.4)",
+          "oklch(72% 0.003 91.4)",
+          "oklch(84% 0.002 91.4)",
+          "oklch(95% 0.001 91.4)"
+        ]
+      },
+      "paper-3": {
+        "role": "neutral",
+        "displayName": "Pressed Paper",
+        "canonical": "#eeece7",
+        "cssVar": "--paper-3",
+        "tonalRamp": [
+          "oklch(15% 0.002 88.6)",
+          "oklch(26% 0.003 88.6)",
+          "oklch(38% 0.005 88.6)",
+          "oklch(49% 0.006 88.6)",
+          "oklch(61% 0.006 88.6)",
+          "oklch(72% 0.005 88.6)",
+          "oklch(84% 0.003 88.6)",
+          "oklch(95% 0.002 88.6)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#121212",
+        "cssVar": "--ink",
+        "tonalRamp": [
+          "oklch(15% 0.000 52.9)",
+          "oklch(26% 0.000 52.9)",
+          "oklch(38% 0.000 52.9)",
+          "oklch(49% 0.000 52.9)",
+          "oklch(61% 0.000 52.9)",
+          "oklch(72% 0.000 52.9)",
+          "oklch(84% 0.000 52.9)",
+          "oklch(95% 0.000 52.9)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink Soft",
+        "canonical": "#33332f",
+        "cssVar": "--ink-2",
+        "tonalRamp": [
+          "oklch(15% 0.002 106.8)",
+          "oklch(26% 0.003 106.8)",
+          "oklch(38% 0.005 106.8)",
+          "oklch(49% 0.006 106.8)",
+          "oklch(61% 0.006 106.8)",
+          "oklch(72% 0.005 106.8)",
+          "oklch(84% 0.003 106.8)",
+          "oklch(95% 0.002 106.8)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "canonical": "#55554f",
+        "cssVar": "--muted",
+        "tonalRamp": [
+          "oklch(15% 0.003 106.8)",
+          "oklch(26% 0.005 106.8)",
+          "oklch(38% 0.007 106.8)",
+          "oklch(49% 0.009 106.8)",
+          "oklch(61% 0.009 106.8)",
+          "oklch(72% 0.007 106.8)",
+          "oklch(84% 0.005 106.8)",
+          "oklch(95% 0.003 106.8)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "canonical": "#e7e5e0",
+        "cssVar": "--line",
+        "tonalRamp": [
+          "oklch(15% 0.002 88.6)",
+          "oklch(26% 0.003 88.6)",
+          "oklch(38% 0.005 88.6)",
+          "oklch(49% 0.006 88.6)",
+          "oklch(61% 0.006 88.6)",
+          "oklch(72% 0.005 88.6)",
+          "oklch(84% 0.003 88.6)",
+          "oklch(95% 0.002 88.6)"
+        ]
+      },
+      "rail": {
+        "role": "neutral",
+        "displayName": "Rail",
+        "canonical": "#8f8c84",
+        "cssVar": "--rail",
+        "tonalRamp": [
+          "oklch(15% 0.003 89.8)",
+          "oklch(26% 0.006 89.8)",
+          "oklch(38% 0.008 89.8)",
+          "oklch(49% 0.011 89.8)",
+          "oklch(61% 0.011 89.8)",
+          "oklch(72% 0.008 89.8)",
+          "oklch(84% 0.006 89.8)",
+          "oklch(95% 0.003 89.8)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display-start": {
+        "displayName": "Display, start",
+        "purpose": "The start screen sentence, white on pen."
+      },
+      "display-step": {
+        "displayName": "Display, step",
+        "purpose": "The plan headline: the next step, with its date highlighted."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Question titles, advisor screen, how page."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Plan section heads. 1.12rem variant for the advisor-check box and how-page columns."
+      },
+      "title-sm": {
+        "displayName": "Title small",
+        "purpose": "Program names inside program cards."
+      },
+      "wordmark": {
+        "displayName": "Wordmark",
+        "purpose": "The Pathways name in the top bar and on start."
+      },
+      "sub": {
+        "displayName": "Sub",
+        "purpose": "The line under the plan headline naming the open question."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All running text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Button labels."
+      },
+      "source": {
+        "displayName": "Source",
+        "purpose": "Record ID and checked date next to every fact."
+      }
+    },
+    "shadows": [
+      {
+        "name": "pen-glow",
+        "value": "0 6px 16px -8px rgb(36 67 214 / 0.6)",
+        "purpose": "Primary buttons only; removed when disabled."
+      },
+      {
+        "name": "shadow",
+        "value": "0 1px 2px rgb(18 18 18 / 0.05), 0 8px 24px -12px rgb(18 18 18 / 0.14)",
+        "purpose": "The :root --shadow. Selected how-page tab."
+      },
+      {
+        "name": "overlay",
+        "value": "0 30px 80px -20px rgb(17 24 39 / 0.45)",
+        "purpose": "The floating crisis card."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Screen rise, crisis card rise, highlighter stroke."
+      },
+      {
+        "name": "rise",
+        "value": "260ms; opacity 0 to 1, translateY 6px to 0",
+        "purpose": "Every screen entrance. Crisis card uses 220ms."
+      },
+      {
+        "name": "highlighter",
+        "value": "700ms, 250ms delay; background-size 0% to 100% 80%",
+        "purpose": "Draws across the next step date each time a plan appears."
+      },
+      {
+        "name": "state",
+        "value": "150ms ease-out",
+        "purpose": "Background, border and press-scale transitions. Progress segments 200ms."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "1ms, no delay",
+        "purpose": "prefers-reduced-motion collapses all animation; the date shows already highlighted."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "column",
+        "value": "30rem",
+        "purpose": "Max width of the planner column."
+      },
+      {
+        "name": "table-stack",
+        "value": "640px",
+        "purpose": "How-page tables become stacked blocks below this."
+      },
+      {
+        "name": "how-grid",
+        "value": "800px",
+        "purpose": "How-page rule blurbs go to three columns."
+      },
+      {
+        "name": "how-column",
+        "value": "64rem",
+        "purpose": "Max width of the how page."
+      }
+    ],
+    "fonts": [
+      {
+        "family": "Schibsted Grotesk",
+        "src": "/fonts/schibstedgrotesk.woff2",
+        "weights": "600 800"
+      },
+      {
+        "family": "Geist",
+        "src": "/fonts/geist.woff2",
+        "weights": "400 600"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one action on a screen. Full width, pen glow.",
+      "html": "<button class=\"ds-btn-primary\">Add Nov 30 to my calendar</button>",
+      "css": ".ds-btn-primary { display:inline-flex; align-items:center; justify-content:center; width:100%; min-height:52px; padding:0 22px; border:0; border-radius:999px; background:#2443d6; color:#fff; font:600 1rem/1.2 Geist, ui-sans-serif, system-ui, sans-serif; box-shadow:0 6px 16px -8px rgb(36 67 214 / 0.6); cursor:pointer; transition:transform 150ms ease-out, background 150ms ease-out; } .ds-btn-primary:hover { background:#1a33a8; } .ds-btn-primary:active { transform:scale(0.98); } .ds-btn-primary:focus-visible { outline:3px solid #2443d6; outline-offset:3px; } .ds-btn-primary:disabled { background:#eeece7; color:#55554f; box-shadow:none; cursor:not-allowed; }"
+    },
+    {
+      "name": "Secondary Buttons",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet actions sharing one row under the primary.",
+      "html": "<div class=\"ds-row\"><button class=\"ds-btn-secondary\">Save this plan</button><button class=\"ds-btn-secondary\">Ask an advisor</button></div>",
+      "css": ".ds-row { display:flex; gap:10px; } .ds-btn-secondary { flex:1; min-height:52px; padding:0 14px; border:0; border-radius:999px; background:#f6f5f2; color:#121212; font:600 1rem/1.2 Geist, ui-sans-serif, system-ui, sans-serif; cursor:pointer; transition:transform 150ms ease-out, background 150ms ease-out; } .ds-btn-secondary:hover { background:#eeece7; } .ds-btn-secondary:active { transform:scale(0.98); } .ds-btn-secondary:focus-visible { outline:3px solid #2443d6; outline-offset:3px; }"
+    },
+    {
+      "name": "Choice Rows",
+      "kind": "custom",
+      "refersTo": "choice",
+      "description": "Question answers. Multi-select rows carry a check circle on the right.",
+      "html": "<div class=\"ds-choices\"><button class=\"ds-choice\" aria-pressed=\"true\">Northline Electrical Apprenticeship</button><button class=\"ds-choice\" aria-pressed=\"false\">Riverbend Community College</button></div>",
+      "css": ".ds-choices { display:grid; gap:10px; } .ds-choice { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:60px; padding:12px 20px; border:0; border-radius:16px; background:#f6f5f2; color:#121212; font:600 1.1rem Geist, ui-sans-serif, system-ui, sans-serif; text-align:left; cursor:pointer; transition:background 150ms ease-out, transform 150ms ease-out; } .ds-choice:hover, .ds-choice[aria-pressed='true'] { background:#e9edfc; } .ds-choice:active { transform:scale(0.99); } .ds-choice:focus-visible { outline:3px solid #2443d6; outline-offset:3px; } .ds-choice::after { content:''; flex:none; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:inset 0 0 0 1.5px #8f8c84; } .ds-choice[aria-pressed='true']::after { box-shadow:none; background:#2443d6 url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E\") center / 14px no-repeat; }"
+    },
+    {
+      "name": "Plan Headline",
+      "kind": "custom",
+      "refersTo": "display-step",
+      "description": "The next step as the h1, the date drawn in highlighter, then days left and the source.",
+      "html": "<div class=\"ds-next\"><h1>Apply to Northline by <mark>Nov 30</mark></h1><p class=\"ds-meta\"><span class=\"ds-days\">27 days left</span><span class=\"ds-source\">PRG-02 · checked Oct 20, 2026</span></p></div>",
+      "css": ".ds-next h1 { margin:0; font:750 clamp(2.1rem, 9vw, 2.75rem)/1.04 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; letter-spacing:-0.025em; color:#121212; text-wrap:balance; } .ds-next mark { color:#121212; padding:0 4px; margin:0 -2px; border-radius:4px; background:linear-gradient(#ffe14a, #ffe14a) no-repeat 0 62% / 0% 80%; animation:ds-draw 700ms cubic-bezier(0.16, 1, 0.3, 1) 250ms forwards; } @keyframes ds-draw { to { background-size:100% 80%; } } .ds-meta { margin:10px 0 0; font:0.875rem Geist, ui-sans-serif, system-ui, sans-serif; color:#55554f; } .ds-days { display:block; color:#121212; font-weight:550; font-size:0.95rem; font-variant-numeric:tabular-nums; } .ds-source { letter-spacing:0.01em; white-space:nowrap; } @media (prefers-reduced-motion: reduce) { .ds-next mark { animation:none; background-size:100% 80%; } }"
+    },
+    {
+      "name": "Advisor-check Box",
+      "kind": "card",
+      "refersTo": "advisor-check",
+      "description": "Ask Wash panel naming what only a person can confirm.",
+      "html": "<section class=\"ds-open\"><h2>What an advisor will check</h2><ul><li>Whether you meet the age rule by the start date</li><li>How many seats are left</li></ul></section>",
+      "css": ".ds-open { background:#fdf1d8; border-radius:16px; padding:20px; color:#121212; font:400 1rem/1.5 Geist, ui-sans-serif, system-ui, sans-serif; } .ds-open h2 { margin:0; color:#7a4a00; font:700 1.12rem/1.2 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; letter-spacing:-0.01em; } .ds-open ul { margin:12px 0 0; padding-left:20px; } .ds-open li + li { margin-top:8px; }"
+    },
+    {
+      "name": "The Road",
+      "kind": "custom",
+      "refersTo": "road",
+      "description": "Vertical date rail. Pen-blue walked stretch from Today to the target dot.",
+      "html": "<ol class=\"ds-road\"><li class=\"today walked\"><time>Nov 3</time><span>Today</span></li><li class=\"target\"><time>Nov 30</time><span>Northline applications close</span><span class=\"ds-src\">PRG-02 · checked Oct 20, 2026</span></li><li><time>Mar 1, 2027</time><span>Northline starts</span></li></ol>",
+      "css": ".ds-road { list-style:none; margin:0; padding:0 0 0 26px; font:400 1rem/1.5 Geist, ui-sans-serif, system-ui, sans-serif; color:#33332f; } .ds-road li { position:relative; padding:0 0 20px; } .ds-road li:last-child { padding-bottom:0; } .ds-road span { display:block; } .ds-road time { display:block; font-weight:650; color:#121212; } .ds-src { font-size:0.8125rem; color:#55554f; letter-spacing:0.01em; } .ds-road li::before { content:''; position:absolute; left:-24px; top:6px; width:12px; height:12px; border-radius:50%; background:#fff; box-shadow:0 0 0 2px #8f8c84; z-index:1; } .ds-road li:not(:last-child)::after { content:''; position:absolute; left:-19px; top:12px; bottom:-12px; width:2px; background:#eeece7; } .ds-road li.walked::after { background:#2443d6; } .ds-road li.today::before { background:#121212; box-shadow:0 0 0 2px #121212; } .ds-road li.target::before { background:#2443d6; box-shadow:0 0 0 3px #e9edfc; width:14px; height:14px; left:-25px; top:5px; } .ds-road li.target span:first-of-type { color:#121212; font-weight:550; }"
+    },
+    {
+      "name": "Program Card",
+      "kind": "card",
+      "refersTo": "program-card",
+      "description": "Flat Warm Paper card: name, status dot with words, facts, source.",
+      "html": "<article class=\"ds-program\"><h3>Northline Electrical Apprenticeship</h3><p class=\"ds-status good\"><span class=\"ds-dot\"></span>A good fit to apply to</p><ul><li>Paid from the first day</li></ul><span class=\"ds-src\">PRG-02 · checked Oct 20, 2026</span></article>",
+      "css": ".ds-program { background:#f6f5f2; border-radius:16px; padding:18px; color:#121212; font:400 1rem/1.5 Geist, ui-sans-serif, system-ui, sans-serif; } .ds-program h3 { margin:0; font:650 1.08rem/1.3 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; } .ds-program ul { margin:12px 0 10px; padding-left:18px; } .ds-status { display:flex; align-items:flex-start; gap:8px; margin:8px 0 0; font-size:0.9375rem; font-weight:550; } .ds-dot { width:9px; height:9px; border-radius:50%; flex:none; margin-top:7px; } .ds-status.good { color:#1f7a4d; } .ds-status.good .ds-dot { background:#1f7a4d; } .ds-status.ask { color:#7a4a00; } .ds-status.ask .ds-dot { background:#c98a12; } .ds-status.miss { color:#a3341c; } .ds-status.miss .ds-dot { background:#a3341c; } .ds-src { font-size:0.8125rem; color:#55554f; letter-spacing:0.01em; white-space:nowrap; }"
+    },
+    {
+      "name": "Chat Bubbles",
+      "kind": "custom",
+      "refersTo": "bubble-them",
+      "description": "Their replies on Warm Paper with sources inside; unsure replies in Ask Wash; hers in pen.",
+      "html": "<div class=\"ds-thread\"><p class=\"ds-bubble me\">How much does Northline pay?</p><div class=\"ds-bubble them\">Northline pays from the first day.<span class=\"ds-src\">PRG-02 · checked Oct 20, 2026</span></div><div class=\"ds-bubble them unsure\">I can’t confirm how many seats are left.</div></div>",
+      "css": ".ds-thread { display:grid; gap:10px; font:400 1rem/1.5 Geist, ui-sans-serif, system-ui, sans-serif; } .ds-bubble { max-width:88%; padding:12px 15px; border-radius:20px; margin:0; } .ds-bubble.me { justify-self:end; background:#2443d6; color:#fff; border-bottom-right-radius:8px; } .ds-bubble.them { justify-self:start; background:#f6f5f2; color:#121212; border-bottom-left-radius:8px; } .ds-bubble.them.unsure { background:#fdf1d8; } .ds-src { display:block; margin-top:6px; font-size:0.8125rem; color:#55554f; }"
+    },
+    {
+      "name": "Crisis Card",
+      "kind": "card",
+      "refersTo": "crisis-card",
+      "description": "Floating bottom card with 988 and 911, shown on crisis words.",
+      "html": "<aside class=\"ds-crisis\"><h2>You don’t have to handle this alone.</h2><p>If you’re in danger right now, call <a href=\"tel:911\">911</a>.</p><p>Call or text <a href=\"tel:988\">988</a>.</p><button class=\"ds-btn-neutral\">Close</button></aside>",
+      "css": ".ds-crisis { background:#fff; color:#121212; border-radius:20px; padding:22px 20px 20px; box-shadow:0 30px 80px -20px rgb(17 24 39 / 0.45); font:400 1rem/1.5 Geist, ui-sans-serif, system-ui, sans-serif; animation:ds-rise 220ms cubic-bezier(0.16, 1, 0.3, 1) both; } @keyframes ds-rise { from { opacity:0; transform:translateY(6px); } } .ds-crisis h2 { margin:0; font:700 1.3rem/1.2 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; } .ds-crisis p { margin:10px 0 0; font-size:1.06rem; } .ds-crisis a { font-weight:700; color:#2443d6; } .ds-btn-neutral { margin-top:18px; width:100%; min-height:52px; border:0; border-radius:999px; background:#121212; color:#fff; font:600 1rem/1.2 Geist, ui-sans-serif, system-ui, sans-serif; cursor:pointer; } .ds-btn-neutral:focus-visible { outline:3px solid #2443d6; outline-offset:3px; }"
+    },
+    {
+      "name": "How-page Tabs",
+      "kind": "nav",
+      "refersTo": "tabs",
+      "description": "Pill track; the selected tab lifts on the soft shadow.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\"><button role=\"tab\" aria-selected=\"true\">Records</button><button role=\"tab\" aria-selected=\"false\">What the model saw</button></div>",
+      "css": ".ds-tabs { display:flex; gap:6px; padding:4px; background:#f6f5f2; border-radius:999px; width:fit-content; } .ds-tabs button { min-height:44px; padding:0 18px; border:0; border-radius:999px; background:transparent; color:#55554f; font:600 0.9375rem Geist, ui-sans-serif, system-ui, sans-serif; cursor:pointer; } .ds-tabs button[aria-selected='true'] { background:#fff; color:#121212; box-shadow:0 1px 2px rgb(18 18 18 / 0.05), 0 8px 24px -12px rgb(18 18 18 / 0.14); } .ds-tabs button:focus-visible { outline:3px solid #2443d6; outline-offset:3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Kitchen Table, Filed Properly",
+    "overview": "Pathways reads like a plan written on warm paper in blue pen, then checked line by line. The world is Mano's: white and warm off-white paper, near-black ink, one blue pen that does all the acting, and a single yellow highlighter stroke on the date that matters. The structure is Front Door's: the answer first, then the sources, then the steps, with every fact carrying the record it came from and the day it was last checked.\n\nThe surface is a single phone column. Density is low and type is large, because the reader is a 17-year-old between classes. Separation comes from tint, never from lines: cards are one shade darker than the page, and the page never draws a border or a rule to divide itself. The start screen flips the world: the whole ground is pen blue and the controls go white.\n\nMotion is calm and short. A screen rises 6px into place, and the highlighter draws across the next step's date each time a plan appears. Nothing loops, bounces or waits on the reader.",
+    "keyCharacteristics": [
+      "One phone column, 30rem wide at most, 20px side gutter.",
+      "Paper tints for surfaces, no borders on cards, no dividers.",
+      "Pen blue is the only action color; yellow marks one date.",
+      "Status is always a dot plus words, never color alone.",
+      "Every fact sits next to a source line: record ID and checked date.",
+      "Light mode only (`color-scheme: light`)."
+    ],
+    "rules": [
+      {
+        "name": "The One Pen Rule",
+        "body": "Pen blue is the only color that means \"you can act here\". No second action color, no links in another hue.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Stroke Rule",
+        "body": "Yellow highlights exactly one thing per screen: the next step's date, in the headline or in the line under it, never both. Selection and start-screen focus are interaction feedback, not content.",
+        "section": "colors"
+      },
+      {
+        "name": "The Words-With-Color Rule",
+        "body": "A status tint never appears without words that say the same thing (\"Another path to look at\", \"Passed checks\", \"Replaced\", \"passed\"). Color only repeats what the text says.",
+        "section": "colors"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "Every label, heading and source line is sentence case. No uppercase tracked labels, no small caps, no line above a heading that introduces it.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Days Rule",
+        "body": "Day counts use `font-variant-numeric: tabular-nums` so \"23 days left\" holds its width.",
+        "section": "typography"
+      },
+      {
+        "name": "The Thumb Reach Rule",
+        "body": "At 390px wide, the step, its date, the open question, days left and the primary action fit in the first viewport. Actions stack: the primary full width, the secondary buttons sharing one row below it.",
+        "section": "layout"
+      },
+      {
+        "name": "The 44 Floor Rule",
+        "body": "Every tap target is at least 44px tall. Buttons are 52px (48px small), choice rows 60px, inputs 48px, links, chips and tabs 44px.",
+        "section": "layout"
+      },
+      {
+        "name": "The Tint Not Line Rule",
+        "body": "A surface separates from the page by being Warm Paper on Paper. Never a border, never a rule, never a shadow on a resting card.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do give each screen exactly one pen-blue primary button. On the plan screen it matches the step: \"Ask an advisor now\" when something must be confirmed or no future date exists, the calendar otherwise.",
+      "Do put a source line (record ID and checked date) next to every fact, including facts in chat replies and on the road.",
+      "Do pair every status tint with words that say the same thing.",
+      "Do separate surfaces with Warm Paper on Paper and keep cards flat.",
+      "Do keep every tap target at 44px or taller and text contrast at 4.5:1 or better.",
+      "Do keep light mode only. The root declares `color-scheme: light` and nothing follows the system theme."
+    ],
+    "donts": [
+      "Don't use yellow for anything but the one date stroke, apart from selection and start-screen focus feedback.",
+      "Don't put a small label above a heading. No eyebrows, kickers or section numbers.",
+      "Don't add borders to cards, or dividers and rules between sections, list items or table rows.",
+      "Don't show a status by color alone, or a fact without its record ID and checked date.",
+      "Don't introduce a second action color or a second filled primary button on the same screen.",
+      "Don't add a dark theme."
+    ]
+  }
+}
