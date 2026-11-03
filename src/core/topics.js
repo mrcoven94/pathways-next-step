@@ -1,0 +1,80 @@
+// Turns a typed question into a topic code, on Dani's phone. The text itself goes no further:
+// this module returns codes and record IDs only, and runs in the browser before any request.
+// Order matters: crisis first, then the four unknowns the records can't answer, then topics.
+
+const CRISIS = /\b(kill(ing)? myself|suicid\w*|end (it all|my life)|want to die|don'?t want to (live|be here)|hurt(ing)? myself|self[- ]?harm|cutting myself|being abused|abus(e|ing) me|not safe at home|unsafe at home|someone (is )?hurting me)\b/i;
+
+const UNKNOWN = [
+  ['UNKNOWN_SEATS', /\b(seats?|spots?|openings?|space left|room left|still open|is it full|full yet|capacity|wait ?list)\b/i],
+  ['UNKNOWN_AID_AMOUNT', /\b(how much|what amount|exact(ly)?)\b.{0,40}\b(aid|grant|award|scholarship|funding|financial)\b|\b(will|would|do|can) i get\b.{0,30}\b(aid|grant|money|award|scholarship)\b/i],
+  ['UNKNOWN_PERSONAL_ELIGIBILITY', /\b(am i|i'?m|will i|would i|can i|do i|could i)\b.{0,30}\b(eligible|qualify|get in|be accepted|accepted|make it in|allowed to (apply|join))\b/i],
+];
+
+const PROGRAM_WORDS = [
+  ['PRG-02', /\b(northline|apprentice\w*|electric\w*)\b/i],
+  ['PRG-01', /\b(medical|medical assistant|ma cert\w*)\b/i],
+  ['PRG-04', /\b(it support|it cert\w*|tech support|computers? support)\b/i],
+  ['CASCADE', /\b(cascade|community college|cc)\b/i],
+  ['PRG-03', /\b(riverbend|university|computer science|bachelor\w*|cs degree)\b/i],
+  ['PRG-05', /\b(harbor|cdl|truck\w*|commercial driver)\b/i],
+];
+
+// [topic, pattern, fact keys it may cite]
+const TOPICS = [
+  ['AID', /\b(aid|grants?|fafsa|financial|scholarships?|help paying|pay for)\b/i, ['basis', 'how_to_apply', 'amount', 'aid_application']],
+  ['COST', /\b(cost|costs|tuition|price|expensive|afford|fees?)\b/i, ['tuition']],
+  ['PAY', /\b(pay|paid|wages?|earn|salary|hourly|money)\b/i, ['paid', 'wage']],
+  ['DEADLINE', /\b(deadlines?|due|closes?|apply by|last day|when (do|should|can) i apply)\b/i, ['applications_close', 'priority_deadline']],
+  ['START', /\b(start|starts|begin|begins|first day)\b/i, ['next_start', 'program_start']],
+  ['AGE_RULE', /\b(18|eighteen|17|seventeen|age|old enough|too young)\b/i, ['age_rule', 'program_start']],
+  ['DIPLOMA_RULE', /\b(diploma|ged|graduat\w*)\b/i, ['diploma_rule']],
+  ['LENGTH', /\b(how long|years?|quarters?|weeks?|length)\b/i, ['length']],
+  ['SCHEDULE', /\b(evening|night|nights|day classes|schedule|online|part[- ]time|after school)\b/i, ['schedule']],
+  ['ADVISOR', /\b(advisor|adviser|counsel?lor|real person|talk to (a |an )?(person|human|someone))\b/i, ['confirms', 'response']],
+];
+
+export const TOPIC_CODES = TOPICS.map(([t]) => t);
+export const TOPIC_KEYS = Object.fromEntries(TOPICS.map(([t, , keys]) => [t, keys]));
+
+// Dani's plan covers these; other records are cited only when she names them.
+const DEFAULT_PROGRAMS = ['PRG-02', 'PRG-01', 'PRG-04'];
+const LISTED_STARTS = new Set(['PRG-01', 'PRG-02', 'PRG-04']);
+const UNLISTED_TIME = /\b(fall|summer|spring|next year|20(2[89]|3\d)|next (cycle|round|class|cohort)|later)\b/i;
+
+function mentionedPrograms(text) {
+  const ids = new Set();
+  for (const [id, re] of PROGRAM_WORDS) {
+    if (!re.test(text)) continue;
+    if (id === 'CASCADE') ids.add('PRG-01').add('PRG-04');
+    else ids.add(id);
+  }
+  return [...ids];
+}
+
+/**
+ * @returns {{kind:'crisis'} | {kind:'cannot_confirm', code:string} | {kind:'topic', topic:string, record_ids:string[]}}
+ */
+export function matchQuestion(text) {
+  const q = String(text ?? '').slice(0, 500);
+  if (CRISIS.test(q)) return { kind: 'crisis' };
+  for (const [code, re] of UNKNOWN) if (re.test(q)) return { kind: 'cannot_confirm', code };
+
+  const named = mentionedPrograms(q);
+  for (const [topic, re] of TOPICS) {
+    if (!re.test(q)) continue;
+    if (topic === 'START') {
+      const unlisted = named.some((id) => !LISTED_STARTS.has(id)) || UNLISTED_TIME.test(q);
+      if (unlisted) return { kind: 'cannot_confirm', code: 'UNKNOWN_START_DATE' };
+    }
+    const record_ids =
+      topic === 'AID' ? ['AID-A', ...named.filter((id) => id === 'PRG-03')]
+      : topic === 'ADVISOR' ? ['ADV-01']
+      : named.length ? named : DEFAULT_PROGRAMS;
+    return { kind: 'topic', topic, record_ids };
+  }
+  return { kind: 'cannot_confirm', code: 'UNMATCHED_QUESTION' };
+}
+
+export function isCrisis(text) {
+  return CRISIS.test(String(text ?? ''));
+}
