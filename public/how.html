@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pathways · How this works</title>
+  <meta name="description" content="The records Pathways answers from, and every model call it made, word for word.">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/schibstedgrotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/how.css">
+  <script type="module" src="/how.js"></script>
+</head>
+<body data-screen="how">
+  <main id="app" class="how">
+    <nav class="topbar">
+      <a class="wordmark ink" href="/">Pathways</a>
+      <a class="link" href="/">Back to the planner</a>
+    </nav>
+    <h1>How this works</h1>
+    <p class="lede-ink">Pathways says only what these records say. A person backs up everything they don’t, and nothing about a student reaches the model.</p>
+
+    <section class="layers" aria-label="The three rules">
+      <div>
+        <h2>Code decides</h2>
+        <p>Deadlines, the age rule, what’s unknown and when to send someone to an advisor are decided in <a href="https://github.com/mrcoven94/pathways-next-step/blob/main/src/core/planner.js">planner.js</a>. The model only writes two or three warm sentences, and code checks every number, date and citation before they’re shown. A reply that fails is replaced with plain text built by code.</p>
+      </div>
+      <div>
+        <h2>The model never sees the student</h2>
+        <p>Every model call is built from a closed list: record IDs, decision codes, topic codes and the exact wording of record facts. <a href="https://github.com/mrcoven94/pathways-next-step/blob/main/src/core/gateway.js">gateway.js</a> refuses anything else. The student’s name is filled in on their phone after the reply comes back. Typed questions are matched to a topic on the phone, and only the topic is sent.</p>
+      </div>
+      <div>
+        <h2>A person backs it up</h2>
+        <p>Seats, one person’s eligibility, exact aid amounts and dates the records don’t list always get “I can’t confirm that” and the advisor hand-off. Crisis words show 988 and 911 right away, with no model involved.</p>
+      </div>
+    </section>
+
+    <div class="tabs" role="tablist" aria-label="Data">
+      <button role="tab" id="tab-records" aria-controls="panel-records" aria-selected="true">Records</button>
+      <button role="tab" id="tab-calls" aria-controls="panel-calls" aria-selected="false" tabindex="-1">What the model saw <span id="call-count"></span></button>
+    </div>
+
+    <section role="tabpanel" id="panel-records" aria-labelledby="tab-records">
+      <p class="hint-ink">Synthetic records from the challenge brief. The only facts this app may state.</p>
+      <table class="data records">
+        <thead><tr><th scope="col">ID</th><th scope="col">Record</th><th scope="col">Facts</th><th scope="col">Last checked</th></tr></thead>
+        <tbody id="records-body"><tr><td colspan="4">Loading…</td></tr></tbody>
+      </table>
+    </section>
+
+    <section role="tabpanel" id="panel-calls" aria-labelledby="tab-calls" hidden>
+      <p class="hint-ink">Every call this server has made since it started, word for word. Make a plan or ask a question, then come back. The full log from the test run is <a href="https://github.com/mrcoven94/pathways-next-step/blob/main/model-calls.log">model-calls.log</a>.</p>
+      <table class="data calls">
+        <thead><tr><th scope="col">#</th><th scope="col">Task</th><th scope="col">Result</th><th scope="col">Sent and received</th></tr></thead>
+        <tbody id="calls-body"><tr><td colspan="4">Loading…</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p class="safety">In danger, call <a href="tel:911">911</a>. Thinking about hurting yourself, call or text <a href="tel:988">988</a>.</p>
+    <p class="demo">Demo with synthetic programs and a scripted stand-in model, not real AI.</p>
+  </footer>
+</body>
+</html>

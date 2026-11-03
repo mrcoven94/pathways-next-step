@@ -1,7 +1,7 @@
 # model-calls.log: every model call from the last `npm test` run, written by src/core/gateway.js
-# started 2026-11-03T16:57:30.497Z
+# started 2026-11-03T17:10:22.835Z
 
-=== model call 1 · 2026-11-03T16:57:30.636Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 1 · 2026-11-03T17:10:22.956Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -125,7 +125,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026, so it comes first. It's paid, and it starts at 55% of journey-level wage.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 2 · 2026-11-03T16:57:30.641Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 2 · 2026-11-03T17:10:22.962Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -150,7 +150,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here is what the records say. Northline Apprenticeship: Applications close Nov 30, 2026.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 1 · 2026-11-03T16:57:30.735Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 1 · 2026-11-03T17:10:23.122Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -277,7 +277,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 2 · 2026-11-03T16:57:30.741Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 2 · 2026-11-03T17:10:23.128Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -306,7 +306,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here is what the records say. Northline Apprenticeship: Paid. Starts at 55% of journey-level wage.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 1 · 2026-11-03T16:57:30.842Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 1 · 2026-11-03T17:10:23.238Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -430,7 +430,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026, so it comes first. It's paid, and it starts at 55% of journey-level wage.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 2 · 2026-11-03T16:57:30.852Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 2 · 2026-11-03T17:10:23.243Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -554,7 +554,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026, so it comes first. It's paid, and it starts at 55% of journey-level wage.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 3 · 2026-11-03T16:57:30.853Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 3 · 2026-11-03T17:10:23.244Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -678,7 +678,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 4 · 2026-11-03T16:57:30.855Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 4 · 2026-11-03T17:10:23.246Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -802,7 +802,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026, so it comes first. It's paid, and it starts at 55% of journey-level wage.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 5 · 2026-11-03T16:57:30.856Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 5 · 2026-11-03T17:10:23.248Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -926,9 +926,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 6 · 2026-11-03T16:57:30.856Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 6 · 2026-11-03T17:10:23.249Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -1054,7 +1054,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 7 · 2026-11-03T16:57:30.857Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 7 · 2026-11-03T17:10:23.250Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -1178,9 +1178,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 8 · 2026-11-03T16:57:30.857Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 8 · 2026-11-03T17:10:23.251Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -1304,9 +1304,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 9 · 2026-11-03T16:57:30.858Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 9 · 2026-11-03T17:10:23.253Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -1432,7 +1432,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 10 · 2026-11-03T16:57:30.860Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 10 · 2026-11-03T17:10:23.254Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -1556,9 +1556,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 11 · 2026-11-03T16:57:30.861Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 11 · 2026-11-03T17:10:23.255Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -1684,7 +1684,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 12 · 2026-11-03T16:57:30.862Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 12 · 2026-11-03T17:10:23.256Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -1810,7 +1810,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 13 · 2026-11-03T16:57:30.862Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 13 · 2026-11-03T17:10:23.256Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -1936,7 +1936,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 14 · 2026-11-03T16:57:30.862Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 14 · 2026-11-03T17:10:23.256Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -2063,7 +2063,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 15 · 2026-11-03T16:57:30.863Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 15 · 2026-11-03T17:10:23.257Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -2190,7 +2190,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 16 · 2026-11-03T16:57:30.863Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 16 · 2026-11-03T17:10:23.257Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -2317,7 +2317,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 17 · 2026-11-03T16:57:30.864Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 17 · 2026-11-03T17:10:23.258Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -2444,7 +2444,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 18 · 2026-11-03T16:57:30.864Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 18 · 2026-11-03T17:10:23.258Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -2571,7 +2571,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 19 · 2026-11-03T16:57:30.864Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 19 · 2026-11-03T17:10:23.258Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -2698,7 +2698,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 20 · 2026-11-03T16:57:30.865Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 20 · 2026-11-03T17:10:23.259Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -2822,9 +2822,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 21 · 2026-11-03T16:57:30.865Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 21 · 2026-11-03T17:10:23.259Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -2950,7 +2950,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 22 · 2026-11-03T16:57:30.865Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 22 · 2026-11-03T17:10:23.260Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -3074,9 +3074,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 23 · 2026-11-03T16:57:30.866Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 23 · 2026-11-03T17:10:23.261Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -3203,7 +3203,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 24 · 2026-11-03T16:57:30.866Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 24 · 2026-11-03T17:10:23.262Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -3330,7 +3330,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 25 · 2026-11-03T16:57:30.867Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 25 · 2026-11-03T17:10:23.263Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -3457,7 +3457,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 26 · 2026-11-03T16:57:30.868Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 26 · 2026-11-03T17:10:23.263Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -3584,7 +3584,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 27 · 2026-11-03T16:57:30.868Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 27 · 2026-11-03T17:10:23.264Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -3711,7 +3711,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 28 · 2026-11-03T16:57:30.868Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 28 · 2026-11-03T17:10:23.264Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -3838,7 +3838,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 29 · 2026-11-03T16:57:30.869Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 29 · 2026-11-03T17:10:23.265Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -3964,7 +3964,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 30 · 2026-11-03T16:57:30.869Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 30 · 2026-11-03T17:10:23.265Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -4088,9 +4088,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 31 · 2026-11-03T16:57:30.869Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 31 · 2026-11-03T17:10:23.266Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -4214,9 +4214,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 32 · 2026-11-03T16:57:30.870Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 32 · 2026-11-03T17:10:23.266Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -4340,9 +4340,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 1 · 2026-11-03T16:57:30.871Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 1 · 2026-11-03T17:10:23.267Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -4468,7 +4468,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 33 · 2026-11-03T16:57:30.873Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 33 · 2026-11-03T17:10:23.269Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -4594,7 +4594,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 34 · 2026-11-03T16:57:30.873Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 34 · 2026-11-03T17:10:23.270Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -4720,7 +4720,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 1 · 2026-11-03T16:57:30.958Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 1 · 2026-11-03T17:10:23.346Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -4844,7 +4844,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026, so it comes first. It's paid, and it starts at 55% of journey-level wage.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 2 · 2026-11-03T16:57:30.962Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 2 · 2026-11-03T17:10:23.352Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -4968,7 +4968,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 3 · 2026-11-03T16:57:30.964Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 3 · 2026-11-03T17:10:23.353Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -5092,7 +5092,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026, so it comes first. It's paid, and it starts at 55% of journey-level wage.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 4 · 2026-11-03T16:57:30.965Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 4 · 2026-11-03T17:10:23.354Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -5216,9 +5216,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 5 · 2026-11-03T16:57:30.966Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 5 · 2026-11-03T17:10:23.355Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -5344,7 +5344,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 6 · 2026-11-03T16:57:30.967Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 6 · 2026-11-03T17:10:23.356Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -5468,9 +5468,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 7 · 2026-11-03T16:57:30.967Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 7 · 2026-11-03T17:10:23.357Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -5594,9 +5594,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 8 · 2026-11-03T16:57:30.968Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 8 · 2026-11-03T17:10:23.357Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -5722,7 +5722,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 9 · 2026-11-03T16:57:30.969Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 9 · 2026-11-03T17:10:23.358Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -5846,9 +5846,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 10 · 2026-11-03T16:57:30.970Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 10 · 2026-11-03T17:10:23.359Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -5974,7 +5974,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 11 · 2026-11-03T16:57:30.971Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 11 · 2026-11-03T17:10:23.360Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -6100,7 +6100,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 12 · 2026-11-03T16:57:30.972Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 12 · 2026-11-03T17:10:23.362Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -6226,7 +6226,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 13 · 2026-11-03T16:57:30.973Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 13 · 2026-11-03T17:10:23.363Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -6353,7 +6353,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 14 · 2026-11-03T16:57:30.974Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 14 · 2026-11-03T17:10:23.363Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -6480,7 +6480,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 15 · 2026-11-03T16:57:30.975Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 15 · 2026-11-03T17:10:23.364Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -6607,7 +6607,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 16 · 2026-11-03T16:57:30.976Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 16 · 2026-11-03T17:10:23.365Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -6734,7 +6734,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 17 · 2026-11-03T16:57:30.977Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 17 · 2026-11-03T17:10:23.365Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -6861,7 +6861,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 18 · 2026-11-03T16:57:30.978Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 18 · 2026-11-03T17:10:23.365Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -6988,7 +6988,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 19 · 2026-11-03T16:57:30.980Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 19 · 2026-11-03T17:10:23.366Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -7112,9 +7112,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 20 · 2026-11-03T16:57:30.980Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 20 · 2026-11-03T17:10:23.366Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -7240,7 +7240,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 21 · 2026-11-03T16:57:30.981Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 21 · 2026-11-03T17:10:23.367Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -7364,9 +7364,9 @@ PAYLOAD
   ]
 }
 --- received ---
-{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
+{"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. One thing about you isn't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 22 · 2026-11-03T16:57:30.982Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 22 · 2026-11-03T17:10:23.367Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -7493,7 +7493,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 23 · 2026-11-03T16:57:30.982Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 23 · 2026-11-03T17:10:23.368Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -7620,7 +7620,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 24 · 2026-11-03T16:57:30.983Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 24 · 2026-11-03T17:10:23.368Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -7747,7 +7747,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 25 · 2026-11-03T16:57:30.985Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 25 · 2026-11-03T17:10:23.369Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -7874,7 +7874,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 26 · 2026-11-03T16:57:30.986Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 26 · 2026-11-03T17:10:23.369Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8001,7 +8001,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here's your move: start the FAFSA or the state aid application. That's how you apply for the Evergreen Opportunity Grant. Cascade's next certificates start Jan 6, 2027.","cites":["AID-A","PRG-01"]}
 --- verdict: used
-=== model call 27 · 2026-11-03T16:57:30.987Z · task=explain_plan · model=scripted-demo-model (not a real AI)
+=== model call 27 · 2026-11-03T17:10:23.370Z · task=explain_plan · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8128,7 +8128,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, Northline is worth a real look, and applications close Nov 30, 2026. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.","cites":["PRG-02","ADV-01"]}
 --- verdict: used
-=== model call 28 · 2026-11-03T16:57:30.988Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 28 · 2026-11-03T17:10:23.371Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8157,7 +8157,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here is what the records say. Northline Apprenticeship: Paid. Starts at 55% of journey-level wage.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 29 · 2026-11-03T16:57:30.989Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 29 · 2026-11-03T17:10:23.372Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8182,7 +8182,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here is what the records say. Northline Apprenticeship: Applications close Nov 30, 2026.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 30 · 2026-11-03T16:57:30.990Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 30 · 2026-11-03T17:10:23.373Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8211,7 +8211,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here is what the records say. Cascade Medical Assistant: Estimated total tuition 4,200 USD. Cascade IT Support: Estimated total tuition 2,100 USD.","cites":["PRG-01","PRG-04"]}
 --- verdict: used
-=== model call 31 · 2026-11-03T16:57:30.991Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 31 · 2026-11-03T17:10:23.373Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8240,7 +8240,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here is what the records say. Northline Apprenticeship: Applicants must be 18 by the program start date. Program starts Mar 1, 2027.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 32 · 2026-11-03T16:57:30.992Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 32 · 2026-11-03T17:10:23.373Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8267,7 +8267,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here is what the records say. Northline Apprenticeship: HS diploma or GED required. The records don't say when you need it by, so that one's for an advisor.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 33 · 2026-11-03T16:57:30.992Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 33 · 2026-11-03T17:10:23.374Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8300,7 +8300,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here is what the records say. Evergreen Opportunity Grant: Income-based. Apply through FAFSA or the state aid application. Award amount varies.","cites":["AID-A"]}
 --- verdict: used
-=== model call 34 · 2026-11-03T16:57:30.993Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 34 · 2026-11-03T17:10:23.374Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8333,7 +8333,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here is what the records say. Northline Apprenticeship: 4 years. Cascade Medical Assistant: 3 quarters. Cascade IT Support: 2 quarters.","cites":["PRG-02","PRG-01","PRG-04"]}
 --- verdict: used
-=== model call 35 · 2026-11-03T16:57:30.994Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 35 · 2026-11-03T17:10:23.374Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8362,7 +8362,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here is what the records say. Cascade Medical Assistant: Day classes only. Cascade IT Support: Evening online option.","cites":["PRG-01","PRG-04"]}
 --- verdict: used
-=== model call 36 · 2026-11-03T16:57:30.995Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 36 · 2026-11-03T17:10:23.375Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8395,7 +8395,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here is what the records say. Northline Apprenticeship: Program starts Mar 1, 2027. Cascade Medical Assistant: Next start Jan 6, 2027. Cascade IT Support: Next start Jan 6, 2027.","cites":["PRG-02","PRG-01","PRG-04"]}
 --- verdict: used
-=== model call 37 · 2026-11-03T16:57:30.996Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 37 · 2026-11-03T17:10:23.375Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8426,7 +8426,7 @@ PAYLOAD
 --- verdict: replaced · STATUS_CLAIM(eligibility)
 --- shown instead (template) ---
 Here's what the records say. Advisor: Advisors confirm eligibility, seats, and award amounts. Response within 2 business days.
-=== model call 1 · 2026-11-03T16:57:30.999Z · task=explain_plan · model=bad-model:claims eligibility
+=== model call 1 · 2026-11-03T17:10:23.379Z · task=explain_plan · model=bad-model:claims eligibility
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8552,7 +8552,7 @@ PAYLOAD
 --- verdict: replaced · STATUS_CLAIM(eligible)
 --- shown instead (template) ---
 {first_name}, your next step is to apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026.
-=== model call 1 · 2026-11-03T16:57:31.001Z · task=explain_plan · model=bad-model:says she applied
+=== model call 1 · 2026-11-03T17:10:23.380Z · task=explain_plan · model=bad-model:says she applied
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8678,7 +8678,7 @@ PAYLOAD
 --- verdict: replaced · STATUS_CLAIM(application is submitted)
 --- shown instead (template) ---
 {first_name}, your next step is to apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026.
-=== model call 1 · 2026-11-03T16:57:31.003Z · task=explain_plan · model=bad-model:invents a dollar figure
+=== model call 1 · 2026-11-03T17:10:23.381Z · task=explain_plan · model=bad-model:invents a dollar figure
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8804,7 +8804,7 @@ PAYLOAD
 --- verdict: replaced · UNGROUNDED_NUMBER(5,000)
 --- shown instead (template) ---
 {first_name}, your next step is to apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026.
-=== model call 1 · 2026-11-03T16:57:31.004Z · task=explain_plan · model=bad-model:invents a date
+=== model call 1 · 2026-11-03T17:10:23.382Z · task=explain_plan · model=bad-model:invents a date
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -8930,7 +8930,7 @@ PAYLOAD
 --- verdict: replaced · UNGROUNDED_NUMBER(15)
 --- shown instead (template) ---
 {first_name}, your next step is to apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026.
-=== model call 1 · 2026-11-03T16:57:31.007Z · task=explain_plan · model=bad-model:cites a record that does not exist
+=== model call 1 · 2026-11-03T17:10:23.383Z · task=explain_plan · model=bad-model:cites a record that does not exist
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -9056,7 +9056,7 @@ PAYLOAD
 --- verdict: replaced · CITES_UNGIVEN_RECORD(PRG-99)
 --- shown instead (template) ---
 {first_name}, your next step is to apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026.
-=== model call 1 · 2026-11-03T16:57:31.011Z · task=explain_plan · model=bad-model:cites nothing
+=== model call 1 · 2026-11-03T17:10:23.384Z · task=explain_plan · model=bad-model:cites nothing
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -9182,7 +9182,7 @@ PAYLOAD
 --- verdict: replaced · NO_CITATION
 --- shown instead (template) ---
 {first_name}, your next step is to apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026.
-=== model call 1 · 2026-11-03T16:57:31.012Z · task=explain_plan · model=bad-model:asks for a placeholder it was not given
+=== model call 1 · 2026-11-03T17:10:23.385Z · task=explain_plan · model=bad-model:asks for a placeholder it was not given
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -9308,7 +9308,7 @@ PAYLOAD
 --- verdict: replaced · UNKNOWN_PLACEHOLDER({last_name})
 --- shown instead (template) ---
 {first_name}, your next step is to apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026.
-=== model call 1 · 2026-11-03T16:57:31.016Z · task=explain_plan · model=bad-model:returns prose instead of JSON
+=== model call 1 · 2026-11-03T17:10:23.386Z · task=explain_plan · model=bad-model:returns prose instead of JSON
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -9434,7 +9434,7 @@ Sure! Here is a plan for Dani.
 --- verdict: replaced · NOT_JSON
 --- shown instead (template) ---
 {first_name}, your next step is to apply to the Northline Electrical Apprenticeship. Applications close Nov 30, 2026.
-=== model call 1 · 2026-11-03T16:57:31.018Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 1 · 2026-11-03T17:10:23.387Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -9463,7 +9463,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here is what the records say. Northline Apprenticeship: Paid. Starts at 55% of journey-level wage.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 1 · 2026-11-03T16:57:31.126Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 1 · 2026-11-03T17:10:23.483Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:
@@ -9492,7 +9492,7 @@ PAYLOAD
 --- received ---
 {"text":"{first_name}, here is what the records say. Northline Apprenticeship: Paid. Starts at 55% of journey-level wage.","cites":["PRG-02"]}
 --- verdict: used
-=== model call 2 · 2026-11-03T16:57:31.128Z · task=answer_topic · model=scripted-demo-model (not a real AI)
+=== model call 2 · 2026-11-03T17:10:23.484Z · task=answer_topic · model=scripted-demo-model (not a real AI)
 --- sent ---
 You write two or three short, warm sentences for a high school student, using only the facts given.
 Rules:

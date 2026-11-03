@@ -38,6 +38,7 @@ export function createApp({ model = mockModel, logFile = null, today = () => new
   const handoffs = []; // stand-in for the advisor queue; never exposed over HTTP
 
   async function plan({ answers, today: asOf }) {
+    if (asOf !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(asOf)) throw new BadAnswers('today must look like 2026-12-05.');
     const p = planNextStep(answers, asOf ?? today());
     const payload = {
       task: 'explain_plan',

@@ -23,8 +23,9 @@ function explainPlan(p) {
   }
   if (action === 'ask_advisor_then_apply') {
     const close = textOf(p, 'PRG-02', 'Applications close').replace('Applications close ', '');
+    const open = p.programs.find((x) => x.record_id === 'PRG-02').reasons.length;
     return {
-      text: `{first_name}, Northline is worth a real look, and applications close ${close}. A couple of things about you aren't in the records, so ask an advisor first. They answer within 2 business days.`,
+      text: `{first_name}, Northline is worth a real look, and applications close ${close}. ${open === 1 ? 'One thing about you isn\'t' : 'A couple of things about you aren\'t'} in the records, so ask an advisor first. They answer within 2 business days.`,
       cites: ['PRG-02', 'ADV-01'],
     };
   }
