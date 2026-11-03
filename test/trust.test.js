@@ -65,8 +65,8 @@ test('AC7c the model points at facts; code writes them, so every fact shown is w
   try {
     const call = async () => s.app.gateway.calls.at(-1);
     const { summary } = await s.plan(dani({ age18: 'yes', diploma: 'yes', lean: 'earn' }));
-    assert.equal(JSON.parse((await call()).received).text, '{first_name}, {fact:PRG-02:paid} Its deadline is the first on your road.');
-    assert.equal(summary.text, '{first_name}, Northline Apprenticeship is paid. Its deadline is the first on your road.');
+    assert.equal(JSON.parse((await call()).received).text, '{first_name}, {fact:PRG-02:paid} {fact:PRG-02:wage}');
+    assert.equal(summary.text, '{first_name}, Northline Apprenticeship is paid. Pay starts at 55% of journey-level wage.');
 
     // A misbehaving model's reply about the diploma still keeps the "ask an advisor when" caveat.
     const broken = await startApp({ model: badModel('broken', 'not json') });

@@ -1,6 +1,6 @@
 # Spec: Pathways next-step slice for Dani
 
-This is the brief every coding agent got before writing code. If the code and this file disagree, the code is wrong.
+This is the brief the coding agents got before writing code. It was written first in the session and committed together with the first code (`5898f35`). It is kept in sync with what shipped: changes after the first build are marked "(amended)" and explained under Amendments. If the code and this file disagree, the code is wrong.
 
 ## Outcome
 
@@ -8,7 +8,7 @@ Dani is 17, a high school senior, likes hands-on work, and is torn between the N
 
 In under two minutes on her phone, the slice moves her to one concrete next step with a date on it, built only from the synthetic records. It gives her three ways to act on it: put the date on her calendar, save the plan on her device, and ask a human advisor to confirm what the records can't.
 
-Done looks like this: Dani answers three taps and sees her next step. That is Northline with "Applications close Nov 30, 2026", or the community college plan if the age rule rules her out. Every fact on screen shows its record ID and last-checked date. She leaves with a calendar file, a saved plan or an advisor request code.
+Done looks like this: Dani says where she is and what she's weighing, answers only the questions those picks need (amended: three to five taps), and sees her next step. That is Northline with "Applications close Nov 30, 2026", or the community college plan if the age rule rules her out. Every fact on screen shows its record ID and last-checked date. She leaves with a calendar file, a saved plan or an advisor request code.
 
 ## Users and buyers
 
@@ -26,7 +26,7 @@ Done looks like this: Dani answers three taps and sees her next step. That is No
    - Dani's first name may be asked. It stays on her device and goes into the advisor hand-off, never to the model. The model writes `{first_name}` and the browser fills it in after the reply comes back.
    - Typed text (the question box, the advisor note) never reaches the model. Questions are matched against a fixed topic list and only the topic code is sent.
    - Every string in a model payload must come from a closed set: topic codes, record IDs, decision codes, canonical record fact text. The gateway throws on anything else.
-   - Rampart Edge (an in-browser personal info detector) nudges Dani before she submits typed text. It is the third layer, not the boundary: its published catch rate on name-only messages is 49.6%.
+   - Rampart Edge (an in-browser personal info detector) runs on the advisor note, the one piece of typed text that leaves the phone, and only suggests removing contact details (amended: it no longer touches the question box). It is the third layer, not the boundary: its published catch rate on name-only messages is 49.6%.
 7. Every model call is logged to `model-calls.log`: the exact text sent, the exact text returned, and the validator verdict.
 8. The model is a clearly labeled scripted stand-in. No API keys, no paid services, no accounts, no database.
 9. `npm start` runs it. `npm test` runs the checks and prints pass or fail. No `npm install`. Node 20 or newer.
@@ -59,14 +59,13 @@ The replacement is a plain template built by code, logged as `replaced`.
 ## The flow
 
 1. Start. "Let's find your next step before winter break." First name, optional.
-2. Three taps, each answered yes, no or not sure:
-   - Will you be 18 by Mar 1, 2027?
-   - Will you have a diploma or GED by then?
-   - Earn right away, or classes first?
-3. Plan. One next step with its date, why it comes first, what's still open, and the backup path.
-4. Three actions: add the date to her calendar (.ics), save the plan on this device, ask an advisor.
-5. A question box answered from the records, or routed to an advisor.
-6. "How this works": the records table and the model-call table.
+2. Where are you right now? Finishing high school, out of school and looking for work, or something else. Only the first continues; the others get an honest "built for seniors for now" and the advisor (amended).
+3. What are you weighing? Pick any of Northline, the two Cascade certificates and Riverbend, or "not sure yet" (amended).
+4. Only if she picked Northline: Will you be 18 by Mar 1, 2027? Will you have a diploma or GED by then? Only if she also picked a classroom program: earn right away, or classes first? Each answer is yes, no or not sure (amended).
+5. Plan. One next step with its date, what's still open, the road of dates, and her options.
+6. Three actions: ask an advisor, add the date to her calendar (.ics), save the plan on this device.
+7. A question box answered from the records, or routed to an advisor.
+8. "How this works": the records table and the model-call table.
 
 ## Acceptance criteria (each one is an automated check)
 
@@ -88,7 +87,7 @@ One seam does most of the work: the HTTP API (`/api/plan`, `/api/ask`, `/api/han
 
 ## Out of scope
 
-Marcus (the planner takes his inputs without changes; see the README), accounts, real advisor messaging, real application links, Spanish and other languages, analytics, and anything not in the records table.
+Marcus (the gateway and checks carry over, but the planner needs a new branch for PRG-05, evening filters and an AID-B layoff-notice tap; see the README), accounts, real advisor messaging, real application links, Spanish and other languages, analytics, and anything not in the records table.
 
 ## Amendments (2026-11-03, after the first build)
 
@@ -104,3 +103,7 @@ New acceptance criteria:
 12. Someone weighing only Cascade is never asked her age, and the server refuses a Northline plan without the age and diploma taps.
 13. Every path reaches a dated next step from the records, including a Riverbend-only path and a path where everything she picked is ruled out.
 14. A date that has passed is never the next step, even in the code-written fallback.
+15. Every question the box suggests routes to an answer from the records or to an advisor.
+16. "Today" is the date in Pacific time, so a deadline stays open until midnight there (AC5b).
+
+Every acceptance criterion's check is also covered by `npm run mutate`, which breaks the guard behind it and confirms the check fails.

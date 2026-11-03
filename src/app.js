@@ -33,7 +33,12 @@ function newHandoffCode() {
 /**
  * @param {{model?: object, logFile?: string|null, today?: () => string}} opts
  */
-export function createApp({ model = mockModel, logFile = null, today = () => new Date().toISOString().slice(0, 10) } = {}) {
+/** Today's date where the pilot runs, so a deadline stays open until midnight there, not in UTC. */
+export function todayIn(timeZone = 'America/Los_Angeles', now = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+}
+
+export function createApp({ model = mockModel, logFile = null, today = () => todayIn() } = {}) {
   const gateway = createGateway({ model, logFile });
   const handoffs = []; // stand-in for the advisor queue; never exposed over HTTP
 

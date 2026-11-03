@@ -142,6 +142,8 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 
 /* ---------- plan ---------- */
 .loading { padding-top: 30vh; text-align: center; color: var(--muted); }
+.replay { margin: 0 0 16px; padding: 10px 14px; border-radius: 12px; background: var(--ask-soft); color: var(--ink); font-size: 0.875rem; }
+.replay a { color: var(--pen); font-weight: 550; }
 .plan > section { margin-top: 44px; }
 .plan > section.next { margin-top: 4px; }
 .plan > h1 { margin-bottom: 14px; }
