@@ -28,6 +28,18 @@ const pkg = (name) => JSON.parse(fs.readFileSync(path.join(nm, name, 'package.js
 for (const [name, want] of [[RAMPART, RAMPART_VERSION], [ORT, ORT_VERSION]]) {
   if (pkg(name).version !== want) throw new Error(`${name} installed ${pkg(name).version}, expected ${want}`);
 }
+// The registry's own checksum for each package that ends up in the bundle. A package swapped under the same version
+// number changes its checksum, and the rebuild stops here before anything is copied.
+const INTEGRITY = {
+  '@nationaldesignstudio/rampart-edge': 'sha512-0xPMwbDbG3FEuJfbVDr6PQgi3s/76I7fRerTEqG6yRp8Ra9GLmlKEr2Xx+/9StQIL7lXr3b0WqZpmY8nFYLypQ==',
+  'onnxruntime-web': 'sha512-q0y+JrrtukXSzsBWEMccVfqX25LRmosXHF+CaRJmg8pZClzcV7svNc4rKY3jL02Vb7QmRMDs1SigqR4CXAfKYQ==',
+  'onnxruntime-common': 'sha512-7fdVWjAID1dVhH/G8qK3APARunV4VkBFoCQAP7qp4Wkab0mrorvmc+sqiT+mKXOzDqdjN5j+/Z9nb4gzNPWcyA==',
+};
+const lock = JSON.parse(fs.readFileSync(path.join(nm, '.package-lock.json'), 'utf8')).packages;
+for (const [name, want] of Object.entries(INTEGRITY)) {
+  const got = Object.entries(lock).find(([where]) => where.endsWith(`node_modules/${name}`))?.[1].integrity; // --prefix installs get long relative keys
+  if (got !== want) throw new Error(`${name}: the registry checksum is ${got}, expected ${want}. Stop and find out why before vendoring.`);
+}
 const rampartDir = path.join(nm, RAMPART);
 
 // The entry: one function that always takes a base URL, so the package's default Hugging Face model URL is never used.

@@ -108,20 +108,21 @@ test('AC22 the inbox policy allows WASM and nothing else new, locally and on Ver
 function serveVendorFromDisk() {
   const real = globalThis.fetch;
   const prefix = pathToFileURL(VENDOR + sep).href;
-  globalThis.fetch = async (input, init) => {
+  const outside = []; // any request that is not for a vendored file. There must be none.
+  globalThis.fetch = async (input) => {
     const url = String(input instanceof Request ? input.url : input);
-    if (!url.startsWith('file:')) return real(input, init);
+    if (!url.startsWith('file:')) { outside.push(url); throw new Error(`AC22: the detector asked for ${url}`); }
     if (!url.startsWith(prefix)) return new Response(null, { status: 404 });
     try { return new Response(readFileSync(fileURLToPath(url))); } catch { return new Response(null, { status: 404 }); }
   };
-  return () => { globalThis.fetch = real; };
+  return { outside, restore: () => { globalThis.fetch = real; } };
 }
 
 const NOTES = Object.fromEntries(JSON.parse(read(join(root, 'test/fixtures/synthetic-notes.json'))).notes.map((n) => [n.id, n]));
 const shownText = (segs) => segs.filter((s) => !s.masked).map((s) => s.text).join('');
 
 test('AC22 the real model, loaded from the vendored files, finds and masks contact details and passes private notes it cannot see', async () => {
-  const restore = serveVendorFromDisk();
+  const { outside, restore } = serveVendorFromDisk();
   try {
     const { loadGate } = await import('../public/rampart.js');
     const gate = await loadGate(60_000);
@@ -158,4 +159,5 @@ test('AC22 the real model, loaded from the vendored files, finds and masks conta
   } finally {
     restore();
   }
+  assert.deepEqual(outside, [], 'loading the model and reading five notes asked no other host for anything');
 });

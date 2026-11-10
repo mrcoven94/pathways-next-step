@@ -52,14 +52,13 @@ function fail(e) {
 // browser; the server never runs it. The built-in patterns are merged in, and stand alone if the model
 // is not ready within about 4 seconds, so the advisor is never kept waiting.
 async function findSpans(text) {
-  const builtin = builtinSpans(text);
-  const gate = await loadGate(4000);
-  if (!gate) return builtin;
-  try {
-    return mergeSpans(fromRampart((await gate.check(text)).spans), builtin);
-  } catch {
-    return builtin;
-  }
+  const builtin = mergeSpans(builtinSpans(text));
+  const detect = (async () => {
+    const gate = await loadGate(4000);
+    return gate ? mergeSpans(fromRampart((await gate.check(text)).spans), builtin) : builtin;
+  })().catch(() => builtin);
+  // One deadline for loading and for reading the note. A result that arrives after it is dropped.
+  return Promise.race([detect, new Promise((resolve) => setTimeout(() => resolve(builtin), 4000))]);
 }
 
 // ---------- list ----------

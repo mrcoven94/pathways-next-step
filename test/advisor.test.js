@@ -34,9 +34,9 @@ test('AC21 overlapping spans from Rampart and the built-in patterns merge', () =
   assert.deepEqual(rampart, [{ start: 29, end: 36, type: 'phone' }], 'a type Rampart does not return is dropped');
   const merged = mergeSpans(rampart, builtinSpans(NOTE));
   assert.equal(merged.length, 2);
-  assert.deepEqual(merged[0], { start: 29, end: 41, type: 'phone' });
+  assert.deepEqual(merged[0], { start: 29, end: 41, type: 'phone', kinds: ['phone'] });
   assert.deepEqual(mergeSpans([{ start: 0, end: 5, type: 'a' }], [{ start: 3, end: 9, type: 'b' }, { start: 9, end: 10, type: 'c' }]),
-    [{ start: 0, end: 9, type: 'a' }, { start: 9, end: 10, type: 'c' }]);
+    [{ start: 0, end: 9, type: 'a', kinds: ['a', 'b'] }, { start: 9, end: 10, type: 'c', kinds: ['c'] }]);
 });
 
 test('AC21 a note with script tags comes back as plain text segments, and esc makes it inert', () => {
@@ -89,4 +89,18 @@ test('AC21 a real Rampart result hides the name, the address and the email, each
   const names = maskNote(RAMPART_NOTE, spans, new Set(['name']));
   assert.equal(names.find((s) => s.type === 'name').masked, false);
   assert.ok(names.filter((s) => s.type !== 'name' && s.type).every((s) => s.masked));
+});
+
+test('AC21 two kinds found in the same text stay hidden until both are switched on (found by Sol 6.1 with the real model)', () => {
+  // The real detector reads "123" in this note as an ID; the built-in pattern reads the ten digits as a phone number.
+  const text = 'My ID number is 1234567890.';
+  const spans = mergeSpans(fromRampart([{ start: 16, end: 19, type: 'OTHER_ID' }]), builtinSpans(text));
+  assert.deepEqual(kindsIn(spans).sort(), ['id', 'phone'], 'both kinds get a switch');
+  const shown = (on) => maskNote(text, spans, new Set(on)).filter((s) => !s.masked).map((s) => s.text).join('');
+  assert.equal(shown([]), 'My ID number is .');
+  assert.equal(shown(['phone']), 'My ID number is .', 'phones on alone does not show the ID');
+  assert.equal(shown(['id']), 'My ID number is .', 'IDs on alone does not show the phone number');
+  assert.equal(shown(['id', 'phone']), text);
+  const label = (on) => maskNote(text, spans, new Set(on)).find((s) => s.masked).type;
+  assert.equal(label(['phone']), 'id', 'the label names the kind still hidden');
 });

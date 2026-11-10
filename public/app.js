@@ -395,7 +395,8 @@ async function contactDetails(text) {
   const g = await Promise.race([loadGate(), new Promise((r) => setTimeout(() => r(null), 3000))]);
   if (!g) return null;
   try {
-    const d = await g.check(text);
+    const d = await Promise.race([g.check(text), new Promise((r) => setTimeout(() => r(null), 3000))]); // never keep her waiting to send
+    if (!d) return null;
     const spans = (d.spans ?? []).filter((s) => SPAN_WORDS[s.type]); // a name in a note to her own advisor is fine
     return d.verdict === 'BLOCK' && spans.length ? spans : null;
   } catch {

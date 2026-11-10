@@ -58,20 +58,24 @@ export function fromRampart(spans) {
     .map((s) => ({ start: s.start, end: s.end, type: RAMPART_KINDS[s.type] }));
 }
 
-// Overlapping spans become one; the merged span keeps the type of the one that starts first (longest on a tie).
+// Overlapping spans become one, and the merged span remembers every kind inside it. It is shown only when all of
+// its kinds are switched on, so switching phone numbers on never shows an ID found in the same digits.
 export function mergeSpans(a = [], b = []) {
   const all = [...a, ...b].filter((s) => s.end > s.start).sort((x, y) => x.start - y.start || y.end - x.end);
   const out = [];
   for (const s of all) {
+    const kinds = s.kinds ?? [s.type];
     const last = out[out.length - 1];
-    if (last && s.start < last.end) last.end = Math.max(last.end, s.end);
-    else out.push({ ...s });
+    if (last && s.start < last.end) {
+      last.end = Math.max(last.end, s.end);
+      for (const k of kinds) if (!last.kinds.includes(k)) last.kinds.push(k);
+    } else out.push({ start: s.start, end: s.end, type: kinds[0], kinds: [...kinds] });
   }
   return out;
 }
 
 export function kindsIn(spans) {
-  return [...new Set((spans ?? []).map((s) => s.type))];
+  return [...new Set((spans ?? []).flatMap((s) => s.kinds ?? [s.type]))];
 }
 
 // Segments in order; joined with masked spans shown, they are exactly the input text.
@@ -84,7 +88,8 @@ export function maskNote(text, spans, shown = new Set()) {
     const end = Math.min(sp.end, s.length);
     if (start >= end) continue;
     if (start > at) segs.push({ text: s.slice(at, start), type: null, masked: false });
-    segs.push({ text: s.slice(start, end), type: sp.type, masked: !shown.has(sp.type) });
+    const hidden = sp.kinds.filter((k) => !shown.has(k)); // every kind in the span must be switched on
+    segs.push({ text: s.slice(start, end), type: hidden[0] ?? sp.type, masked: hidden.length > 0 });
     at = end;
   }
   if (at < s.length) segs.push({ text: s.slice(at), type: null, masked: false });
