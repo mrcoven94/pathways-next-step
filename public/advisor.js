@@ -15,7 +15,11 @@ async function api(path, init = {}) {
 }
 
 function fail() {
-  $('#detail').innerHTML = '<p class="pick">That didn’t load. Refresh to try again.</p>';
+  $('#detail').innerHTML = '<p class="pick">That didn’t load. Go back and open it again.</p>';
+}
+// The list is what a phone shows first, so a failed load says so there, with a way to try again.
+function failList() {
+  $('#requests').innerHTML = '<li class="empty">The inbox didn’t load. <button class="link" type="button" data-action="retry">Try again</button></li>';
 }
 
 // ---------- Contact details ----------
@@ -111,6 +115,7 @@ async function setStatus(status) {
 
 // ---------- events ----------
 $('#requests').addEventListener('click', (e) => {
+  if (e.target.closest('[data-action=retry]')) return loadList().catch(failList);
   const b = e.target.closest('button[data-code]');
   if (b) openRequest(b.dataset.code);
 });
@@ -128,4 +133,4 @@ $('#detail').addEventListener('change', (e) => {
 });
 
 loadGate(); // start loading the detector now, so it is ready when a note is opened
-loadList().catch(fail);
+loadList().catch(failList);

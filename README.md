@@ -6,7 +6,7 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 - **Run:** `npm start`, then open http://localhost:3000
 - **Advisor inbox:** https://pathways-next-step.vercel.app/advisor (locally, http://localhost:3000/advisor). No sign-in. It opens with two invented requests, and shows any note you send from the planner in the same browser.
 - **Test:** `npm test` (43 checks, prints pass or fail, writes `model-calls.log` with a summary at the top)
-- **Prove the tests bite:** `npm run mutate` breaks 43 guards, at least one behind every acceptance criterion, one at a time in a scratch copy. It confirms the named check fails each time.
+- **Prove the tests bite:** `npm run mutate` breaks 48 guards, at least one behind every acceptance criterion, one at a time in a scratch copy. It confirms the named check fails each time.
 - **The 30-minute version:** tag [`v0.1-30min`](https://github.com/mrcoven94/pathways-next-step/tree/v0.1-30min) is the slice as it stood 23 minutes after the repo started, before any review. To run it: `git checkout v0.1-30min && npm test && npm start` (15 checks, all passing). Compare it with `main` to see what review added.
 - Node 20 or newer. No `npm install`, no API key, no accounts, no database.
 
@@ -64,7 +64,7 @@ It also proves the note arrives word for word through the advisor read, that one
 
 **How production differs.**
 - **Storage.** The queue is in memory, and on Vercel each server instance has its own, so a request can vanish on restart or land where the inbox isn't looking. Production needs a durable queue with the note encrypted as its own field, so the store and its backups hold ciphertext.
-- **Who the advisor is.** In the demo the student and the advisor are the same person in one browser, so a key that browser made stands in for identity. Production uses the district's sign-in, assigns each request to an advisor, and records the advisor's identity with every open.
+- **Who the advisor is.** In the demo the student and the advisor are the same person in one browser, so a key that browser made stands in for identity. It shows that this browser sent the request, not who is sitting at it: anyone using the same browser profile can read its notes, which is fine for invented data and not for a real student's. Production uses the district's sign-in, assigns each request to an advisor, and records the advisor's identity with every open.
 - **Retention.** Hand-offs are deleted 90 days after they're resolved, as in the data inventory below.
 - **The model.** A real provider goes behind the same gateway, under zero retention, with egress from the server limited to that provider. A daily canary student leaves a sentinel note and searches the provider-side log for it.
 - **Logging.** Request bodies are never logged at the host, and the error tracker is set to drop them.
@@ -139,7 +139,7 @@ What isn't collected at all: age or birth date, last name, phone, email, address
 
 ## The checks
 
-`npm test` runs 43 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim: 43 deliberate breaks, every one caught. Writing it caught one weak test. AC5b had only checked the time zone it was handed, never the app's default (`docs/process.md`, entry 13).
+`npm test` runs 43 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim: 48 deliberate breaks, every one caught. Writing it caught one weak test. AC5b had only checked the time zone it was handed, never the app's default (`docs/process.md`, entry 13).
 
 "Today" is the date in Pacific time, so Northline stays open until midnight on Nov 30 (AC5b). To replay a plan on another date, add `?today=2026-12-05` to the URL. The screen then says it's showing a replay.
 

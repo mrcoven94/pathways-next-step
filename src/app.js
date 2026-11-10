@@ -46,9 +46,12 @@ const keyId = (key) => createHash('sha256').update(key).digest('hex');
 const bearer = (header) => /^Bearer (\S+)$/.exec(header ?? '')?.[1] ?? '';
 /** A request as the inbox list shows it: everything but the note, which stays sealed, and the inbox it sits in. */
 const listed = ({ note, inbox, ...rest }) => ({ ...rest, has_note: !note.empty });
-const MAX_QUEUE = 500; // the demo queue is in memory, so it has a ceiling; the oldest requests go first
+// The demo queue is in memory, so it has ceilings. One inbox can't fill it, and the oldest requests go first.
+const MAX_QUEUE = 500;
+const MAX_PER_INBOX = 20;
 
-// Every inbox starts with the same two invented requests, so the page shows what an advisor sees at once.
+// Every inbox shows the same two invented requests, so the page shows what an advisor sees at once.
+// They are made once and kept apart from the queue: listing them costs real requests no room.
 const SAMPLES = [
   { first_name: 'Dani', question: 'are there seats left?', reasons: ['DIPLOMA_TIMING_UNKNOWN', 'UNKNOWN_SEATS'], next_step: 'ask_advisor_then_apply',
     note: 'My dad Marcus Hale lost his job last month, so I need to work while I train. You can text me at 253-555-0119 or dani.r@example.com. We live at 418 Alder Street in Tacoma.' },
@@ -66,6 +69,11 @@ export function todayIn(timeZone = 'America/Los_Angeles', now = new Date()) {
 export function createApp({ model = mockModel, logFile = null, today = () => todayIn(), handoffCode = newHandoffCode } = {}) {
   const gateway = createGateway({ model, logFile });
   const handoffs = []; // stand-in for the advisor queue; a request is served only to the inbox it was sent to
+  const samples = SAMPLES.map((s, i) => ({
+    code: `ADV-SMP${'AB'[i]}`, first_name: s.first_name, note: seal(s.note), question: s.question, reasons: s.reasons,
+    next_step: s.next_step, at: new Date().toISOString(), status: 'new', sample: true, inbox: null, crisis: false,
+  }));
+  const used = new Set(samples.map((s) => s.code)); // every code ever given out, so one is never given twice
   const opens = []; // every time a sealed note was opened: why, which request, when. Never the text.
 
   async function plan({ answers, today: asOf }) {
@@ -102,11 +110,12 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
     return { kind: 'answer', topic, ...reply, facts, open, advisor: advisorFacts() };
   }
 
-  function handoff({ first_name = '', note = '', question = '', reasons = [], next_step = null, inbox_key = '' }, sample = false) {
+  function handoff({ first_name = '', note = '', question = '', reasons = [], next_step = null, inbox_key = '' }) {
     const clean = (s, n) => String(s ?? '').slice(0, n);
     const raw = clean(note, 1000); // the last line that holds the note as plain text
     let code = handoffCode();
-    while (handoffs.some((h) => h.code === code)) code = handoffCode(); // a code names one request
+    while (used.has(code)) code = handoffCode(); // a code names one request, for good
+    used.add(code);
     const request = {
       code,
       first_name: clean(first_name, 40),
@@ -116,11 +125,13 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
       next_step: next_step ? clean(next_step, 40) : null,
       at: new Date().toISOString(),
       status: 'new',
-      sample,
+      sample: false,
       inbox: KEY.test(String(inbox_key)) ? keyId(inbox_key) : null, // no key: the request is queued, and no inbox shows it
     };
     request.crisis = [request.first_name, raw, request.question].some(isCrisis);
     handoffs.push(request);
+    const own = request.inbox ? handoffs.filter((h) => h.inbox === request.inbox) : [];
+    if (own.length > MAX_PER_INBOX) handoffs.splice(handoffs.indexOf(own[0]), 1);
     if (handoffs.length > MAX_QUEUE) handoffs.splice(0, handoffs.length - MAX_QUEUE);
     return {
       code: request.code,
@@ -141,14 +152,14 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
     const [, code, status] = m;
     if (!code) {
       if (req.method !== 'GET') return send(res, 404, { error: 'Not found' });
-      if (!mine().some((h) => h.sample)) for (const s of SAMPLES) handoff({ ...s, inbox_key: key }, true);
-      return send(res, 200, { requests: mine().map(listed) });
+      return send(res, 200, { requests: [...mine(), ...samples].map(listed) });
     }
-    const request = mine().find((h) => h.code === code);
+    const request = mine().find((h) => h.code === code) ?? samples.find((h) => h.code === code);
     if (!request) return send(res, 404, { error: 'Not found' });
     if (status && req.method === 'POST') {
       const next = (await readJson(req)).status;
       if (!STATUSES.includes(next)) return send(res, 400, { error: 'Status must be new, in_progress or resolved.' });
+      if (request.sample) return send(res, 200, { request: { ...listed(request), status: next } }); // every inbox shares the samples, so they never change
       request.status = next;
       return send(res, 200, { request: listed(request) });
     }

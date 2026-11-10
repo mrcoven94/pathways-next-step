@@ -96,7 +96,8 @@ test('AC18 private note: it reaches the advisor through the read path, and no mo
     assert.equal(JSON.parse(seen['the advisor list']).requests.find((r) => r.code === ticket.body.code).has_note, true, 'the list says a note exists without carrying it');
 
     // The queue itself, in every form a log line, an error or a store would turn it into.
-    const queued = s.app.handoffs.at(-1);
+    const queued = s.app.handoffs.find((h) => h.code === ticket.body.code);
+    assert.ok(!queued.note.empty, 'this is her request, with her note in it');
     queueForms = {
       'JSON of the queue': JSON.stringify(s.app.handoffs),
       'a string of the note': String(queued.note),
@@ -113,7 +114,10 @@ test('AC18 private note: it reaches the advisor through the read path, and no mo
     opensBefore = s.app.opens.length;
     const read = await get(s, `/api/advisor/requests/${ticket.body.code}`, KEY);
     assert.equal(read.status, 200);
-    opened = (await read.json()).request;
+    seen['the advisor read, checked for the key only'] = '';
+    const readBody = await read.text();
+    assert.ok(!readBody.includes(KEY), 'the read does not send the inbox key back');
+    opened = JSON.parse(readBody).request;
   } finally {
     cap.restore();
     await s?.close();
@@ -204,13 +208,23 @@ test('AC19 the gateway refuses the note in every position of every payload, as t
 test('AC20 an inbox opens only with its own key, shows only its own requests, and its list never carries a note', async () => {
   const s = await startApp();
   const post = (path, body, key) => fetch(s.base + path, { method: 'POST', headers: { 'content-type': 'application/json', ...(key && { authorization: `Bearer ${key}` }) }, body: JSON.stringify(body) });
+  const replies = []; // every successful reply, whole, scanned at the end for a key
+  const list = async (key) => {
+    const text = await (await get(s, '/api/advisor/requests', key)).text();
+    replies.push(text);
+    return JSON.parse(text).requests;
+  };
   try {
-    const ticket = await s.post('/api/handoff', { first_name: 'Dani', note: NOTE, question: 'are there seats left?', reasons: ['UNKNOWN_SEATS'], inbox_key: KEY });
-    const one = `/api/advisor/requests/${ticket.body.code}`;
+    // Two browsers, each with a real note of its own.
+    const hers = await s.post('/api/handoff', { first_name: 'Dani', note: NOTE, question: 'are there seats left?', reasons: ['UNKNOWN_SEATS'], inbox_key: KEY });
+    const his = await s.post('/api/handoff', { first_name: 'Marcus', note: 'OTHER-BROWSER-NOTE night classes only', reasons: [], inbox_key: OTHER });
+    const one = `/api/advisor/requests/${hers.body.code}`;
+    const two = `/api/advisor/requests/${his.body.code}`;
+    replies.push(JSON.stringify(hers.body), JSON.stringify(his.body));
 
     // No key, or something that isn't a key: nothing is served, and nothing is opened.
     for (const key of [undefined, '', 'wrong', 'undefined', 'null', KEY + '0', KEY.slice(0, -1), KEY.toUpperCase(), 'g'.repeat(32), `${KEY} ${KEY}`]) {
-      for (const path of ['/api/advisor/requests', one]) {
+      for (const path of ['/api/advisor/requests', one, two]) {
         const res = await get(s, path, key);
         assert.equal(res.status, 401, `${path} with key ${JSON.stringify(key)}`);
         clean(await res.text(), `${path} without a key`);
@@ -218,43 +232,61 @@ test('AC20 an inbox opens only with its own key, shows only its own requests, an
     }
     assert.equal((await post(`${one}/status`, { status: 'resolved' })).status, 401, 'status needs the key too');
 
-    // Somebody else's key is a real key. It opens their inbox, which has the two samples and nothing of hers.
-    const theirs = await (await get(s, '/api/advisor/requests', OTHER)).json();
-    assert.deepEqual(theirs.requests.map((r) => r.sample), [true, true]);
-    assert.ok(!theirs.requests.some((r) => r.code === ticket.body.code));
-    assert.equal((await get(s, one, OTHER)).status, 404, 'her request does not exist for another inbox');
-    assert.equal((await post(`${one}/status`, { status: 'resolved' }, OTHER)).status, 404);
-    assert.equal(s.app.opens.length, 0, 'a refused request opens nothing');
+    // Each key opens its own inbox: its own request and the two samples, and nothing of the other's. Both ways.
+    for (const [key, mine, theirs, name] of [[KEY, hers, his, 'Dani'], [OTHER, his, hers, 'Marcus']]) {
+      const rows = await list(key);
+      assert.deepEqual(rows.map((r) => [r.first_name, r.sample]), [[name, false], ['Dani', true], ['Marcus', true]], `the inbox for ${name}`);
+      assert.equal(rows[0].code, mine.body.code);
+      assert.ok(!rows.some((r) => r.code === theirs.body.code), 'the other browser\'s request is not listed');
+      assert.equal((await get(s, `/api/advisor/requests/${theirs.body.code}`, key)).status, 404, 'the other browser\'s request does not exist here');
+      assert.equal((await post(`/api/advisor/requests/${theirs.body.code}/status`, { status: 'resolved' }, key)).status, 404);
+      clean(JSON.stringify(rows), `the list for ${name}`);
+    }
+    assert.equal(s.app.opens.length, 0, 'listing, and being refused, open nothing');
+    assert.deepEqual(s.app.handoffs.map((h) => h.status), ['new', 'new'], 'a refused status change changes nothing');
 
-    // Her own key: her request and the two samples. The samples are made once.
-    const list = await (await get(s, '/api/advisor/requests', KEY)).json();
-    await get(s, '/api/advisor/requests', KEY);
-    assert.equal((await (await get(s, '/api/advisor/requests', KEY)).json()).requests.length, 3);
-    const hers = list.requests.find((r) => r.code === ticket.body.code);
-    assert.deepEqual(Object.keys(hers).sort(), ['at', 'code', 'crisis', 'first_name', 'has_note', 'next_step', 'question', 'reasons', 'sample', 'status']);
-    assert.deepEqual({ ...hers, at: null }, { code: ticket.body.code, first_name: 'Dani', question: 'are there seats left?', reasons: ['UNKNOWN_SEATS'], next_step: null, at: null, status: 'new', sample: false, has_note: true, crisis: false });
-    clean(JSON.stringify(list), 'the advisor list');
-    assert.equal(s.app.opens.length, 0, 'listing opens nothing');
+    // Reading is per inbox too: each key gets its own note and never the other's.
+    const hisRead = await (await get(s, two, OTHER)).json();
+    replies.push(JSON.stringify(hisRead));
+    assert.equal(hisRead.request.note, 'OTHER-BROWSER-NOTE night classes only');
+    clean(JSON.stringify(hisRead), 'the other browser\'s read');
+    assert.deepEqual(s.app.opens.map((o) => o.code), [his.body.code]);
 
-    assert.equal((await post(`${one}/status`, { status: 'in_progress' }, KEY)).status, 200);
+    const row = (await list(KEY))[0];
+    assert.deepEqual(Object.keys(row).sort(), ['at', 'code', 'crisis', 'first_name', 'has_note', 'next_step', 'question', 'reasons', 'sample', 'status']);
+    assert.deepEqual({ ...row, at: null }, { code: hers.body.code, first_name: 'Dani', question: 'are there seats left?', reasons: ['UNKNOWN_SEATS'], next_step: null, at: null, status: 'new', sample: false, has_note: true, crisis: false });
+
+    // Triage: her status changes hers only. A sample answers but is shared by every inbox, so it never changes.
+    const moved = await post(`${one}/status`, { status: 'in_progress' }, KEY);
+    replies.push(await moved.text());
+    assert.equal(moved.status, 200);
     assert.equal((await post(`${one}/status`, { status: NOTE }, KEY)).status, 400);
-    assert.equal((await (await get(s, '/api/advisor/requests', KEY)).json()).requests.find((r) => r.code === ticket.body.code).status, 'in_progress');
+    assert.deepEqual(s.app.handoffs.map((h) => h.status), ['in_progress', 'new']);
+    const sample = (await list(KEY)).find((r) => r.sample);
+    assert.equal((await (await post(`/api/advisor/requests/${sample.code}/status`, { status: 'resolved' }, KEY)).json()).request.status, 'resolved');
+    assert.equal((await list(OTHER)).find((r) => r.code === sample.code).status, 'new', 'one browser cannot change what another sees');
     assert.equal((await get(s, '/api/advisor/requests/ADV-ZZZZ', KEY)).status, 404);
-    assert.equal(s.app.opens.length, 0, 'triage without reading opens nothing');
+    assert.equal(s.app.opens.length, 1, 'triage without reading opens nothing');
 
-    // The key itself is nowhere: not in the queue, not in any reply.
-    for (const text of [JSON.stringify(s.app.handoffs), JSON.stringify(list), JSON.stringify(theirs), JSON.stringify(ticket.body)]) {
+    // A key is nowhere: not in the queue, not in any reply, successful ones included.
+    for (const text of [JSON.stringify(s.app.handoffs), ...replies]) {
       assert.ok(!text.includes(KEY) && !text.includes(OTHER), 'an inbox key is never stored or sent back');
     }
 
     // A hand-off with no key still lands in the queue, as it did before there was an inbox. No inbox shows it.
     const old = await s.post('/api/handoff', { first_name: 'Dani', note: NOTE, reasons: [] });
     assert.match(old.body.code, /^ADV-[A-Z2-9]{4}$/);
-    assert.equal(s.app.handoffs.at(-1).inbox, null);
+    assert.equal(s.app.handoffs.find((h) => h.code === old.body.code).inbox, null);
     for (const key of [KEY, OTHER]) assert.equal((await get(s, `/api/advisor/requests/${old.body.code}`, key)).status, 404);
 
-    // The demo queue has a ceiling.
-    for (let i = 0; i < 520; i++) s.app.handoff({ first_name: 'x', inbox_key: OTHER });
+    // The demo queue has ceilings. Listing with any number of keys costs nothing, and one inbox can't push out another's request.
+    const before = s.app.handoffs.length;
+    for (let i = 0; i < 300; i++) await list(i.toString(16).padStart(32, '0'));
+    assert.equal(s.app.handoffs.length, before, 'listing adds nothing to the queue');
+    for (let i = 0; i < 60; i++) s.app.handoff({ first_name: 'x', inbox_key: OTHER });
+    assert.equal(s.app.handoffs.filter((h) => h.first_name === 'x').length, 20, 'one inbox holds twenty requests');
+    assert.equal((await get(s, one, KEY)).status, 200, 'her request is still there');
+    for (let i = 0; i < 520; i++) s.app.handoff({ first_name: 'y', inbox_key: (i + 1000).toString(16).padStart(32, '0') });
     assert.equal(s.app.handoffs.length, 500);
   } finally {
     await s.close();
@@ -285,6 +317,17 @@ test('AC20b two requests never share a code, so an advisor can never open one st
     const read = async (code) => (await (await get(s, `/api/advisor/requests/${code}`, KEY)).json()).request;
     assert.equal((await read('ADV-AAAA')).note, NOTE);
     assert.deepEqual([(await read('ADV-BBBB')).first_name, (await read('ADV-BBBB')).note], ['Marcus', 'a different note']);
+
+    // Push the first request out of the queue, then let the generator offer its code again. It is not given twice,
+    // so an old link can never open a newer request.
+    for (const letter of 'CDEFGHJKMNPQRSTUVWXY') codes.push(`ADV-${letter}222`); // twenty codes, all different
+    const fillers = new Set();
+    for (let i = 0; i < 20; i++) fillers.add((await s.post('/api/handoff', { first_name: 'x', reasons: [], inbox_key: KEY })).body.code);
+    assert.equal((await get(s, '/api/advisor/requests/ADV-AAAA', KEY)).status, 404, 'the oldest request has left the queue');
+    codes.push('ADV-AAAA', 'ADV-DDDD');
+    const next = await s.post('/api/handoff', { first_name: 'Priya', note: 'the newest note', reasons: [], inbox_key: KEY });
+    assert.equal(next.body.code, 'ADV-DDDD');
+    assert.equal((await get(s, '/api/advisor/requests/ADV-AAAA', KEY)).status, 404, 'the old code still opens nothing');
   } finally {
     await s.close();
   }
