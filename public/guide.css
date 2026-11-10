@@ -1,0 +1,44 @@
+/* The walkthrough at /guide. Built on app.css: same tokens, same type, one wider reading column. */
+#app.guide { max-width: 44rem; }
+body[data-screen='guide'] .site-footer { max-width: 44rem; }
+.guide .wordmark { text-decoration: none; }
+
+.guide h1 { margin-bottom: 14px; }
+.guide .lede-ink { max-width: 60ch; }
+.guide p, .guide li { max-width: 66ch; }
+.guide p + p, .guide ul + p, .guide ol + p, .guide pre + p { margin-top: 14px; }
+.guide p a, .guide li a { color: var(--pen); }
+
+.guide section { margin-top: 64px; scroll-margin-top: 16px; }
+.guide section > h2 { font-size: clamp(1.5rem, 5.5vw, 1.85rem); line-height: 1.12; font-weight: 750; letter-spacing: -0.02em; margin-bottom: 16px; }
+.guide section > h3 { font-size: 1.08rem; margin: 30px 0 8px; }
+.guide section > h2 + h3 { margin-top: 0; }
+
+.guide ul, .guide ol { margin: 10px 0 0; padding-left: 22px; }
+.guide li + li { margin-top: 10px; }
+.guide li { padding-left: 2px; }
+
+.guide blockquote { margin: 0; padding: 16px 18px; background: var(--paper-2); border-radius: 12px; color: var(--ink); font-size: 1.06rem; line-height: 1.5; }
+.guide .answer { color: var(--ink); font-size: 1.06rem; }
+.guide .warn { margin-bottom: 4px; padding: 12px 14px; background: var(--ask-soft); border-radius: 12px; color: var(--ink); font-weight: 550; }
+.guide .rule { margin-top: 18px; padding: 18px 20px; background: var(--pen-soft); border-radius: 16px; color: var(--ink); font-size: 1.12rem; font-weight: 600; line-height: 1.45; }
+
+.guide code { font: 0.88em/1.4 ui-monospace, 'SF Mono', Menlo, monospace; color: var(--ink); overflow-wrap: anywhere; }
+.guide a code { color: inherit; }
+.guide pre { margin: 14px 0 0; padding: 14px 16px; background: var(--paper-2); border-radius: 12px; overflow-x: auto; }
+.guide pre code { display: block; font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* The video slot. Today it holds one line of text. A <video> from this site, or a link, drops into the same box;
+   with a video in it, the box takes the video's shape. */
+.guide .video { margin-top: 24px; padding: 16px 20px; background: var(--paper-2); border-radius: 16px; overflow: hidden; }
+.guide .video p { color: var(--ink); font-weight: 600; }
+.guide .video:has(video) { padding: 0; aspect-ratio: 16 / 9; }
+.guide .video video { width: 100%; height: 100%; display: block; background: var(--ink); }
+.guide .video a { color: var(--pen); font-weight: 600; }
+
+.guide .toc { margin-top: 28px; }
+.guide .toc ul { list-style: none; margin: 0; padding: 0; }
+.guide .toc li { margin: 0; padding: 0; }
+.guide .toc a { display: inline-block; padding: 10px 0; line-height: 1.35; font-weight: 550; text-underline-offset: 3px; }
+
+.guide .steps li::marker { color: var(--muted); font-weight: 600; }

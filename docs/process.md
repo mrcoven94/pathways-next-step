@@ -165,3 +165,11 @@ Tools: Claude Code (Opus 5.5) as the architect and builder. A Claude subagent re
 - **What Sol 6.1 found in it:** Six things, all fixed. Counts from the data went into the page unescaped. A mutation run that crashed partway left the last clean result in place, so the page would have kept saying everything was caught. A note with a missing fixture was labelled "wrongly blocked". New results could be paired with old note text. One sentence said details stay hidden when the detector misses some. And the checks proved the totals add up, not that the page shows the right number in the right column.
 - **What changed:** Every value is escaped and counts are validated. The mutation script writes its file as it goes and marks it finished only at the end, and the page shows an unfinished run as unfinished. Results carry the hash of the notes they measured. The checks now read the rendered table.
 
+## 20. "An inbox is useless unless they can respond" (David, 2026-11-10)
+
+- **AI built:** An inbox where an advisor could open a request, read the note and set a status. The planner told the student "they answer within 2 business days", and nothing in the app could answer her.
+- **What David said:** "An inbox is useless unless they can respond, right? Like, what is this?" Then: it needs to look better, it should simulate conversations, and a reviewer needs a panel to reach the model log, the report, the repo and the planner.
+- **Why he was right:** The task says the note must be available "through the intended advisor workflow". Reading without answering is half a workflow. I had met the letter of the criterion and missed what an advisor is for.
+- **What changed:** The advisor replies on the opened request and the student sees the answer on her own screen. A reply is sealed like the note, since it can quote it, and a sentinel check (AC25) holds it out of every model prompt, log and error. The inbox was redesigned through four rounds with a critic, the samples carry an invented conversation, and a collapsible panel links the pages a reviewer needs.
+- **What was shipped fast:** David asked for this to ship at once, so it merged on green checks with the independent review running alongside, and the review's findings follow in their own change.
+

@@ -4,10 +4,11 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 
 - **Live:** https://pathways-next-step.vercel.app (records and every model call are at [/how](https://pathways-next-step.vercel.app/how))
 - **Run:** `npm start`, then open http://localhost:3000
+- **Guide:** https://pathways-next-step.vercel.app/guide walks through the private-note task one acceptance criterion at a time: what it asks, what I did, where to see it, how it is proven.
 - **Report:** https://pathways-next-step.vercel.app/report shows what Rampart Edge caught and missed on 40 invented notes, each check that guards the note, and every mutation aimed at it. The data is in `public/data/` and is rewritten by `npm run eval:rampart` and `npm run mutate`.
-- **Advisor inbox:** https://pathways-next-step.vercel.app/advisor (locally, http://localhost:3000/advisor). No sign-in: this is a demo with invented students, and the inbox is public. It opens with two invented requests and shows any note sent from the planner.
-- **Test:** `npm test` (62 checks, prints pass or fail, writes `model-calls.log` with a summary at the top)
-- **Prove the tests bite:** `npm run mutate` breaks 44 guards, at least one behind every acceptance criterion, one at a time in a scratch copy. It confirms the named check fails each time.
+- **Advisor inbox:** https://pathways-next-step.vercel.app/advisor (locally, http://localhost:3000/advisor). No sign-in: this is a demo with invented students, and the inbox is public. It opens with two invented requests, each with an invented conversation, and shows any note sent from the planner. The advisor can reply, the student sees the answer on her own screen and can write back.
+- **Test:** `npm test` (84 checks, prints pass or fail, writes `model-calls.log` with a summary at the top)
+- **Prove the tests bite:** `npm run mutate` breaks 50 guards, at least one behind every acceptance criterion, one at a time in a scratch copy. It confirms the named check fails each time.
 - **The 30-minute version:** tag [`v0.1-30min`](https://github.com/mrcoven94/pathways-next-step/tree/v0.1-30min) is the slice as it stood 23 minutes after the repo started, before any review. To run it: `git checkout v0.1-30min && npm test && npm start` (15 checks, all passing). Compare it with `main` to see what review added.
 - Node 20 or newer. No `npm install`, no API key, no accounts, no database.
 
@@ -35,6 +36,7 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 **The task.** A student leaves a private note for their advisor. The advisor can read it through the advisor workflow. It is never sent to an AI model.
 
 **What changed, and it is small.** The note was already captured and already kept away from the gateway by convention. Three things were missing, and each is now code:
+- **The advisor can answer it.** A reply is sealed like the note, since it can quote it, and the student reads it through her own route, which returns the status and the replies and never the note or her name (AC25).
 - **The advisor can read it.** `/advisor` is an inbox. The list shows who asked and why, without the note. Opening a request opens the note. In this demo the inbox is public, and both pages say so.
 - **The note is sealed where it arrives** (`src/core/private.js`). It prints as "[private]" in JSON, strings, templates, logs and errors. One function can open it, and every open is recorded: why, which request, when, never the text.
 - **The gateway checks the copy it sends**, so an object can't show the check one thing and the prompt another.
@@ -139,7 +141,7 @@ What isn't collected at all: age or birth date, last name, phone, email, address
 
 ## The checks
 
-`npm test` runs 62 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim: 44 deliberate breaks, every one caught. Writing it caught one weak test. AC5b had only checked the time zone it was handed, never the app's default (`docs/process.md`, entry 13).
+`npm test` runs 84 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim: 50 deliberate breaks, every one caught. Writing it caught one weak test. AC5b had only checked the time zone it was handed, never the app's default (`docs/process.md`, entry 13).
 
 "Today" is the date in Pacific time, so Northline stays open until midnight on Nov 30 (AC5b). To replay a plan on another date, add `?today=2026-12-05` to the URL. The screen then says it's showing a replay.
 

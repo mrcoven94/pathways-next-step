@@ -75,7 +75,7 @@ const MUTATIONS = [
   ['A refused payload is quoted in the error', 'src/core/gateway.js',
     'throw new PayloadRejected(`${path}: not an allowed value`);', 'throw new PayloadRejected(`${path}: ${JSON.stringify(v)} is not an allowed value`);', 'AC19'],
   ['The inbox list carries the note', 'src/app.js',
-    'const listed = ({ note, ...rest }) => ({ ...rest, has_note: !note.empty });', "const listed = ({ note, ...rest }) => ({ ...rest, has_note: !note.empty, note: Sealed.open(note, [], { purpose: 'advisor_read', code: rest.code }) });", 'AC20'],
+    'const listed = ({ note, replies, ...rest }) => ({ ...rest, has_note: !note.empty, replies: replies.length });', "const listed = ({ note, replies, ...rest }) => ({ ...rest, has_note: !note.empty, replies: replies.length, note: Sealed.open(note, [], { purpose: 'advisor_read', code: rest.code }) });", 'AC20'],
   ['Two requests can share a code', 'src/app.js',
     'while (used.has(code)) code = handoffCode();', '', 'AC20b'],
   ['A code is given out again once its request has left the queue', 'src/app.js',
@@ -98,6 +98,18 @@ const MUTATIONS = [
     '.filter(([, r]) => r.total > 0)', '.filter(([, r]) => r.total >= 0)', 'AC23'],
   ['The report shows the missed count in the Caught column', 'public/report-client.js',
     '      <td data-label="Caught">${esc(r.caught)}</td>', '      <td data-label="Caught">${esc(r.missed)}</td>', 'AC23'],
+  ['The note open count is off by one', 'src/app.js',
+    'opens: before.length + 1,', 'opens: before.length,', 'AC20c'],
+  ['A resolved crisis request still jumps the queue', 'public/advisor-client.js',
+    "const rank = (r) => (r.crisis && r.status !== 'resolved' ? 0", 'const rank = (r) => (r.crisis ? 0', 'AC21'],
+  ['An advisor reply is printed to the server log', 'src/app.js',
+    "      request.replies.push({ from: 'advisor', text: seal(text), at });", "      request.replies.push({ from: 'advisor', text: seal(text), at }); console.log('reply', text);", 'AC25'],
+  ['A student follow-up is printed to the server log', 'src/app.js',
+    "    request.replies.push({ from: 'student', text: seal(text), at });", "    request.replies.push({ from: 'student', text: seal(text), at }); console.log(text);", 'AC25'],
+  ['The student read returns the note', 'src/app.js',
+    'return send(res, 200, { code: request.code, status: request.status, replies });', "return send(res, 200, { code: request.code, status: request.status, replies, note: Sealed.open(request.note, opens, { purpose: 'advisor_read', code }) });", 'AC25'],
+  ['An unfinished mutation run shows counts in the criteria', 'public/report-client.js',
+    "    if (state !== 'finished') return '';", "    if (state === 'none') return '';", 'AC23'],
 ];
 
 // For /report: this run first, then up to nine earlier runs. The file is written before the first

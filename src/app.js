@@ -35,22 +35,34 @@ function newHandoffCode() {
 }
 
 const STATUSES = ['new', 'in_progress', 'resolved'];
-const PAGES = { '/': 'index.html', '/how': 'how.html', '/advisor': 'advisor.html', '/report': 'report.html' };
+const PAGES = { '/': 'index.html', '/how': 'how.html', '/advisor': 'advisor.html', '/report': 'report.html', '/guide': 'guide.html' };
 // The inbox shows student-typed text, so it may load nothing from anywhere else.
 // 'wasm-unsafe-eval' lets the page compile Rampart Edge's WASM engine from this site; it allows no eval of JS.
 const INBOX_POLICY = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 
-/** A request as the inbox list shows it: everything but the note, which stays sealed until the request is opened. */
-const listed = ({ note, ...rest }) => ({ ...rest, has_note: !note.empty });
+/** A request as the inbox list shows it: everything but the note and the replies, which stay sealed. Replies are only counted. */
+const listed = ({ note, replies, ...rest }) => ({ ...rest, has_note: !note.empty, replies: replies.length });
 const MAX_QUEUE = 500; // the demo queue is in memory, so it has a ceiling; the oldest requests go first
 
 // The inbox always shows two invented requests, so the page shows what an advisor sees at once.
 // They are made once and kept apart from the queue: listing them costs real requests no room.
 const SAMPLES = [
   { first_name: 'Dani', question: 'are there seats left?', reasons: ['DIPLOMA_TIMING_UNKNOWN', 'UNKNOWN_SEATS'], next_step: 'ask_advisor_then_apply',
-    note: 'My dad Marcus Hale lost his job last month, so I need to work while I train. You can text me at 253-555-0119 or dani.r@example.com. We live at 418 Alder Street in Tacoma.' },
-  { first_name: 'Marcus', question: 'how much aid will I get?', reasons: ['UNKNOWN_AID_AMOUNT'], next_step: 'start_aid_application', note: '' },
+    note: 'My dad Marcus Hale lost his job last month, so I need to work while I train. You can text me at 253-555-0119 or dani.r@example.com. We live at 418 Alder Street in Tacoma.',
+    status: 'resolved',
+    // An invented exchange, so a reviewer sees a whole conversation without typing. Minutes are before the server started.
+    thread: [
+      ['advisor', 150, 'Hi Dani, thanks for telling me. The records don’t say how many seats are left or when you need your diploma, so I called Northline and will confirm both by Thursday. Do you expect your diploma in June, or a GED sooner?'],
+      ['student', 120, 'June. My phone is new, it’s 253-555-0144 if texting is easier.'],
+      ['advisor', 30, 'Thanks, Dani. I’ll text you on Thursday once Northline confirms both. Then let’s fill in the application together before the deadline.'],
+    ] },
+  { first_name: 'Marcus', question: 'how much aid will I get?', reasons: ['UNKNOWN_AID_AMOUNT'], next_step: 'start_aid_application', note: '',
+    status: 'in_progress',
+    thread: [
+      ['advisor', 60, 'Hi Marcus. The records don’t list award amounts, and the amount is different for each student, so I can’t give you a number yet. Start your FAFSA or state aid application this week and send me a message when it’s in. We’ll go through it together.'],
+    ] },
 ];
+const MAX_REPLIES = 10; // messages after the note, from either side
 
 /**
  * @param {{model?: object, logFile?: string|null, today?: () => string}} opts
@@ -63,12 +75,16 @@ export function todayIn(timeZone = 'America/Los_Angeles', now = new Date()) {
 export function createApp({ model = mockModel, logFile = null, today = () => todayIn(), handoffCode = newHandoffCode } = {}) {
   const gateway = createGateway({ model, logFile });
   const handoffs = []; // stand-in for the advisor queue; served only by the advisor routes below
+  const started = Date.now();
+  const ago = (min) => new Date(started - min * 60000).toISOString();
   const samples = SAMPLES.map((s, i) => ({
     code: `ADV-SMP${'AB'[i]}`, first_name: s.first_name, note: seal(s.note), question: s.question, reasons: s.reasons,
-    next_step: s.next_step, at: new Date().toISOString(), status: 'new', sample: true, crisis: false,
+    next_step: s.next_step, at: ago(180), status: s.status, sample: true, crisis: false,
+    replies: s.thread.map(([from, min, text]) => ({ from, text: seal(text), at: ago(min) })), // sealed like any message
   }));
   const used = new Set(samples.map((s) => s.code)); // every code ever given out, so one is never given twice
   const opens = []; // every time a sealed note was opened: why, which request, when. Never the text.
+  const replyOpens = []; // every time a sealed reply was read, by the advisor or the student. Kept apart so note opens stay a true count.
 
   async function plan({ answers, today: asOf }) {
     if (asOf !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(asOf)) throw new BadAnswers('today must look like 2026-12-05.');
@@ -120,6 +136,7 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
       at: new Date().toISOString(),
       status: 'new',
       sample: false,
+      replies: [], // the advisor's answers, each sealed like the note: { text: Sealed, at }
     };
     request.crisis = [request.first_name, raw, request.question].some(isCrisis);
     handoffs.push(request);
@@ -134,9 +151,10 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
 
   /** The advisor read path: list without notes, open one request, set a status. Public in this demo. */
   async function advisor(req, res, pathname) {
-    const m = pathname.match(/^\/api\/advisor\/requests(?:\/(ADV-[A-Z2-9]{4})(\/status)?)?$/);
+    const m = pathname.match(/^\/api\/advisor\/requests(?:\/(ADV-[A-Z2-9]{4})(?:\/(status|reply))?)?$/);
     if (!m) return send(res, 404, { error: 'Not found' });
-    const [, code, status] = m;
+    const [, code, action] = m;
+    const status = action === 'status';
     if (!code) {
       if (req.method !== 'GET') return send(res, 404, { error: 'Not found' });
       return send(res, 200, { requests: [...handoffs, ...samples].map(listed) });
@@ -149,10 +167,51 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
       request.status = next;
       return send(res, 200, { request: listed(request) });
     }
-    if (!status && req.method === 'GET') {
-      return send(res, 200, { request: { ...listed(request), note: Sealed.open(request.note, opens, { purpose: 'advisor_read', code }) } });
+    if (action === 'reply' && req.method === 'POST') {
+      const body = await readJson(req);
+      // Fixed messages only: a refusal never repeats what was typed.
+      const text = typeof body.text === 'string' ? body.text.trim() : '';
+      if (!text || text.length > 1000) return send(res, 400, { error: 'A reply must be 1 to 1000 characters.' });
+      if (body.status !== undefined && !STATUSES.includes(body.status)) return send(res, 400, { error: 'Status must be new, in_progress or resolved.' });
+      if (request.replies.length >= MAX_REPLIES) return send(res, 400, { error: `A request holds ${MAX_REPLIES} replies at most.` });
+      const at = new Date().toISOString();
+      const first = !request.replies.some((r) => r.from === 'advisor');
+      request.replies.push({ from: 'advisor', text: seal(text), at });
+      // The first answer resolves the request unless the advisor chose a status. Later ones keep it as it is.
+      request.status = body.status ?? (first ? 'resolved' : request.status);
+      return send(res, 200, { request: listed(request), reply: { at } });
+    }
+    if (!action && req.method === 'GET') {
+      const before = opens.filter((o) => o.code === code); // earlier note opens: times only, never text
+      const note = Sealed.open(request.note, opens, { purpose: 'advisor_read', code });
+      const replies = request.replies.map((r) => ({ from: r.from, text: Sealed.open(r.text, replyOpens, { purpose: 'advisor_reply_read', code }), at: r.at }));
+      return send(res, 200, { request: { ...listed(request), note, replies, opens: before.length + 1, last_opened_at: before.at(-1)?.at ?? null } });
     }
     return send(res, 404, { error: 'Not found' });
+  }
+
+  /** The student's read of her own request: the code, the status and the answers. Never her note, name, question or reasons. */
+  const findRequest = (code) => /^ADV-[A-Z2-9]{4}$/.test(code) && (handoffs.find((h) => h.code === code) ?? samples.find((h) => h.code === code));
+  function studentRead(res, code) {
+    const request = findRequest(code);
+    if (!request) return send(res, 404, { error: 'Not found' });
+    const replies = request.replies.map((r) => ({ from: r.from, text: Sealed.open(r.text, replyOpens, { purpose: 'student_reply_read', code }), at: r.at }));
+    return send(res, 200, { code: request.code, status: request.status, replies });
+  }
+
+  /** The student answers back. Same limits and sealing as the advisor's replies; a crisis word flags the request again. */
+  async function studentReply(req, res, code) {
+    const request = findRequest(code);
+    if (!request) return send(res, 404, { error: 'Not found' });
+    const body = await readJson(req);
+    const text = typeof body.text === 'string' ? body.text.trim() : '';
+    if (!text || text.length > 1000) return send(res, 400, { error: 'A reply must be 1 to 1000 characters.' });
+    if (request.replies.length >= MAX_REPLIES) return send(res, 400, { error: `A request holds ${MAX_REPLIES} replies at most.` });
+    const at = new Date().toISOString();
+    request.replies.push({ from: 'student', text: seal(text), at });
+    if (isCrisis(text)) request.crisis = true;
+    if (request.status === 'resolved') request.status = 'in_progress'; // she wrote back, so it needs someone again
+    return send(res, 200, { code: request.code, status: request.status, reply: { at } });
   }
 
   async function serveStatic(pathname, res) {
@@ -184,6 +243,9 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
       if (req.method === 'POST' && pathname === '/api/plan') return send(res, 200, await plan(await readJson(req)));
       if (req.method === 'POST' && pathname === '/api/answer') return send(res, 200, await answer(await readJson(req)));
       if (req.method === 'POST' && pathname === '/api/handoff') return send(res, 200, handoff(await readJson(req)));
+      if (req.method === 'GET' && pathname.startsWith('/api/handoff/')) return studentRead(res, pathname.slice('/api/handoff/'.length));
+      const back = req.method === 'POST' && pathname.match(/^\/api\/handoff\/([^/]+)\/reply$/);
+      if (back) return await studentReply(req, res, back[1]);
       if (pathname.startsWith('/api/advisor/')) return await advisor(req, res, pathname);
       if (req.method === 'GET') return serveStatic(pathname, res);
       return send(res, 404, { error: 'Not found' });
@@ -196,7 +258,7 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
     }
   }
 
-  return { handle, plan, answer, handoff, gateway, handoffs, opens };
+  return { handle, plan, answer, handoff, gateway, handoffs, opens, replyOpens };
 }
 
 async function readJson(req) {

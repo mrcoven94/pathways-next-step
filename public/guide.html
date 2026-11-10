@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pathways · The private note</title>
+  <meta name="description" content="How the private note for an advisor meets each of the four acceptance criteria, where to see it, and where the proof stops.">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/schibstedgrotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/guide.css">
+  <link rel="stylesheet" href="/nav.css">
+  <script type="module" src="/nav.js"></script>
+</head>
+<body data-screen="guide">
+  <main id="app" class="guide">
+    <nav class="topbar">
+      <a class="wordmark ink" href="/">Pathways</a>
+      <a class="link" href="/">Open the planner</a>
+    </nav>
+
+    <h1>The private note, start to finish</h1>
+    <p class="lede-ink">Arjun, Tim: this is what the build came up with after our call on Nov 10, 2026. It follows your four acceptance criteria. Each one says what I did, where to click, and how it is proven. Where the proof stops, I say so.</p>
+
+    <section class="video" id="video" aria-label="Video walkthrough">
+      <p>Video walkthrough: coming</p>
+    </section>
+
+    <nav class="toc" aria-label="On this page">
+      <ul>
+        <li><a href="#task">The task and my answer</a></li>
+        <li><a href="#try">Try it in two minutes</a></li>
+        <li><a href="#ac1">Acceptance criterion 1: the advisor can read it</a></li>
+        <li><a href="#ac2">Acceptance criterion 2: it never reaches a model</a></li>
+        <li><a href="#ac3">Acceptance criterion 3: a test that fails on leakage</a></li>
+        <li><a href="#ac4">Acceptance criterion 4: what the test proves and misses</a></li>
+        <li><a href="#review">What review changed</a></li>
+        <li><a href="#next">What I would do next</a></li>
+        <li><a href="#links">Links</a></li>
+      </ul>
+    </nav>
+
+    <section id="task" aria-labelledby="task-title">
+      <h2 id="task-title">The task</h2>
+      <blockquote>A student wants to leave a private note for their advisor. The note should be available through the intended advisor workflow but must never be sent to an AI model. Make the smallest safe change and show how you would verify it.</blockquote>
+      <h3>My answer</h3>
+      <p class="answer">I added an advisor inbox at <a href="/advisor">/advisor</a> that opens the note the student already sends and lets the advisor reply, and sealed the note in code so it prints as “[private]” everywhere except that one recorded read. The boundary is the model gateway: a payload may hold only record IDs, codes and exact record text, so the note is refused in any position before a model is called. A sentinel test looks for the note in every prompt the model was handed, in <code>model-calls.log</code>, in every other response and in everything the server printed, and <code>npm run mutate</code> breaks each guard in turn to show the test fails when it should.</p>
+    </section>
+
+    <section id="try" aria-labelledby="try-title">
+      <h2 id="try-title">Try it</h2>
+      <p class="warn">The advisor inbox is public, with no sign-in. Anyone can read what you send. Type nothing real.</p>
+      <ol class="steps">
+        <li>Open <a href="/">the planner</a>. Type a made-up first name and tap Start.</li>
+        <li>Tap “Finishing high school”, pick Northline and one Cascade certificate, and tap Continue. Answer “Not sure” to the age question, then anything for the rest.</li>
+        <li>On your plan, tap “Ask an advisor now”.</li>
+        <li>Under “Anything else?”, write a note with a made-up name and a 555 number, for example: “My aunt Rosa Vale can drive me to interviews. Call me at 206-555-0134.” Tap “Send to an advisor”. If the page suggests leaving the number out, tap “Send as is”, so you can see what the inbox does with it.</li>
+        <li>On the next screen, follow “See what the advisor sees”. It opens <a href="/advisor">the advisor inbox</a>.</li>
+        <li>Open your request in the list and press “Open the note”. That press is the one read that opens the note, and it is counted. The number shows as “[phone hidden]”, and the name as “[name hidden]” when the detector finds it. The two sample requests already hold an invented conversation, if you would rather read than type.</li>
+        <li>Switch on “Show phone numbers”. The number appears, and nothing else changes.</li>
+        <li>Write a short reply as the advisor and send it. Keep it invented too: the inbox is public.</li>
+        <li>Go back to <a href="/">the planner</a> in the same browser and follow “See your request and answer”. The advisor’s answer is there, and you can write back.</li>
+        <li>Open <a href="/how">/how</a>, choose “What the model saw”, and search the page for a word from your note. It is not there. The same calls as raw JSON are at <a href="/api/log">/api/log</a>.</li>
+      </ol>
+      <p>One thing can go wrong on the live site. Each server instance keeps its own queue and call table in memory. If your request or the reply is missing, or the call table is empty, a different instance answered. Reload, or send again. That gap is the first piece of missing infrastructure under criterion 1.</p>
+    </section>
+
+    <section id="ac1" aria-labelledby="ac1-title">
+      <h2 id="ac1-title">Acceptance criterion 1</h2>
+      <h3>What it asks</h3>
+      <blockquote>Capture the note and make it available through the intended advisor workflow, or explicitly identify the missing infrastructure needed to do so.</blockquote>
+      <h3>What I did</h3>
+      <p>The note was already captured. The planner sent it to <code>/api/handoff</code>, which put it in the hand-off queue and never near the gateway. What was missing was the workflow around it. I read “the intended advisor workflow” as the full loop: the student sends, the advisor reads, the advisor replies, and the student sees the reply. The first version stopped at reading. I pushed for the rest: an inbox is useless unless they can respond. The routes behind the inbox:</p>
+      <ul>
+        <li><code>GET /api/advisor/requests</code> lists requests without notes. A row says a note exists without carrying it.</li>
+        <li><code>GET /api/advisor/requests/&lt;code&gt;</code> opens one note and records the open: why, which request, when. Never the text.</li>
+        <li><code>POST /api/advisor/requests/&lt;code&gt;/status</code> sets new, in progress or resolved, and never returns the note.</li>
+        <li><code>POST /api/advisor/requests/&lt;code&gt;/reply</code> sends the advisor’s answer.</li>
+        <li><code>GET /api/handoff/&lt;code&gt;</code> is what the student’s planner reads: the status and the replies, never the note or her name.</li>
+        <li><code>POST /api/handoff/&lt;code&gt;/reply</code> lets her write back, so a request is a conversation.</li>
+      </ul>
+      <p>The criterion also asks me to name the infrastructure that is missing. Two pieces are.</p>
+      <ul>
+        <li>A queue that survives a restart. Today it is in memory, and on Vercel each server instance has its own, so a request can vanish on restart or land where the inbox isn’t looking. Production needs a durable queue with the note encrypted as its own field, so the store and its backups hold ciphertext.</li>
+        <li>Who the advisor is. The inbox is public because every student in it is invented, and both pages say so. Production puts the district’s sign-in in front of it, assigns each request to one advisor, and records the advisor’s identity with every open.</li>
+      </ul>
+      <h3>Where to see it</h3>
+      <ul>
+        <li><a href="/advisor">The advisor inbox</a>, live, with two invented sample requests and anything sent from the planner.</li>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/blob/main/src/app.js#L153-L193"><code>src/app.js</code>, lines 153 to 193</a>: the advisor routes. The note is sealed where it arrives at <a href="https://github.com/mrcoven94/pathways-next-step/blob/main/src/app.js#L132">line 132</a>, and the list drops it at <a href="https://github.com/mrcoven94/pathways-next-step/blob/main/src/app.js#L44">line 44</a>.</li>
+      </ul>
+      <h3>How it is proven</h3>
+      <p>AC18 reads the note back through the advisor route and requires it word for word, with exactly one recorded open. AC20 requires that the list never carries a note, and that listing, a status change and wrong turns open nothing. AC25 covers the reply: the advisor sends it and the student reads it, without her note or her name. Mutations that break the read path: “The inbox list carries the note” and “A status change sends the note back” (AC20), and “Opening a note leaves no record” (AC18). Each one makes the named check fail.</p>
+      <ul>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/blob/main/test/private-note.test.js#L200-L247"><code>test/private-note.test.js</code>, AC20</a></li>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/blob/main/test/reply.test.js"><code>test/reply.test.js</code>, AC25</a></li>
+      </ul>
+    </section>
+
+    <section id="ac2" aria-labelledby="ac2-title">
+      <h2 id="ac2-title">Acceptance criterion 2</h2>
+      <h3>What it asks</h3>
+      <blockquote>The note does not enter model request payloads; enforce this at a trustworthy boundary.</blockquote>
+      <h3>What I did</h3>
+      <p>Two layers, both code, neither a prompt.</p>
+      <ul>
+        <li>The gateway’s closed allowlist. Every model call goes through <code>callModel</code> in <code>src/core/gateway.js</code>. A payload may hold only record IDs, decision and topic codes, and the exact text of record facts, each matching its record and key. Anything else, an extra field included, is refused before the call. I changed one thing here. The gateway used to check the object it was handed and then serialize it, so a hidden <code>toJSON</code> hook could pass the check and write something else into the prompt. It now copies the payload to plain data, checks the copy and sends the copy. Its errors say where the problem is, never what was there.</li>
+        <li>The sealed note. <code>src/core/private.js</code> holds the note in a private field from the moment it arrives. As JSON, a string, a template, a log line or <code>util.inspect</code>, it reads “[private]”. The only way to read it is <code>Sealed.open</code>, which needs a list to record the open in and accepts only a short closed list of reasons. The note is opened in one place, the advisor read.</li>
+      </ul>
+      <p>A reply gets the same treatment as the note, because a reply can quote it: sealed in the queue, and never in a model payload, the log or an error.</p>
+      <p>A detector cannot be the boundary. I ran Rampart Edge, a personal-details detector, over 40 invented notes. It found every email and street address and 6 of 7 names. It passed all 12 of the most private notes, a parent’s job loss, an eviction, a health worry, because they hold no identifier. A detector finds contact details. It does not know what is private. So it helps a person instead: it suggests the student leave contact details out, and it hides details in the inbox until the advisor switches each kind on.</p>
+      <p class="rule">The server never runs any model on a note, not even the detector. Rampart Edge runs only in the student’s browser and the advisor’s browser, the two places that already hold the note in the clear. It is served from this site, with no request to any other host.</p>
+      <h3>Where to see it</h3>
+      <ul>
+        <li><a href="/how">/how</a>, “What the model saw”: every call this server instance made, word for word.</li>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/blob/main/src/core/gateway.js#L182-L186"><code>src/core/gateway.js</code>, lines 182 to 186</a>: the copy is checked before anything leaves. The allowlist is <a href="https://github.com/mrcoven94/pathways-next-step/blob/main/src/core/gateway.js#L49-L78">lines 49 to 78</a>.</li>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/blob/main/src/core/private.js#L9-L37"><code>src/core/private.js</code>, lines 9 to 37</a>: the sealed note.</li>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/blob/main/public/rampart.js#L5"><code>public/rampart.js</code>, line 5</a>: the detector loads from this site’s own folder.</li>
+        <li><a href="/report">/report</a>: the detector’s results on all 40 notes.</li>
+      </ul>
+      <h3>How it is proven</h3>
+      <p>AC19 puts the note into 212 placements across both payload shapes: in place of each string, after each string, and as a new field on each object, as plain text, as a sealed value and inside an object. Five of the 212 are objects that try to show the check one thing and the prompt another. The gateway refuses every one before the model is called, and no rejection message holds the note. AC22 fails if any page, script or style names another host, and runs the real detector inside <code>npm test</code> with a check that it asked no other host for anything.</p>
+      <p>Mutations that break it: “The gateway checks the object it was handed, not the copy it sends”, “Extra fields are allowed in a model payload” and “A refused payload is quoted in the error” (AC19), and “The detector is loaded from a CDN again” (AC22).</p>
+      <ul>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/blob/main/test/private-note.test.js#L159-L198"><code>test/private-note.test.js</code>, AC19</a></li>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/blob/main/test/rampart.test.js#L24-L41"><code>test/rampart.test.js</code>, AC22</a></li>
+      </ul>
+    </section>
+
+    <section id="ac3" aria-labelledby="ac3-title">
+      <h2 id="ac3-title">Acceptance criterion 3</h2>
+      <h3>What it asks</h3>
+      <blockquote>Add an automated regression test (for example, a sentinel and model-calls.log inspection) that would fail on leakage.</blockquote>
+      <h3>What I did</h3>
+      <p>AC18 plants the string <code>SENTINEL-7Q4-PRIVATE</code> in a note, with a 555 number and a sentence about a parent’s job. It sends the note through the browser’s own request builder, keeps the app busy with more plans and questions after the note is in the queue, and pushes the note at the two endpoints that do reach the model. Then it looks for the sentinel, the number and “lost his job” in:</p>
+      <ul>
+        <li>every prompt the model was handed, recorded by a spy at <code>model.complete</code>, and that the spy and the gateway count the same number of calls;</li>
+        <li>every line of <code>model-calls.log</code>;</li>
+        <li>every response that is not the advisor read: the inbox list, the public log, the records, the hand-off reply, and the replies to each request that pushed the note at the model, to an unknown request and to a body that isn’t JSON;</li>
+        <li>everything the server printed, through <code>console</code> and raw writes to stdout and stderr;</li>
+        <li>the queue itself as JSON, as a string, in a template, through <code>util.inspect</code> and as a structured clone.</li>
+      </ul>
+      <p>It looks past <code>model-calls.log</code> because the gateway writes that log. A change that calls the model around the gateway never appears in it, and a check that reads only the log passes. One mutation does exactly that: it adds <code>model.complete(raw)</code> to the hand-off. The log stays clean. The spy at the model sees the note, and AC18 fails.</p>
+      <p><code>npm run mutate</code> copies the repo to a scratch folder, breaks one guard, runs the tests and requires the named check to fail. It does this for every guard in the list, and <a href="/report">/report</a> shows the last full run, guard by guard.</p>
+      <h3>Where to see it</h3>
+      <ul>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/blob/main/test/private-note.test.js#L41-L136"><code>test/private-note.test.js</code>, lines 41 to 136</a>: AC18. The spy is at <a href="https://github.com/mrcoven94/pathways-next-step/blob/main/test/private-note.test.js#L19-L22">line 19</a>.</li>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/blob/main/scripts/mutate.mjs#L63-L64"><code>scripts/mutate.mjs</code>, line 63</a>: the call around the gateway.</li>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/blob/main/model-calls.log"><code>model-calls.log</code></a> from the last test run.</li>
+      </ul>
+      <h3>How it is proven</h3>
+      <p>Run it yourself. Node 20 or newer, no install, no keys.</p>
+      <pre><code>git clone https://github.com/mrcoven94/pathways-next-step/
+cd pathways-next-step
+npm test
+npm run mutate
+npm start</code></pre>
+      <p><code>npm test</code> runs every check and ends with PASS or FAIL. <code>npm run mutate</code> breaks each guard in a scratch copy and prints CAUGHT or SURVIVED for each. <code>npm start</code> runs the app and prints the address to open.</p>
+      <p>Mutations aimed at AC18, beyond the call around the gateway: the note kept in the queue as plain text, a sealed note that gives up its text as JSON, the note printed to the server log, and the parser’s error sent back for a body that isn’t JSON.</p>
+    </section>
+
+    <section id="ac4" aria-labelledby="ac4-title">
+      <h2 id="ac4-title">Acceptance criterion 4</h2>
+      <h3>What it asks</h3>
+      <blockquote>Explain what the test proves, what it misses, and how the behavior would differ in production.</blockquote>
+      <h3>What it proves</h3>
+      <ul>
+        <li>The note reaches the advisor word for word through the advisor read, and one read is exactly one recorded open.</li>
+        <li>It appears in no prompt handed to the model, no line of <code>model-calls.log</code>, no other response, nothing the server printed and no copy of the queue, including calls made after the note is in the queue.</li>
+        <li>The gateway refuses it in 212 placements across both payload shapes, before any call.</li>
+        <li>Breaking any one guard makes its named check fail, including a call to the model that the log never sees.</li>
+      </ul>
+      <h3>What it misses</h3>
+      <ul>
+        <li>The browser. The inbox shows a student’s text to an advisor. The page escapes it and a content security policy blocks outside code, and I checked a script-tag note by hand, but no automated test drives a real browser.</li>
+        <li>A model client the test doesn’t inject. The spy sees calls through the app’s model. Code that built its own client and called a provider would not be seen. The guard for that is review, plus a lint rule in production that only <code>gateway.js</code> may import a model client.</li>
+        <li>The host. Vercel’s request logs, a crash dump or an error tracker could hold a request body. Nothing in the repo can test that.</li>
+        <li>The raw request. For one function call, before sealing, the note is a plain string in the request body. A debugger or a heap dump would show it.</li>
+        <li>An advisor who copies it. Once a person reads the note, software can’t stop them pasting it into a chat tool.</li>
+      </ul>
+      <h3>How production differs</h3>
+      <ul>
+        <li>Storage. A durable queue with the note encrypted as its own field, so the store and its backups hold ciphertext.</li>
+        <li>Who the advisor is. The district’s sign-in in front of the inbox, each request assigned to an advisor, and the advisor’s identity recorded with every open.</li>
+        <li>Retention. Hand-offs are deleted 90 days after they’re resolved.</li>
+        <li>The model. A real provider goes behind the same gateway, under zero retention, with egress from the server limited to that provider. A daily canary student leaves a sentinel note and searches the provider-side log for it.</li>
+        <li>Logging. Request bodies are never logged at the host, and the error tracker is set to drop them.</li>
+      </ul>
+      <h3>Where to see it</h3>
+      <ul>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/blob/main/README.md#the-private-note-added-2026-11-10">README, “The private note”</a>, where these three lists come from.</li>
+      </ul>
+    </section>
+
+    <section id="review" aria-labelledby="review-title">
+      <h2 id="review-title">What review changed</h2>
+      <p>Claude (Fable 5.2) orchestrated, and Opus 5.5 agents built each change. Sol 6.1, a different model run through Codex with read-only access, reviewed the plan before any code and each diff after. The one exception is the last change to the inbox, which only removed code and was not sent back. I decided what to fix and what to reject. Every correction is logged in <a href="https://github.com/mrcoven94/pathways-next-step/blob/main/docs/process.md"><code>docs/process.md</code></a>, entries 14 to 18.</p>
+      <ul>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/pull/8">Pull request 8</a>, the sealed note and the inbox: 10 findings, 5 on the plan and 5 on the diff. Nine were fixed. The tenth, the in-memory queue, is named under criterion 1.</li>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/pull/9">Pull request 9</a>, the detector served from this site: 4 findings, all fixed.</li>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/pull/10">Pull request 10</a>, the open inbox: 6 findings on the per-browser key version, all fixed before the key came out.</li>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/pull/11">Pull request 11</a>, the report: 6 findings, all fixed.</li>
+      </ul>
+      <p>Three findings taught me the most.</p>
+      <ul>
+        <li>A payload with a hidden <code>toJSON</code> hook passed the gateway check and put the sentinel in the prompt. Sol reproduced it while reviewing the plan, before I had changed any code. That is why the gateway checks the copy it sends.</li>
+        <li>The gateway refused the note in every position, then quoted it in the error: <code>task: "&lt;the note&gt;" is not an allowed task</code>. AC19 only checked that an error was thrown. Rejections now say where, never what, and AC19 reads every one.</li>
+        <li>With the real detector, “My ID number is 1234567890” came back as an ID inside a phone number. The merge kept only the phone, so switching phone numbers on showed the ID. A merged span now remembers every kind in it and shows only when all are on.</li>
+      </ul>
+      <p>The mutation run caught weak checks I wrote, twice. On Nov 3, breaking the app’s default time zone survived, because AC5b passed the time zone in by hand and never tested the default. On Nov 10, sending the parser’s error back for a body that isn’t JSON survived, because the parser quotes only the first ten characters and AC18 looked for the whole sentinel. A partial echo of a note is still a leak, so AC18 now requires the fixed sentence word for word. I also wrote a getter check that expected the wrong result, and twice changed code before its check, against the order the repo asks for.</p>
+      <p>Three times I overruled the AI.</p>
+      <ul>
+        <li>The first inbox sat behind a shared access code. I said: “Remember no passwords.” Claude then built a random key per browser. I said a demo with invented students needs an honest label, not a mechanism. The inbox is public, and the planner and the inbox both say so.</li>
+        <li>After Sol flagged loading the detector from a CDN, Claude dropped the detector from the inbox. That fixed the third-party problem by removing the feature. I said to incorporate Rampart and serve it from our own site. It is now vendored, with a manifest of sizes and SHA-256 hashes that AC22 checks.</li>
+        <li>The first inbox let an advisor read a note and nothing more. I said an inbox is useless unless they can respond. The advisor can now reply, and the student sees the reply in her planner.</li>
+      </ul>
+    </section>
+
+    <section id="next" aria-labelledby="next-title">
+      <h2 id="next-title">What I would do next</h2>
+      <ul>
+        <li>District sign-in in front of the inbox, and a durable queue with the note encrypted as its own field.</li>
+        <li>Say who opened a note. The inbox shows how many times a note has been opened and when. It cannot say by whom until there is a sign-in.</li>
+        <li>Arjun’s point: a troubling sentence can use no trigger words. The crisis check is a fixed pattern list. After the call I ran the two phrases he raised through it. “I want to disappear” and “my parents kicked me out and I have nowhere to sleep” both fall through: each is treated as a question the records can’t answer and offered an advisor, with no 988 and 911 card. I had told you a help card covered it. It does not. I wrote a patch the same day and did not ship it. Review found ten likely phrasings it still missed and three ordinary questions it wrongly caught, and a student with nowhere to sleep should reach an advisor, not a self-harm card that blocks the request. That needs its own route, and it is ticketed. A list will always have a gap. The next layer is a small model that only classifies and never replies, running on our own infrastructure so no student text goes to an outside provider. It has to respect the rule under criterion 2, so it starts with the question box, which is not private text for an advisor, or it runs in the browser, as the detector does.</li>
+        <li>Why the inbox is simply open. A demo with invented students needs an honest label, not a mechanism. For a public demo that might get real text typed into it, a good halfway step is a random key per browser, so each visitor reads only what their own browser sent, with nothing to type. I built it, had it reviewed, and took it out as more than this demo needs. Sol found no way for one browser to read another’s note, and six gaps around that, all fixed before it came out.</li>
+      </ul>
+    </section>
+
+    <section id="links" aria-labelledby="links-title">
+      <h2 id="links-title">Links</h2>
+      <ul>
+        <li><a href="/">The planner</a></li>
+        <li><a href="/advisor">The advisor inbox</a></li>
+        <li><a href="/how">How this works: the records and every model call</a></li>
+        <li><a href="/report">The report: detector results and the checks</a></li>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/tree/main">The repository</a></li>
+        <li><a href="https://github.com/mrcoven94/pathways-next-step/blob/main/README.md">README</a>, <a href="https://github.com/mrcoven94/pathways-next-step/blob/main/SPEC.md">SPEC.md</a> and <a href="https://github.com/mrcoven94/pathways-next-step/blob/main/docs/process.md">docs/process.md</a></li>
+        <li>Pull requests <a href="https://github.com/mrcoven94/pathways-next-step/pull/8">8</a>, <a href="https://github.com/mrcoven94/pathways-next-step/pull/9">9</a>, <a href="https://github.com/mrcoven94/pathways-next-step/pull/10">10</a> and <a href="https://github.com/mrcoven94/pathways-next-step/pull/11">11</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p class="safety">Need help now? Call or text <a href="tel:988">988</a>. In danger, call <a href="tel:911">911</a>.</p>
+    <p class="demo">Demo: synthetic programs, invented students and a scripted stand-in for the AI.</p>
+  </footer>
+</body>
+</html>

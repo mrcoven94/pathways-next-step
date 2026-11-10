@@ -162,8 +162,10 @@ export const NOTE_CHECKS = [
   ['AC19', 'The gateway refuses the note in every spot of a model request, even when it is hidden, before the model is called.'],
   ['AC20', 'The inbox list never carries a note, and only opening a request opens one.'],
   ['AC20b', 'Two requests never share a code, so one advisor read can never open someone else’s note.'],
+  ['AC20c', 'Each advisor open is counted, and the count is what the inbox shows.'],
   ['AC21', 'Details the detector finds in a note, such as names, phone numbers and emails, stay hidden from the advisor until switched on, one kind at a time.'],
   ['AC22', 'The detector is served from this site, no page names another host, and the real model runs in the checks with no install.'],
+  ['AC25', 'The advisor replies to a note, and the student reads the reply.'],
 ];
 
 export function checkRows(mutRun) {
@@ -297,10 +299,147 @@ export function checksView(data) {
     <tr>
       <th scope="row" data-label="Check">${esc(c.check)}</th>
       <td data-label="What it proves">${esc(c.proves)}</td>
-      <td data-label="Broken on purpose">${c.mutations.length ? `<ul>${c.mutations.map((m) => `<li>${esc(m.what)} <span class="file">${esc(m.file)}</span> <span class="verdict ${m.caught ? 'good' : 'miss'}">${m.caught ? 'Caught' : 'Not caught'}</span></li>`).join('')}</ul>` : finished ? 'No break targets this check yet' : 'Not reached before the run stopped'}</td>
+      <td data-label="Broken on purpose">${c.mutations.length ? `<ul>${c.mutations.map((m) => `<li>${esc(m.what)} <span class="file">${esc(m.file)}</span> <span class="verdict ${m.caught ? 'good' : 'miss'}">${m.caught ? 'Caught' : 'Not caught'}</span></li>`).join('')}</ul>` : finished ? 'Not in this run yet' : 'Not reached before the run stopped'}</td>
     </tr>`).join('');
     return { runText, body, hideTable: false };
   } catch {
     return { runText: UNREADABLE, body: unreadableRow(3), hideTable: false };
   }
+}
+
+// ---- The four acceptance criteria. The words are the task's, quoted exactly. The checks behind each are
+// listed here, in one place, and every count is computed from mutations.json.
+
+export const CRITERIA = [
+  {
+    id: 'ac1',
+    name: 'Acceptance criterion 1',
+    words: 'Capture the note and make it available through the intended advisor workflow, or explicitly identify the missing infrastructure needed to do so.',
+    met: [
+      'The note is captured on the send screen and sealed where it arrives, so it prints as "[private]" everywhere but the advisor read.',
+      '/advisor is an inbox: the list shows who asked and why, without the note, and opening a request opens the note and records the open.',
+      'Missing infrastructure, named: a queue that survives a restart, and district sign-in to say who the advisor is.',
+    ],
+    checks: [
+      ['AC18', 'the advisor read returns the note word for word, one recorded open'],
+      ['AC20', 'the list never carries a note; only opening opens one'],
+      ['AC20b', 'a request code is never reused'],
+      ['AC20c', 'the open count'],
+      ['AC25', 'the advisor replies and the student reads the reply'],
+      ['AC21', 'personal details stay hidden until switched on'],
+    ],
+    links: [['/advisor', 'The advisor inbox'], ['/guide#ac1', 'The guide on criterion 1']],
+  },
+  {
+    id: 'ac2',
+    name: 'Acceptance criterion 2',
+    words: 'The note does not enter model request payloads; enforce this at a trustworthy boundary.',
+    met: [
+      'The boundary is code, not a prompt: checkPayload in the gateway lets a model payload hold only record IDs, codes and the exact text of record facts, so a note is refused before any call.',
+      'The gateway checks the copy it sends, and outside the advisor read the note is sealed, not a string anyone can pass along by accident.',
+      'The server never runs any model on a note, not even the detector.',
+    ],
+    checks: [
+      ['AC19', 'the gateway refuses the note in every position of a model payload'],
+      ['AC8', 'the note, name and typed question never reach the model log'],
+      ['AC8b', 'the queue is served only by the advisor routes'],
+      ['AC22', 'the detector is served from this site and runs only in the browser'],
+    ],
+    links: [['/how', 'How this works'], ['/guide#ac2', 'The guide on criterion 2']],
+  },
+  {
+    id: 'ac3',
+    name: 'Acceptance criterion 3',
+    words: 'Add an automated regression test (for example, a sentinel and model-calls.log inspection) that would fail on leakage.',
+    met: [
+      'A sentinel string is planted in a note, and the test looks for it in every prompt the model was handed, every line of model-calls.log, every response but the advisor read, and everything the server printed.',
+      'npm run mutate breaks each guard in turn, including one that calls the model around the gateway: the log never sees it, and the check on every prompt fails it.',
+    ],
+    checks: [['AC18', 'the sentinel check, which looks in every prompt the model was handed and not only the log']],
+    wholeRun: true,
+    links: [['/how', 'How this works'], ['/guide#ac3', 'The guide on criterion 3']],
+  },
+  {
+    id: 'ac4',
+    name: 'Acceptance criterion 4',
+    words: 'Explain what the test proves, what it misses, and how the behavior would differ in production.',
+    met: ['No check can prove an explanation. This is it, in brief. The full text is in the README, under "The private note", and in the guide.'],
+    checks: [],
+    lists: [
+      ['What the test proves', [
+        'A sentinel note never reaches a model prompt, the model log, any other response, the server output or the queue printed any way.',
+        'The advisor read returns the note word for word, and one read is one recorded open.',
+        'The gateway refuses the note in every placement tried, across both payload shapes.',
+      ]],
+      ['What it misses', [
+        'A real browser: no automated test drives one.',
+        'A model client the test does not inject.',
+        'The host: request logs, crash dumps or an error tracker.',
+        'The raw request body, for the one call before sealing.',
+        'An advisor who copies the note somewhere else.',
+      ]],
+      ['How production differs', [
+        'A durable queue, with the note encrypted as its own field.',
+        'District sign-in in front of the inbox, and the advisor recorded with every open.',
+        'Hand-offs deleted 90 days after they are resolved.',
+        'A real model behind the same gateway, under zero retention, with a daily canary note.',
+        'Request bodies never logged at the host or the error tracker.',
+      ]],
+    ],
+    links: [['/guide#ac4', 'The guide on criterion 4']],
+  },
+];
+
+export const NOT_YET = 'not in this run yet';
+
+/** Per check: how many mutations were aimed at it and how many were caught. `null` counts when it has none. */
+export function criterionEvidence(criterion, mutRun) {
+  const muts = mutRun?.mutations ?? [];
+  const rows = criterion.checks.map(([check, says]) => {
+    const aimed = muts.filter((m) => m.check === check);
+    return { check, says, aimed: aimed.length, caught: aimed.filter((m) => m.caught === true).length };
+  });
+  const whole = criterion.wholeRun ? { aimed: muts.length, caught: muts.filter((m) => m.caught === true).length } : null;
+  return { rows, whole };
+}
+
+function evidenceHtml(c, run, state) {
+  if (!c.checks.length) return '';
+  const { rows, whole } = criterionEvidence(c, run);
+  const count = (r) => {
+    if (state !== 'finished') return '';
+    return r.aimed ? `: ${esc(r.caught)} of ${esc(r.aimed)} breaks caught` : `: ${NOT_YET}`;
+  };
+  const items = rows.map((r) => `<li><strong>${esc(r.check)}</strong>, ${esc(r.says)}${count(r)}</li>`);
+  if (whole && state === 'finished') items.push(`<li><strong>The whole mutation run</strong>: ${esc(whole.caught)} of ${esc(whole.aimed)} breaks caught</li>`);
+  const lead = state === 'finished'
+    ? `The checks behind it, with the breaks aimed at each in the run on ${esc(fmtDate(run.date))}:`
+    : state === 'unfinished'
+      ? `The checks behind it. The last mutation run, on ${esc(fmtDate(run.date))}, did not finish, so no counts are shown.`
+      : state === 'none'
+        ? 'The checks behind it. No mutation run has been saved yet.'
+        : `The checks behind it. ${UNREADABLE}`;
+  return `<p>${lead}</p><ul class="evidence">${items.join('')}</ul>`;
+}
+
+/** The criteria section, from mutations.json. Never throws. */
+export function criteriaView(data) {
+  let run;
+  let state;
+  try {
+    run = runsOf(data)[0];
+    state = run === undefined ? 'none' : !mutationRunOk(run) ? 'unreadable' : mutationRunFinished(run) ? 'finished' : 'unfinished';
+  } catch {
+    state = 'unreadable';
+  }
+  if (state !== 'finished') run = state === 'unfinished' ? run : undefined;
+  return CRITERIA.map((c) => `
+    <article class="criterion" id="criterion-${esc(c.id)}" aria-labelledby="h-${esc(c.id)}">
+      <h3 id="h-${esc(c.id)}">${esc(c.name)}</h3>
+      <blockquote><p>“${esc(c.words)}”</p></blockquote>
+      <p>${c.met.map(esc).join(' ')}</p>
+      ${(c.lists ?? []).map(([title, items]) => `<h4>${esc(title)}</h4><ul class="evidence">${items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>`).join('')}
+      ${evidenceHtml(c, run, state)}
+      <p class="see">${c.links.map(([href, label]) => `<a href="${esc(href)}">${esc(label)}</a>`).join('')}</p>
+    </article>`).join('');
 }
