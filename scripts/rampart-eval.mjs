@@ -133,3 +133,14 @@ const report = {
 fs.mkdirSync(path.dirname(outFile), { recursive: true });
 fs.writeFileSync(outFile, JSON.stringify(report, null, 2) + '\n');
 console.log(`\nWrote ${path.relative(root, outFile)}`);
+
+// 7. The same run for /report, newest first, keeping up to nine earlier runs. An older file holding one
+//    bare run (no runs list) counts as one earlier run.
+const dataFile = path.join(root, 'public/data/rampart-eval.json');
+let earlier = [];
+try { const prev = JSON.parse(fs.readFileSync(dataFile, 'utf8')); earlier = prev.runs ?? [prev]; } catch {}
+fs.mkdirSync(path.dirname(dataFile), { recursive: true });
+fs.writeFileSync(dataFile, JSON.stringify({ runs: [report, ...earlier].slice(0, 10) }, null, 2) + '\n');
+console.log(`Wrote ${path.relative(root, dataFile)}`);
+// The notes themselves, so the page can show each one next to its result. All invented.
+fs.copyFileSync(path.join(root, 'test/fixtures/synthetic-notes.json'), path.join(root, 'public/data/synthetic-notes.json'));

@@ -25,6 +25,7 @@ This repo is a small slice of Pathways (CampusEvolve) for one persona: Dani, 17,
 | `public/client.js` | What the browser sends, without the DOM, so tests run the page's own logic. |
 | `public/app.js` | The screens. |
 | `public/advisor.js`, `public/advisor-client.js` | The advisor inbox at `/advisor`. Loads nothing from another site. No sign-in: the demo inbox is public. |
+| `public/report.html`, `public/report-client.js`, `public/data/` | The report at `/report`. Reads only the JSON in `public/data/`, which `npm run mutate` and `npm run eval:rampart` write. Never hard-code a number on the page. |
 | `public/rampart.js`, `public/vendor/rampart/` | Rampart Edge, served from this site. Rebuilt only by `scripts/vendor-rampart.mjs`; never edit the vendored files by hand. Runs in the browser only, never on the server. |
 | `test/` | One test per acceptance criterion in SPEC.md, named `AC<n>`. |
 | `docs/process.md` | Every time a person or a check corrected the AI. Append, never rewrite. |

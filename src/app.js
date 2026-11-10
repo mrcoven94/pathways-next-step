@@ -35,7 +35,7 @@ function newHandoffCode() {
 }
 
 const STATUSES = ['new', 'in_progress', 'resolved'];
-const PAGES = { '/': 'index.html', '/how': 'how.html', '/advisor': 'advisor.html' };
+const PAGES = { '/': 'index.html', '/how': 'how.html', '/advisor': 'advisor.html', '/report': 'report.html' };
 // The inbox shows student-typed text, so it may load nothing from anywhere else.
 // 'wasm-unsafe-eval' lets the page compile Rampart Edge's WASM engine from this site; it allows no eval of JS.
 const INBOX_POLICY = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";

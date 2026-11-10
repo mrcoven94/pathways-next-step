@@ -130,7 +130,7 @@ New acceptance criteria:
 21. Phone numbers and email addresses in a note are hidden from the advisor until switched on, one kind at a time, and the rest of the note is unchanged.
 10b. Crisis words in a note are still flagged once the note is sealed.
 
-`npm run mutate` now breaks 42 guards, 19 of them behind these criteria.
+`npm run mutate` now breaks 43 guards, 20 of them behind these criteria.
 
 ## Amendment (2026-11-10, second change): Rampart Edge from this site
 
@@ -157,3 +157,11 @@ David's review of the inbox: a demo link must open with no password, and the inb
 This replaces amendment 2 of the first change. AC8b now reads: the queue is served only by the advisor routes, never by the public log, the records or the hand-off itself. AC20 now reads: the inbox list never carries a note, and only opening a request opens one; listing, triage and wrong turns open nothing.
 
 **Not built, on purpose.** Who may open the inbox is the first thing production adds: the district's sign-in, each request assigned to one advisor, and the advisor's name on every open. A halfway step was built and reviewed on this branch and then taken out as more than a demo needs: each browser makes a random key, sends it with a hand-off, and can read only the requests sent with it. It is a good idea for a public demo that might get real text typed into it, and the walkthrough page explains it. A queue that survives a restart is the other named follow-up.
+
+## Amendment (2026-11-10, fourth change): the report
+
+David's review: Front Door has a model report, and this slice should report on Rampart and its checks the same way.
+
+23. `/report` is public and shows what protects the private note, read only from `public/data/*.json`: Rampart Edge's results on the invented notes by kind (caught, partly caught, missed, out of how many, with kinds that have nothing expected left out), the sensitive notes it passed and the harmless notes it blocked (counted from each note's verdict, not a summary field), the time per note, and every note with its text, what was expected, what was found and the verdict. It also lists each check that guards the note (AC8, AC8b, AC10b, AC18, AC19, AC20, AC20b, AC21, AC22) with the mutations aimed at it and whether each was caught, says what the measurements do not show, links each data file for download, and compares with the run before only when there is one. The page and its scripts load nothing from another host, and every string from the data is escaped.
+
+`npm run mutate` and `npm run eval:rampart` write the data the page reads, so a fresh run changes the live page once it is committed.

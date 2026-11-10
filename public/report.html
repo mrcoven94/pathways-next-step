@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pathways · What protects the private note</title>
+  <meta name="description" content="What was measured about the private note: the personal-info detector on invented notes, and the checks that keep the note away from the model.">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/schibstedgrotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/how.css">
+  <link rel="stylesheet" href="/report.css">
+  <script type="module" src="/report.js"></script>
+</head>
+<body data-screen="how">
+  <main id="app" class="how report">
+    <nav class="topbar">
+      <a class="wordmark ink" href="/">Pathways</a>
+      <a class="link" href="/how">How this works</a>
+    </nav>
+    <h1>What protects the private note</h1>
+    <p class="lede-ink" id="headline">Loading the results…</p>
+
+    <section aria-labelledby="h-rampart">
+      <h2 id="h-rampart">Rampart Edge on invented notes</h2>
+      <p class="run" id="rampart-run"></p>
+      <p>Rampart Edge is a 1.45 MB personal-info detector from the US National Design Studio. It is served from this site and runs in two places: her browser, before she sends a note, and the advisor’s browser, when they open it. The server never runs it. It is a third layer. The note never goes to a model whatever it says.</p>
+
+      <table class="data kinds">
+        <thead><tr><th scope="col">Kind</th><th scope="col">Caught</th><th scope="col">Partly caught</th><th scope="col">Missed</th><th scope="col">Out of</th><th scope="col" class="before-col" hidden>Run before</th><th scope="col"><span class="sr">Caught, partly caught and missed</span></th></tr></thead>
+        <tbody id="kinds-body"><tr><td colspan="6">Loading…</td></tr></tbody>
+      </table>
+
+      <h3>The row that matters most</h3>
+      <table class="data key">
+        <thead><tr><th scope="col">Notes</th><th scope="col">Result</th></tr></thead>
+        <tbody id="key-body"></tbody>
+      </table>
+      <p class="why" id="key-why"></p>
+
+      <h3>Time per note</h3>
+      <p id="timing"></p>
+
+      <h3>Every note</h3>
+      <p class="hint-ink">Every note, name, number and address here is made up.</p>
+      <table class="data notes">
+        <thead><tr><th scope="col">Note</th><th scope="col">Kind</th><th scope="col">Result</th><th scope="col">Details</th></tr></thead>
+        <tbody id="notes-body"></tbody>
+      </table>
+      <p class="download"><a href="/data/rampart-eval.json" download>Download the data</a></p>
+    </section>
+
+    <section aria-labelledby="h-checks">
+      <h2 id="h-checks">The checks</h2>
+      <p class="run" id="checks-run"></p>
+      <p>Each check is a test that runs on every change. To prove a check works, a script breaks the code on purpose, one break at a time, and the check has to fail.</p>
+      <table class="data checks">
+        <thead><tr><th scope="col">Check</th><th scope="col">What it proves</th><th scope="col">Broken on purpose</th></tr></thead>
+        <tbody id="checks-body"><tr><td colspan="3">Loading…</td></tr></tbody>
+      </table>
+      <p class="download"><a href="/data/mutations.json" download>Download the data</a></p>
+    </section>
+
+    <section aria-labelledby="h-method" class="method">
+      <h2 id="h-method">How it was measured, and what it does not show</h2>
+      <ul>
+        <li><code>npm run eval:rampart</code> runs Rampart Edge on <span id="method-notes">the</span> invented notes in Node. A detail counts as caught only when every character of it falls inside something the detector flagged.</li>
+        <li><span id="method-count">40</span> notes is a small sample. One more missed note moves a row a lot.</li>
+        <li>These numbers are not comparable to the ones Rampart Edge publishes. The notes, the kinds and the scoring are ours.</li>
+        <li>Timing is Node on a laptop, not a phone. A phone will be slower.</li>
+        <li><code>npm run mutate</code> breaks the code in a scratch copy and runs every test. Its list holds only the breaks someone thought of. A check that catches all of them can still miss a break nobody tried.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p class="safety">Need help now? Call or text <a href="tel:988">988</a>. In danger, call <a href="tel:911">911</a>.</p>
+    <p class="demo">Demo: synthetic programs and a scripted stand-in for the AI.</p>
+  </footer>
+</body>
+</html>

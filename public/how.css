@@ -49,3 +49,5 @@ pre { white-space: pre-wrap; word-break: break-word; font: 0.8125rem/1.5 ui-mono
   .calls .problems { display: inline; margin-left: 6px; }
 }
 .records td:last-child { white-space: nowrap; }
+
+.toplinks { display: flex; gap: 20px; }
