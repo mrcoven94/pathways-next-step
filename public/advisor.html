@@ -17,22 +17,10 @@
   <main id="app" class="inbox">
     <nav class="topbar">
       <a class="wordmark ink" href="/">Pathways</a>
-      <button class="link" type="button" id="sign-out" hidden>Sign out</button>
+      <a class="link" href="/">Back to the planner</a>
     </nav>
 
-    <section id="gate" hidden>
-      <h1>Advisor inbox</h1>
-      <form id="code-form" class="code-form">
-        <label for="code">Access code</label>
-        <input id="code" name="code" type="password" autocomplete="off" spellcheck="false" required>
-        <p id="code-msg" class="msg" role="alert"></p>
-        <button class="button primary" type="submit">Open inbox</button>
-      </form>
-    </section>
-
-    <p id="off" class="msg-block" hidden>The advisor inbox is not switched on for this server.</p>
-
-    <div id="inbox" class="panes" hidden>
+    <div id="inbox" class="panes">
       <section class="list-pane" aria-labelledby="inbox-title">
         <h1 id="inbox-title">Inbox</h1>
         <ul id="requests" class="requests"></ul>
@@ -42,7 +30,7 @@
   </main>
 
   <footer class="site-footer">
-    <p class="demo">Demo: synthetic students and requests.</p>
+    <p class="demo">Demo: this inbox is public, with no sign-in. Every student here is invented.</p>
   </footer>
 </body>
 </html>

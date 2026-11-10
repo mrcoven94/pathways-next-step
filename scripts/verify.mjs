@@ -21,6 +21,12 @@ const checks = [
   ['GET /how', async () => { const r = await fetch(base + '/how'); return r.ok && (await r.text()).includes('What the model saw'); }],
   ['GET /src/core/topics.js', async () => (await fetch(base + '/src/core/topics.js')).ok],
   ['GET /src/core/gateway.js is not served', async () => (await fetch(base + '/src/core/gateway.js')).status === 404],
+  ['GET /advisor opens with no sign-in, and the list carries no note', async () => {
+    const page = await fetch(base + '/advisor');
+    const text = await page.text();
+    const { requests } = await (await fetch(base + '/api/advisor/requests')).json();
+    return page.ok && !/type="password"/.test(text) && requests.filter((r) => r.sample).length === 2 && requests.every((r) => !('note' in r));
+  }],
   ['POST /api/plan', async () => {
     const r = await fetch(base + '/api/plan', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ answers: { considering: ['PRG-02', 'PRG-01'], age18: 'yes', diploma: 'yes', lean: 'earn' }, today: '2026-11-03' }) });
     const b = await r.json();

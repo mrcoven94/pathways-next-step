@@ -74,14 +74,12 @@ const MUTATIONS = [
     'for (const k of Object.keys(v)) if (!Object.hasOwn(keys, k)) throw new PayloadRejected(`${path}: has a field that is not allowed`);', '', 'AC19'],
   ['A refused payload is quoted in the error', 'src/core/gateway.js',
     'throw new PayloadRejected(`${path}: not an allowed value`);', 'throw new PayloadRejected(`${path}: ${JSON.stringify(v)} is not an allowed value`);', 'AC19'],
-  ['The advisor inbox answers without the access code', 'src/app.js',
-    "if (!sameCode(req.headers.authorization, advisorCode)) return send(res, 401, { error: 'That access code is not right.' });", '', 'AC20'],
-  ['The advisor inbox is open on a server with no access code set', 'src/app.js',
-    "if (!advisorCode) return send(res, 404, { error: 'Not found' });", '', 'AC20'],
   ['The inbox list carries the note', 'src/app.js',
     'const listed = ({ note, ...rest }) => ({ ...rest, has_note: !note.empty });', "const listed = ({ note, ...rest }) => ({ ...rest, has_note: !note.empty, note: Sealed.open(note, [], { purpose: 'advisor_read', code: rest.code }) });", 'AC20'],
   ['Two requests can share a code', 'src/app.js',
-    'while (handoffs.some((h) => h.code === code)) code = handoffCode();', '', 'AC20b'],
+    'while (used.has(code)) code = handoffCode();', '', 'AC20b'],
+  ['A code is given out again once its request has left the queue', 'src/app.js',
+    'while (used.has(code)) code = handoffCode();', 'while (handoffs.some((h) => h.code === code)) code = handoffCode();', 'AC20b'],
   ['Crisis words in a sealed note are missed', 'src/app.js',
     'request.crisis = [request.first_name, raw, request.question].some(isCrisis);', 'request.crisis = [request.first_name, request.note, request.question].some(isCrisis);', 'AC10b'],
   ['Contact details in a note are shown to the advisor without asking', 'public/advisor-client.js',
@@ -92,6 +90,10 @@ const MUTATIONS = [
     "const BASE = new URL('./vendor/rampart/', import.meta.url);", "const BASE = new URL('https://cdn.jsdelivr.net/npm/@nationaldesignstudio/rampart-edge@2.0.5/', import.meta.url);", 'AC22'],
   ['Names in a note are shown to the advisor without asking', 'public/advisor-client.js',
     "  NAME: 'name', PHONE: 'phone', EMAIL: 'email', ADDRESS: 'address', GOV_ID: 'id', OTHER_ID: 'id',", "  PHONE: 'phone', EMAIL: 'email', ADDRESS: 'address', GOV_ID: 'id', OTHER_ID: 'id',", 'AC21'],
+  ['The demo queue has no ceiling', 'src/app.js',
+    'if (handoffs.length > MAX_QUEUE) handoffs.splice(0, handoffs.length - MAX_QUEUE);', '', 'AC20'],
+  ['A status change sends the note back', 'src/app.js',
+    'request.status = next;\n      return send(res, 200, { request: listed(request) });', "request.status = next;\n      return send(res, 200, { request: { ...listed(request), note: Sealed.open(request.note, [], { purpose: 'advisor_read', code }) } });", 'AC20'],
 ];
 
 let survived = 0;

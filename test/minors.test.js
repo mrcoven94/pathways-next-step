@@ -9,10 +9,9 @@ const NAME = 'Zyxquorra';
 const NOTE = 'CANARY-NOTE my mom works nights, text me at 555-0142';
 const QUESTION = 'CANARY-QUESTION I am 17 and live on Quillfeather Lane, how much does it pay?';
 const SEATS = 'CANARY-SEATS are there still seats in Northline?';
-const ADVISOR_CODE = 'test-advisor-code';
 
 test('AC8 minors\' data: her name, advisor note and typed question reach the advisor and never the model log', async () => {
-  const s = await startApp({ advisorCode: ADVISOR_CODE });
+  const s = await startApp();
   try {
     const { plan, summary } = await s.plan(dani({ age18: 'unsure', diploma: 'no', lean: 'earn' }));
     // What the browser actually sends for her typed question: a topic code, not her words.
@@ -30,8 +29,8 @@ test('AC8 minors\' data: her name, advisor note and typed question reach the adv
     assert.equal(ticket.body.label, 'This is a request for an advisor, not an application.');
 
     // The advisor gets what they need: her name, her note, her own question and why it came to them.
-    // Since AC18 the note is sealed in the queue, so it is read the way an advisor reads it: with the access code.
-    const read = await fetch(`${s.base}/api/advisor/requests/${ticket.body.code}`, { headers: { authorization: `Bearer ${ADVISOR_CODE}` } });
+    // Since AC18 the note is sealed in the queue, so it is read the way an advisor reads it: by opening the request.
+    const read = await fetch(`${s.base}/api/advisor/requests/${ticket.body.code}`);
     const queued = (await read.json()).request;
     assert.equal(queued.first_name, NAME);
     assert.equal(queued.note, NOTE);
@@ -52,11 +51,11 @@ test('AC8 minors\' data: her name, advisor note and typed question reach the adv
   }
 });
 
-test('AC8b the hand-off queue and names are never served over HTTP without the advisor access code', async () => {
+test('AC8b the hand-off queue and names are served only by the advisor routes, never by the public log, the records or the hand-off itself', async () => {
   const s = await startApp();
   try {
     await s.post('/api/handoff', { first_name: NAME, note: NOTE, reasons: [] });
-    for (const path of ['/api/handoff', '/api/handoffs', '/api/log', '/api/records', '/api/advisor/requests']) {
+    for (const path of ['/api/handoff', '/api/handoffs', '/api/log', '/api/records']) {
       const body = await (await fetch(s.base + path)).text();
       assert.ok(!body.includes(NAME), `${path} does not expose the name`);
     }

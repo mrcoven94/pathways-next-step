@@ -4,9 +4,9 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 
 - **Live:** https://pathways-next-step.vercel.app (records and every model call are at [/how](https://pathways-next-step.vercel.app/how))
 - **Run:** `npm start`, then open http://localhost:3000
-- **Advisor inbox:** `ADVISOR_CODE=<a code you choose> npm start`, then open http://localhost:3000/advisor. Without the variable the inbox does not exist (404).
+- **Advisor inbox:** https://pathways-next-step.vercel.app/advisor (locally, http://localhost:3000/advisor). No sign-in: this is a demo with invented students, and the inbox is public. It opens with two invented requests and shows any note sent from the planner.
 - **Test:** `npm test` (43 checks, prints pass or fail, writes `model-calls.log` with a summary at the top)
-- **Prove the tests bite:** `npm run mutate` breaks 41 guards, at least one behind every acceptance criterion, one at a time in a scratch copy. It confirms the named check fails each time.
+- **Prove the tests bite:** `npm run mutate` breaks 42 guards, at least one behind every acceptance criterion, one at a time in a scratch copy. It confirms the named check fails each time.
 - **The 30-minute version:** tag [`v0.1-30min`](https://github.com/mrcoven94/pathways-next-step/tree/v0.1-30min) is the slice as it stood 23 minutes after the repo started, before any review. To run it: `git checkout v0.1-30min && npm test && npm start` (15 checks, all passing). Compare it with `main` to see what review added.
 - Node 20 or newer. No `npm install`, no API key, no accounts, no database.
 
@@ -34,7 +34,7 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 **The task.** A student leaves a private note for their advisor. The advisor can read it through the advisor workflow. It is never sent to an AI model.
 
 **What changed, and it is small.** The note was already captured and already kept away from the gateway by convention. Three things were missing, and each is now code:
-- **The advisor can read it.** `/advisor` is an inbox behind an access code. The list shows who asked and why, without the note. Opening a request opens the note.
+- **The advisor can read it.** `/advisor` is an inbox. The list shows who asked and why, without the note. Opening a request opens the note. In this demo the inbox is public, and both pages say so.
 - **The note is sealed where it arrives** (`src/core/private.js`). It prints as "[private]" in JSON, strings, templates, logs and errors. One function can open it, and every open is recorded: why, which request, when, never the text.
 - **The gateway checks the copy it sends**, so an object can't show the check one thing and the prompt another.
 
@@ -49,7 +49,7 @@ It is not the boundary and can't be. `npm run eval:rampart` runs it over 40 inve
 **What the test proves (AC18 to AC21).** A sentinel string is planted in a note, and the run then looks everywhere it must not be:
 - every prompt the model was handed, recorded by a spy at `model.complete`, including calls made after the note is in the queue;
 - every line of `model-calls.log`, and that the spy and the log agree on the number of calls;
-- every response a caller without the access code can get, including replies to an unreadable request;
+- every response that is not the advisor read itself: the inbox list, the public log, the records, replies to a status change and to an unreadable request;
 - everything the server printed;
 - the queue itself as JSON, as a string, in a template and through `util.inspect`.
 
@@ -64,7 +64,7 @@ It also proves the note arrives word for word through the advisor read, that one
 
 **How production differs.**
 - **Storage.** The queue is in memory, and on Vercel each server instance has its own, so a request can vanish on restart or land where the inbox isn't looking. Production needs a durable queue with the note encrypted as its own field, so the store and its backups hold ciphertext.
-- **Who the advisor is.** A shared access code is a stand-in. Production uses the district's sign-in, assigns each request to an advisor, and records the advisor's identity with every open.
+- **Who the advisor is.** Nobody, in this demo: the inbox is public because every student in it is invented. Production puts the district's sign-in in front of it, assigns each request to an advisor, and records the advisor's identity with every open. A halfway step for a public demo is a random key per browser, so a visitor reads only what that browser sent. It was built and reviewed here, then left out as more than the demo needs.
 - **Retention.** Hand-offs are deleted 90 days after they're resolved, as in the data inventory below.
 - **The model.** A real provider goes behind the same gateway, under zero retention, with egress from the server limited to that provider. A daily canary student leaves a sentinel note and searches the provider-side log for it.
 - **Logging.** Request bodies are never logged at the host, and the error tracker is set to drop them.
@@ -128,7 +128,7 @@ Every piece of student data the slice touches, checked against the code. "Model"
 | Programs she's weighing | Her phone, then `/api/plan` | Her and the planner | Only as record IDs, which are public program IDs | Not stored on the server |
 | Age, diploma, learn-by-doing taps | Her phone, then `/api/plan` | Her and the planner | **Codes derived from them do; the answers never do.** The model sees whether a listed rule applies (`AGE_RULE_MISSED`, `AGE_UNCONFIRMED`, `DIPLOMA_TIMING_UNKNOWN`). It never sees her age or a birth date. These codes are linked to no one, but they are derived from a minor's answers, and they appear in the public `/how` table | Not stored on the server |
 | Typed question | Her phone. Matched to a topic there | Her. Also the advisor, only if she taps "Ask an advisor about this" | **Never.** Only a topic code and record IDs | With the page. If sent to an advisor, as for the first name |
-| Advisor note | Her phone, then `/api/handoff`, where it is sealed | The advisor, through the inbox with the access code. Every open is recorded | **Never.** The gateway refuses it in any position, and outside the advisor read it prints as "[private]" (AC18, AC19) | As for the first name |
+| Advisor note | Her phone, then `/api/handoff`, where it is sealed | Whoever opens the request in the inbox, which is public in this demo. Every open is recorded | **Never.** The gateway refuses it in any position, and outside the advisor read it prints as "[private]" (AC18, AC19) | As for the first name |
 | Saved plan | Her phone (`localStorage` `pathways.saved`): her taps and a timestamp | Her | No | She clears site data |
 | Advisor request code | Her phone (`pathways.handoff`, which also keeps the question she sent) and the server's in-memory queue | Her and the advisor | No | As for the first name |
 | Model log | `model-calls.log` and the "What the model saw" table | Anyone: it's public at `/how` | It is the record of what the model saw: codes and record text only | Kept for audit. Safe to keep, because it holds no student data by construction |
@@ -138,7 +138,7 @@ What isn't collected at all: age or birth date, last name, phone, email, address
 
 ## The checks
 
-`npm test` runs 43 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim: 41 deliberate breaks, every one caught. Writing it caught one weak test. AC5b had only checked the time zone it was handed, never the app's default (`docs/process.md`, entry 13).
+`npm test` runs 43 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim: 42 deliberate breaks, every one caught. Writing it caught one weak test. AC5b had only checked the time zone it was handed, never the app's default (`docs/process.md`, entry 13).
 
 "Today" is the date in Pacific time, so Northline stays open until midnight on Nov 30 (AC5b). To replay a plan on another date, add `?today=2026-12-05` to the URL. The screen then says it's showing a replay.
 
@@ -204,9 +204,9 @@ Typed text is turned into a topic code before any request is made.
 | `POST /api/plan` | `answers`: program IDs plus yes, no or not sure taps. Optional `today` for replays | the plan (next step, programs, open questions, road), every fact with its source and check date, and the reply |
 | `POST /api/answer` | a `topic` code and record IDs, or a `cannot_confirm` code | the reply with its cited facts, or a can't-confirm message with the advisor |
 | `POST /api/handoff` | first name, note, question, reason codes, next-step action | a request code |
-| `GET /api/advisor/requests` | the advisor access code | the requests, without notes. 404 unless a code is set on the server, 401 without it |
-| `GET /api/advisor/requests/<code>` | the advisor access code | one request with its note, and the open is recorded |
-| `POST /api/advisor/requests/<code>/status` | the access code and a status | the request, without its note |
+| `GET /api/advisor/requests` | nothing | the requests, without notes |
+| `GET /api/advisor/requests/<code>` | nothing | one request with its note, and the open is recorded |
+| `POST /api/advisor/requests/<code>/status` | a status | the request, without its note |
 | `GET /api/records` | nothing | the eight records |
 | `GET /api/log` | nothing | recent model calls, exactly as sent and received. They hold no student data, so they can be public |
 

@@ -130,7 +130,7 @@ New acceptance criteria:
 21. Phone numbers and email addresses in a note are hidden from the advisor until switched on, one kind at a time, and the rest of the note is unchanged.
 10b. Crisis words in a note are still flagged once the note is sealed.
 
-`npm run mutate` now breaks 41 guards, 18 of them behind these criteria.
+`npm run mutate` now breaks 42 guards, 19 of them behind these criteria.
 
 ## Amendment (2026-11-10, second change): Rampart Edge from this site
 
@@ -143,3 +143,17 @@ New acceptance criteria:
 New acceptance criterion:
 
 22. No page, script or style names another host. Every vendored file matches the manifest and nothing else is in the folder. The real model, loaded from the vendored files inside `npm test` with no install, finds a phone number, an email address, a street address and a name in invented notes; masking hides each one; and it passes private notes that hold no identifier, which is why it is not the boundary.
+
+## Amendment (2026-11-10, third change): the inbox is open
+
+David's review of the inbox: a demo link must open with no password, and the inbox asked for one. This is a demo with no real students, so the inbox is simply public.
+
+1. **The shared access code is gone**, with its server setting and its sign-in screen. `/advisor` and the `/api/advisor` routes need nothing.
+2. **The page says so.** The note box on the planner and the foot of the inbox both say the inbox is public and that nothing real should be typed.
+3. **The inbox always shows two invented requests**, marked as samples, so the page shows what an advisor sees on the first visit. They are kept apart from the queue.
+4. **The demo queue holds 500 requests.** The oldest go first. A request code is never given out twice, even after its request has left the queue.
+5. **What did not change:** the note is sealed in the queue, the list never carries it, only opening a request opens it, every open is recorded, and it never reaches a model. Acceptance criteria 18 and 19 are untouched.
+
+This replaces amendment 2 of the first change. AC8b now reads: the queue is served only by the advisor routes, never by the public log, the records or the hand-off itself. AC20 now reads: the inbox list never carries a note, and only opening a request opens one; listing, triage and wrong turns open nothing.
+
+**Not built, on purpose.** Who may open the inbox is the first thing production adds: the district's sign-in, each request assigned to one advisor, and the advisor's name on every open. A halfway step was built and reviewed on this branch and then taken out as more than a demo needs: each browser makes a random key, sends it with a hand-off, and can read only the requests sent with it. It is a good idea for a public demo that might get real text typed into it, and the walkthrough page explains it. A queue that survives a restart is the other named follow-up.

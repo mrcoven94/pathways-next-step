@@ -1,8 +1,9 @@
 // HTTP API and static files. Used by server.js locally and api/index.js on Vercel.
 // The name and advisor note arrive only at /api/handoff, which never touches the gateway.
-// The note is sealed there. Only the advisor read path, behind the access code, opens it.
+// The note is sealed there. Only the advisor read path opens it, and every open is recorded.
+// In this demo that path is public: there is no sign-in, and nothing in the queue belongs to a real student.
 
-import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
+import { randomInt } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,14 +36,21 @@ function newHandoffCode() {
 
 const STATUSES = ['new', 'in_progress', 'resolved'];
 const PAGES = { '/': 'index.html', '/how': 'how.html', '/advisor': 'advisor.html' };
-// The inbox shows student-typed text to a signed-in advisor, so it may load nothing from anywhere else.
+// The inbox shows student-typed text, so it may load nothing from anywhere else.
 // 'wasm-unsafe-eval' lets the page compile Rampart Edge's WASM engine from this site; it allows no eval of JS.
 const INBOX_POLICY = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 
-const digest = (s) => createHash('sha256').update(String(s)).digest();
-const sameCode = (header, code) => timingSafeEqual(digest(header ?? ''), digest(`Bearer ${code}`));
-/** A request as the inbox list shows it: everything but the note, which stays sealed. */
+/** A request as the inbox list shows it: everything but the note, which stays sealed until the request is opened. */
 const listed = ({ note, ...rest }) => ({ ...rest, has_note: !note.empty });
+const MAX_QUEUE = 500; // the demo queue is in memory, so it has a ceiling; the oldest requests go first
+
+// The inbox always shows two invented requests, so the page shows what an advisor sees at once.
+// They are made once and kept apart from the queue: listing them costs real requests no room.
+const SAMPLES = [
+  { first_name: 'Dani', question: 'are there seats left?', reasons: ['DIPLOMA_TIMING_UNKNOWN', 'UNKNOWN_SEATS'], next_step: 'ask_advisor_then_apply',
+    note: 'My dad Marcus Hale lost his job last month, so I need to work while I train. You can text me at 253-555-0119 or dani.r@example.com. We live at 418 Alder Street in Tacoma.' },
+  { first_name: 'Marcus', question: 'how much aid will I get?', reasons: ['UNKNOWN_AID_AMOUNT'], next_step: 'start_aid_application', note: '' },
+];
 
 /**
  * @param {{model?: object, logFile?: string|null, today?: () => string}} opts
@@ -52,9 +60,14 @@ export function todayIn(timeZone = 'America/Los_Angeles', now = new Date()) {
   return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
 }
 
-export function createApp({ model = mockModel, logFile = null, today = () => todayIn(), advisorCode = '', handoffCode = newHandoffCode } = {}) {
+export function createApp({ model = mockModel, logFile = null, today = () => todayIn(), handoffCode = newHandoffCode } = {}) {
   const gateway = createGateway({ model, logFile });
-  const handoffs = []; // stand-in for the advisor queue; served only to an advisor with the access code
+  const handoffs = []; // stand-in for the advisor queue; served only by the advisor routes below
+  const samples = SAMPLES.map((s, i) => ({
+    code: `ADV-SMP${'AB'[i]}`, first_name: s.first_name, note: seal(s.note), question: s.question, reasons: s.reasons,
+    next_step: s.next_step, at: new Date().toISOString(), status: 'new', sample: true, crisis: false,
+  }));
+  const used = new Set(samples.map((s) => s.code)); // every code ever given out, so one is never given twice
   const opens = []; // every time a sealed note was opened: why, which request, when. Never the text.
 
   async function plan({ answers, today: asOf }) {
@@ -95,7 +108,8 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
     const clean = (s, n) => String(s ?? '').slice(0, n);
     const raw = clean(note, 1000); // the last line that holds the note as plain text
     let code = handoffCode();
-    while (handoffs.some((h) => h.code === code)) code = handoffCode(); // a code names one request
+    while (used.has(code)) code = handoffCode(); // a code names one request, for good
+    used.add(code);
     const request = {
       code,
       first_name: clean(first_name, 40),
@@ -105,9 +119,11 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
       next_step: next_step ? clean(next_step, 40) : null,
       at: new Date().toISOString(),
       status: 'new',
+      sample: false,
     };
     request.crisis = [request.first_name, raw, request.question].some(isCrisis);
     handoffs.push(request);
+    if (handoffs.length > MAX_QUEUE) handoffs.splice(0, handoffs.length - MAX_QUEUE);
     return {
       code: request.code,
       crisis: request.crisis,
@@ -116,15 +132,16 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
     };
   }
 
-  /** The advisor read path. It does not exist unless a code is configured, and it answers only to that code. */
+  /** The advisor read path: list without notes, open one request, set a status. Public in this demo. */
   async function advisor(req, res, pathname) {
-    if (!advisorCode) return send(res, 404, { error: 'Not found' });
-    if (!sameCode(req.headers.authorization, advisorCode)) return send(res, 401, { error: 'That access code is not right.' });
     const m = pathname.match(/^\/api\/advisor\/requests(?:\/(ADV-[A-Z2-9]{4})(\/status)?)?$/);
     if (!m) return send(res, 404, { error: 'Not found' });
     const [, code, status] = m;
-    if (!code) return req.method === 'GET' ? send(res, 200, { requests: handoffs.map(listed) }) : send(res, 404, { error: 'Not found' });
-    const request = handoffs.find((h) => h.code === code);
+    if (!code) {
+      if (req.method !== 'GET') return send(res, 404, { error: 'Not found' });
+      return send(res, 200, { requests: [...handoffs, ...samples].map(listed) });
+    }
+    const request = handoffs.find((h) => h.code === code) ?? samples.find((h) => h.code === code);
     if (!request) return send(res, 404, { error: 'Not found' });
     if (status && req.method === 'POST') {
       const next = (await readJson(req)).status;

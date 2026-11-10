@@ -13,7 +13,6 @@ import { seal } from '../src/core/private.js';
 const SENTINEL = 'SENTINEL-7Q4-PRIVATE';
 const PHONE = '555-0147';
 const NOTE = `${SENTINEL} my dad lost his job and we might have to move. Call me at ${PHONE}.`;
-const CODE = 'test-advisor-code';
 const LEAKS = [SENTINEL, PHONE, 'lost his job'];
 
 /** The scripted model, with a record of every prompt it was handed. This sees what the log can't: a call made around the gateway. */
@@ -36,7 +35,7 @@ function captureOutput() {
   return { out, restore() { names.forEach((n, i) => { console[n] = saved[i]; }); streams.forEach((undo) => undo()); } };
 }
 
-const get = (s, path, code) => fetch(s.base + path, { headers: code === undefined ? {} : { authorization: `Bearer ${code}` } });
+const get = (s, path) => fetch(s.base + path);
 const clean = (text, where) => { for (const leak of LEAKS) assert.ok(!String(text).includes(leak), `"${leak}" must not appear in ${where}`); };
 
 test('AC18 private note: it reaches the advisor through the read path, and no model prompt, log, public response, printed line or copy of the queue', async () => {
@@ -45,7 +44,7 @@ test('AC18 private note: it reaches the advisor through the read path, and no mo
   const seen = {}; // every response body anyone without the advisor code can get
   let s, opened, opensBefore, queueForms;
   try {
-    s = await startApp({ model: spy, advisorCode: CODE });
+    s = await startApp({ model: spy });
     const { plan } = await s.plan(dani({ age18: 'unsure', diploma: 'no', lean: 'earn' }));
     const req = handoffRequest({ name: 'Dani', note: NOTE, question: 'are there seats left?', reasons: plan.escalations.map((e) => e.code), nextStep: plan.next_step.action });
     const ticket = await s.post('/api/handoff', req.body);
@@ -84,17 +83,18 @@ test('AC18 private note: it reaches the advisor through the read path, and no mo
       seen[`the reply to an unreadable body at ${path}`] = reply;
     }
 
-    for (const path of ['/api/log', '/api/records', '/api/handoff', '/api/handoffs', '/api/advisor/requests', `/api/advisor/requests/${ticket.body.code}`]) {
-      seen[`GET ${path} without the code`] = await (await get(s, path)).text();
+    // Everything that is not the advisor read itself, the inbox list included.
+    for (const path of ['/api/log', '/api/records', '/api/handoff', '/api/handoffs', `/api/advisor/requests/${ticket.body.code}/status`, '/api/advisor/requests/ADV-ZZZZ']) {
+      seen[`GET ${path}`] = await (await get(s, path)).text();
     }
-    seen['the advisor read with a wrong code'] = await (await get(s, `/api/advisor/requests/${ticket.body.code}`, 'wrong-code')).text();
-    const list = await get(s, '/api/advisor/requests', CODE);
+    const list = await get(s, '/api/advisor/requests');
     assert.equal(list.status, 200);
     seen['the advisor list'] = await list.text();
-    assert.equal(JSON.parse(seen['the advisor list']).requests.at(-1).has_note, true, 'the list says a note exists without carrying it');
+    assert.equal(JSON.parse(seen['the advisor list']).requests.find((r) => r.code === ticket.body.code).has_note, true, 'the list says a note exists without carrying it');
 
     // The queue itself, in every form a log line, an error or a store would turn it into.
-    const queued = s.app.handoffs.at(-1);
+    const queued = s.app.handoffs.find((h) => h.code === ticket.body.code);
+    assert.ok(!queued.note.empty, 'this is her request, with her note in it');
     queueForms = {
       'JSON of the queue': JSON.stringify(s.app.handoffs),
       'a string of the note': String(queued.note),
@@ -107,9 +107,9 @@ test('AC18 private note: it reaches the advisor through the read path, and no mo
       'a structured clone of the request': JSON.stringify(structuredClone({ ...queued, note: { ...queued.note } })),
     };
 
-    // The one way in: the advisor read, with the code. Nothing opened the note before this.
+    // The one way in: the advisor read. Nothing opened the note before this.
     opensBefore = s.app.opens.length;
-    const read = await get(s, `/api/advisor/requests/${ticket.body.code}`, CODE);
+    const read = await get(s, `/api/advisor/requests/${ticket.body.code}`);
     assert.equal(read.status, 200);
     opened = (await read.json()).request;
   } finally {
@@ -197,63 +197,63 @@ test('AC19 the gateway refuses the note in every position of every payload, as t
   spy.prompts.forEach((prompt) => clean(prompt, 'a model prompt'));
 });
 
-test('AC20 the advisor inbox is closed without an access code, and its list never carries a note', async () => {
-  // No code configured: the routes don't exist, whatever the caller sends.
-  const closed = await startApp();
+test('AC20 the inbox list never carries a note, and only opening a request opens one', async () => {
+  const s = await startApp();
+  const post = (path, body) => fetch(s.base + path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  const list = async () => {
+    const text = await (await get(s, '/api/advisor/requests')).text();
+    clean(text, 'the inbox list');
+    return JSON.parse(text).requests;
+  };
   try {
-    const ticket = await closed.post('/api/handoff', { first_name: 'Dani', note: NOTE, reasons: [] });
-    for (const code of [undefined, '', 'undefined', 'null', CODE]) {
-      for (const path of ['/api/advisor/requests', `/api/advisor/requests/${ticket.body.code}`]) {
-        const res = await get(closed, path, code);
-        assert.equal(res.status, 404, `${path} with code ${JSON.stringify(code)}`);
-        clean(await res.text(), `${path} on a server with no code`);
-      }
-    }
-    assert.equal(closed.app.opens.length, 0);
-  } finally {
-    await closed.close();
-  }
+    const hers = await s.post('/api/handoff', { first_name: 'Dani', note: NOTE, question: 'are there seats left?', reasons: ['UNKNOWN_SEATS'] });
+    const one = `/api/advisor/requests/${hers.body.code}`;
 
-  const s = await startApp({ advisorCode: CODE });
-  try {
-    const ticket = await s.post('/api/handoff', { first_name: 'Dani', note: NOTE, question: 'are there seats left?', reasons: ['UNKNOWN_SEATS'] });
-    const one = `/api/advisor/requests/${ticket.body.code}`;
-    for (const code of [undefined, '', 'wrong', CODE + 'x', CODE.slice(0, -1), CODE.toUpperCase()]) {
-      for (const path of ['/api/advisor/requests', one]) {
-        const res = await get(s, path, code);
-        assert.equal(res.status, 401, `${path} with code ${JSON.stringify(code)}`);
-        clean(await res.text(), `${path} with a wrong code`);
-      }
-    }
-    const post = (path, body, code) => fetch(s.base + path, { method: 'POST', headers: { 'content-type': 'application/json', ...(code && { authorization: `Bearer ${code}` }) }, body: JSON.stringify(body) });
-    assert.equal((await post(`${one}/status`, { status: 'resolved' })).status, 401, 'status needs the code too');
-    assert.equal(s.app.opens.length, 0, 'a refused request opens nothing');
-
-    const list = await (await get(s, '/api/advisor/requests', CODE)).json();
-    assert.equal(list.requests.length, 1);
-    assert.deepEqual(Object.keys(list.requests[0]).sort(), ['at', 'code', 'crisis', 'first_name', 'has_note', 'next_step', 'question', 'reasons', 'status']);
-    assert.deepEqual({ ...list.requests[0], at: null }, { code: ticket.body.code, first_name: 'Dani', question: 'are there seats left?', reasons: ['UNKNOWN_SEATS'], next_step: null, at: null, status: 'new', has_note: true, crisis: false });
-    clean(JSON.stringify(list), 'the advisor list');
+    // The list: her request, then the two invented samples that are always there. No note in any row.
+    const rows = await list();
+    assert.deepEqual(rows.map((r) => [r.first_name, r.sample]), [['Dani', false], ['Dani', true], ['Marcus', true]]);
+    assert.deepEqual(Object.keys(rows[0]).sort(), ['at', 'code', 'crisis', 'first_name', 'has_note', 'next_step', 'question', 'reasons', 'sample', 'status']);
+    assert.deepEqual({ ...rows[0], at: null }, { code: hers.body.code, first_name: 'Dani', question: 'are there seats left?', reasons: ['UNKNOWN_SEATS'], next_step: null, at: null, status: 'new', sample: false, has_note: true, crisis: false });
     assert.equal(s.app.opens.length, 0, 'listing opens nothing');
 
-    assert.equal((await post(`${one}/status`, { status: 'in_progress' }, CODE)).status, 200);
-    assert.equal((await post(`${one}/status`, { status: NOTE }, CODE)).status, 400);
-    assert.equal((await (await get(s, '/api/advisor/requests', CODE)).json()).requests[0].status, 'in_progress');
-    assert.equal((await get(s, '/api/advisor/requests/ADV-ZZZZ', CODE)).status, 404);
-    assert.equal(s.app.opens.length, 0, 'triage without reading opens nothing');
+    // Triage without reading: a status change answers without the note and opens nothing.
+    const moved = await post(`${one}/status`, { status: 'in_progress' });
+    assert.equal(moved.status, 200);
+    clean(await moved.text(), 'the reply to a status change');
+    assert.equal((await post(`${one}/status`, { status: NOTE })).status, 400);
+    assert.equal((await list())[0].status, 'in_progress');
+    for (const [method, path] of [['POST', '/api/advisor/requests'], ['GET', `${one}/status`], ['GET', '/api/advisor/requests/ADV-ZZZZ'], ['GET', '/api/advisor/requests/../handoffs'], ['DELETE', one]]) {
+      const res = await fetch(s.base + path, { method });
+      assert.equal(res.status, 404, `${method} ${path}`);
+      clean(await res.text(), `${method} ${path}`);
+    }
+    assert.equal(s.app.opens.length, 0, 'triage and wrong turns open nothing');
+
+    // Opening is the only thing that opens, once per read, and it says which request.
+    assert.equal((await (await get(s, one)).json()).request.note, NOTE);
+    const sample = rows.find((r) => r.sample && r.has_note);
+    assert.match((await (await get(s, `/api/advisor/requests/${sample.code}`)).json()).request.note, /example\.com/, 'a sample note is invented text');
+    assert.deepEqual(s.app.opens.map((o) => [o.purpose, o.code]), [['advisor_read', hers.body.code], ['advisor_read', sample.code]]);
+
+    // The demo queue has a ceiling. Listing costs it nothing, and the samples are never pushed out.
+    for (let i = 0; i < 50; i++) await list();
+    assert.equal(s.app.handoffs.length, 1, 'listing adds nothing to the queue');
+    for (let i = 0; i < 520; i++) s.app.handoff({ first_name: 'x' });
+    assert.equal(s.app.handoffs.length, 500);
+    assert.equal((await list()).filter((r) => r.sample).length, 2);
   } finally {
     await s.close();
   }
 });
 
 test('AC10b crisis words in a note are still flagged for the advisor once the note is sealed', async () => {
-  const s = await startApp({ advisorCode: CODE });
+  const s = await startApp();
   try {
     // The page stops a crisis note before sending. This is the server's own check, for a request that skips the page.
     const ticket = await s.post('/api/handoff', { first_name: 'Dani', note: 'I am not safe at home', reasons: [] });
     assert.equal(ticket.body.crisis, true);
-    const list = await (await get(s, '/api/advisor/requests', CODE)).json();
-    assert.equal(list.requests[0].crisis, true);
+    const list = await (await get(s, '/api/advisor/requests')).json();
+    assert.equal(list.requests.find((r) => r.code === ticket.body.code).crisis, true);
     assert.equal(s.app.opens.length, 0);
   } finally {
     await s.close();
@@ -262,14 +262,26 @@ test('AC10b crisis words in a note are still flagged for the advisor once the no
 
 test('AC20b two requests never share a code, so an advisor can never open one student\'s note under another\'s request', async () => {
   const codes = ['ADV-AAAA', 'ADV-AAAA', 'ADV-AAAA', 'ADV-BBBB'];
-  const s = await startApp({ advisorCode: CODE, handoffCode: () => codes.shift() });
+  const s = await startApp({ handoffCode: () => codes.shift() });
   try {
     const first = await s.post('/api/handoff', { first_name: 'Dani', note: NOTE, reasons: [] });
     const second = await s.post('/api/handoff', { first_name: 'Marcus', note: 'a different note', reasons: [] });
     assert.deepEqual([first.body.code, second.body.code], ['ADV-AAAA', 'ADV-BBBB']);
-    const read = async (code) => (await (await get(s, `/api/advisor/requests/${code}`, CODE)).json()).request;
+    const read = async (code) => (await (await get(s, `/api/advisor/requests/${code}`)).json()).request;
     assert.equal((await read('ADV-AAAA')).note, NOTE);
     assert.deepEqual([(await read('ADV-BBBB')).first_name, (await read('ADV-BBBB')).note], ['Marcus', 'a different note']);
+
+    // Push the first request out of the queue, then let the generator offer its code again. It is not given twice,
+    // so an old link can never open a newer request.
+    let n = 0;
+    const alphabet = 'CDEFGHJKMNPQRSTUVWXYZ23456789';
+    const fresh = () => `ADV-${[0, 1, 2].map((p) => alphabet[Math.floor(n / alphabet.length ** p) % alphabet.length]).join('')}2`;
+    for (let i = 0; i < 500; i++) { codes.push(fresh()); n++; s.app.handoff({ first_name: 'x' }); }
+    assert.equal((await get(s, '/api/advisor/requests/ADV-AAAA')).status, 404, 'the oldest request has left the queue');
+    codes.push('ADV-AAAA', 'ADV-DDD3');
+    const next = await s.post('/api/handoff', { first_name: 'Priya', note: 'the newest note', reasons: [] });
+    assert.equal(next.body.code, 'ADV-DDD3');
+    assert.equal((await get(s, '/api/advisor/requests/ADV-AAAA')).status, 404, 'the old code still opens nothing');
   } finally {
     await s.close();
   }
