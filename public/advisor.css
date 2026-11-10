@@ -2,11 +2,6 @@
 body[data-screen='inbox'] .site-footer { max-width: 64rem; }
 .inbox .wordmark { text-decoration: none; }
 
-.code-form { display: grid; gap: 8px; margin-top: 28px; max-width: 24rem; }
-.code-form label { font-weight: 550; color: var(--ink); }
-.code-form .button { margin-top: 8px; }
-.msg { min-height: 1.4em; font-size: 0.9375rem; color: var(--miss); }
-.msg-block { margin-top: 24px; color: var(--ink); font-size: 1.06rem; }
 
 .panes { display: grid; gap: 32px; }
 .list-pane h1 { margin-bottom: 16px; }

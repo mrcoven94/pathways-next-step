@@ -3,51 +3,23 @@
 
 import { esc, reasonWords, STATUS_WORDS, KIND_WORDS, builtinSpans, fromRampart, mergeSpans, maskNote, kindsIn, when } from './advisor-client.js';
 import { loadGate } from './rampart.js';
+import { inboxKey } from './inbox-key.js';
 
 const $ = (s) => document.querySelector(s);
-// The access code lives in this page's memory only. A reload asks for it again, and nothing on disk holds it.
-let memory = '';
-const codeStore = { get: () => memory, set: (v) => { memory = v; }, clear: () => { memory = ''; } };
+const state = { key: inboxKey(), requests: [], open: null, spans: [], shown: new Set() };
 
-const state = { session: 0, code: codeStore.get(), requests: [], open: null, spans: [], shown: new Set() };
-
-class Stale extends Error {}
-class Unauthorized extends Error {}
-class Off extends Error {}
 async function api(path, init = {}) {
-  const session = state.session;
-  const res = await fetch(path, { ...init, headers: { ...(init.headers ?? {}), Authorization: `Bearer ${state.code}`, ...(init.body ? { 'Content-Type': 'application/json' } : {}) } });
-  if (session !== state.session) throw new Stale(); // signed out, or signed in again, while this was on its way
-  if (res.status === 401) throw new Unauthorized();
-  if (res.status === 404) throw new Off();
+  const res = await fetch(path, { ...init, headers: { ...(init.headers ?? {}), Authorization: `Bearer ${state.key}`, ...(init.body ? { 'Content-Type': 'application/json' } : {}) } });
   if (!res.ok) throw new Error(String(res.status));
   return res.json();
 }
 
-function view(name) {
-  $('#gate').hidden = name !== 'gate';
-  $('#off').hidden = name !== 'off';
-  $('#inbox').hidden = name !== 'inbox';
-  $('#sign-out').hidden = name !== 'inbox';
-}
-
-function fail(e) {
-  if (e instanceof Stale) return; // an answer to a session that has ended is dropped, never shown
-  if (e instanceof Unauthorized) {
-    codeStore.clear();
-    state.code = '';
-    view('gate');
-    $('#code-msg').textContent = 'That code didn’t work. Check it and try again.';
-    $('#code').focus();
-  } else if (e instanceof Off) {
-    view('off');
-  } else {
-    $('#detail').innerHTML = '<p class="pick">That didn’t load. Refresh to try again.</p>';
-  }
+function fail() {
+  $('#detail').innerHTML = '<p class="pick">That didn’t load. Refresh to try again.</p>';
 }
 
 // ---------- Contact details ----------
-// This page holds the access code and students' notes, so it loads no code from any other site (the server
+// This page holds this browser's inbox key and students' notes, so it loads no code from any other site (the server
 // sends a policy that enforces it). Rampart Edge is served from this site and runs here, in the advisor's
 // browser; the server never runs it. The built-in patterns are merged in, and stand alone if the model
 // is not ready within about 4 seconds, so the advisor is never kept waiting.
@@ -68,7 +40,7 @@ function renderList() {
   ul.innerHTML = state.requests.map((r) => `
     <li><button type="button" data-code="${esc(r.code)}" aria-current="${state.open?.code === r.code}">
       <span class="name">${esc(r.first_name || 'No name given')}</span>
-      <span class="at">${esc(when(r.at))}</span>
+      <span class="at">${esc(r.sample ? 'Sample' : when(r.at))}</span>
       <span class="why">${esc(r.crisis ? 'Crisis words in their message' : reasonWords(r.reasons?.[0]))}</span>
       <span class="state ${esc(r.status)}">${esc(STATUS_WORDS[r.status] ?? r.status)}</span>
     </button></li>`).join('');
@@ -77,7 +49,6 @@ function renderList() {
 async function loadList() {
   const { requests } = await api('/api/advisor/requests');
   state.requests = requests ?? [];
-  view('inbox');
   renderList();
   if (!state.open) $('#detail').innerHTML = state.requests.length ? '<p class="pick">Pick a request to open it.</p>' : '';
 }
@@ -95,7 +66,7 @@ function renderDetail() {
   $('#detail').innerHTML = `
     <button class="link back" type="button" data-action="back">Back</button>
     <h2 tabindex="-1">${esc(r.first_name || 'No name given')}</h2>
-    <p class="when">${esc(when(r.at))} · ${esc(r.code)}</p>
+    <p class="when">${esc(r.sample ? 'Sample request' : when(r.at))} · ${esc(r.code)}</p>
     ${r.crisis ? '<p class="crisis-line">Their message had crisis words. They were shown 988 and 911.</p>' : ''}
     ${r.question ? `<h3>They asked</h3><p class="q">${esc(r.question)}</p>` : ''}
     <h3>What the records can’t confirm</h3>
@@ -139,25 +110,6 @@ async function setStatus(status) {
 }
 
 // ---------- events ----------
-$('#code-form').addEventListener('submit', (e) => {
-  e.preventDefault();
-  state.session++;
-  state.code = $('#code').value.trim();
-  if (!state.code) return;
-  codeStore.set(state.code);
-  $('#code-msg').textContent = '';
-  $('#code').value = '';
-  loadGate(); // start loading the detector now, so it is ready when a note is opened
-  loadList().catch(fail);
-});
-$('#sign-out').addEventListener('click', () => {
-  codeStore.clear();
-  Object.assign(state, { session: state.session + 1, ticket: (state.ticket ?? 0) + 1, code: '', requests: [], open: null, spans: [], shown: new Set() });
-  $('#requests').innerHTML = ''; // nothing a student wrote stays on the page after sign-out
-  $('#detail').innerHTML = '';
-  document.body.dataset.view = 'list';
-  view('gate');
-});
 $('#requests').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-code]');
   if (b) openRequest(b.dataset.code);
@@ -175,5 +127,5 @@ $('#detail').addEventListener('change', (e) => {
   if (note) note.innerHTML = noteHtml();
 });
 
-if (state.code) loadList().catch(fail);
-else view('gate');
+loadGate(); // start loading the detector now, so it is ready when a note is opened
+loadList().catch(fail);

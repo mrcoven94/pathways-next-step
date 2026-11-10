@@ -21,6 +21,15 @@ const checks = [
   ['GET /how', async () => { const r = await fetch(base + '/how'); return r.ok && (await r.text()).includes('What the model saw'); }],
   ['GET /src/core/topics.js', async () => (await fetch(base + '/src/core/topics.js')).ok],
   ['GET /src/core/gateway.js is not served', async () => (await fetch(base + '/src/core/gateway.js')).status === 404],
+  ['GET /advisor opens with no sign-in, and its API answers only to an inbox key', async () => {
+    const page = await fetch(base + '/advisor');
+    const text = await page.text();
+    const key = [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, '0')).join('');
+    const none = await fetch(base + '/api/advisor/requests');
+    const mine = await fetch(base + '/api/advisor/requests', { headers: { authorization: `Bearer ${key}` } });
+    const { requests } = await mine.json();
+    return page.ok && !/type="password"/.test(text) && none.status === 401 && requests.length === 2 && requests.every((r) => r.sample && !('note' in r));
+  }],
   ['POST /api/plan', async () => {
     const r = await fetch(base + '/api/plan', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ answers: { considering: ['PRG-02', 'PRG-01'], age18: 'yes', diploma: 'yes', lean: 'earn' }, today: '2026-11-03' }) });
     const b = await r.json();

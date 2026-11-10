@@ -9,10 +9,10 @@ const NAME = 'Zyxquorra';
 const NOTE = 'CANARY-NOTE my mom works nights, text me at 555-0142';
 const QUESTION = 'CANARY-QUESTION I am 17 and live on Quillfeather Lane, how much does it pay?';
 const SEATS = 'CANARY-SEATS are there still seats in Northline?';
-const ADVISOR_CODE = 'test-advisor-code';
+const INBOX_KEY = 'c3'.repeat(16); // the inbox key her browser made
 
 test('AC8 minors\' data: her name, advisor note and typed question reach the advisor and never the model log', async () => {
-  const s = await startApp({ advisorCode: ADVISOR_CODE });
+  const s = await startApp();
   try {
     const { plan, summary } = await s.plan(dani({ age18: 'unsure', diploma: 'no', lean: 'earn' }));
     // What the browser actually sends for her typed question: a topic code, not her words.
@@ -24,14 +24,14 @@ test('AC8 minors\' data: her name, advisor note and typed question reach the adv
     // She asks something the records can't answer, then sends it to an advisor with her name and a note.
     const seats = await s.ask(SEATS);
     assert.equal(seats.code, 'UNKNOWN_SEATS');
-    const req = handoffRequest({ name: NAME, note: NOTE, question: SEATS, reasons: [...plan.escalations.map((e) => e.code), seats.code], nextStep: plan.next_step.action });
+    const req = handoffRequest({ name: NAME, note: NOTE, question: SEATS, reasons: [...plan.escalations.map((e) => e.code), seats.code], nextStep: plan.next_step.action, inboxKey: INBOX_KEY });
     const ticket = await s.post('/api/handoff', req.body);
     assert.match(ticket.body.code, /^ADV-[A-Z2-9]{4}$/);
     assert.equal(ticket.body.label, 'This is a request for an advisor, not an application.');
 
     // The advisor gets what they need: her name, her note, her own question and why it came to them.
-    // Since AC18 the note is sealed in the queue, so it is read the way an advisor reads it: with the access code.
-    const read = await fetch(`${s.base}/api/advisor/requests/${ticket.body.code}`, { headers: { authorization: `Bearer ${ADVISOR_CODE}` } });
+    // Since AC18 the note is sealed in the queue, so it is read the way an advisor reads it: with that inbox's key.
+    const read = await fetch(`${s.base}/api/advisor/requests/${ticket.body.code}`, { headers: { authorization: `Bearer ${INBOX_KEY}` } });
     const queued = (await read.json()).request;
     assert.equal(queued.first_name, NAME);
     assert.equal(queued.note, NOTE);
@@ -52,7 +52,7 @@ test('AC8 minors\' data: her name, advisor note and typed question reach the adv
   }
 });
 
-test('AC8b the hand-off queue and names are never served over HTTP without the advisor access code', async () => {
+test('AC8b the hand-off queue and names are never served over HTTP without the inbox key', async () => {
   const s = await startApp();
   try {
     await s.post('/api/handoff', { first_name: NAME, note: NOTE, reasons: [] });

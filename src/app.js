@@ -1,8 +1,8 @@
 // HTTP API and static files. Used by server.js locally and api/index.js on Vercel.
 // The name and advisor note arrive only at /api/handoff, which never touches the gateway.
-// The note is sealed there. Only the advisor read path, behind the access code, opens it.
+// The note is sealed there. Only the advisor read path opens it, and only for the browser that holds that inbox's key.
 
-import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
+import { createHash, randomInt } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -39,10 +39,21 @@ const PAGES = { '/': 'index.html', '/how': 'how.html', '/advisor': 'advisor.html
 // 'wasm-unsafe-eval' lets the page compile Rampart Edge's WASM engine from this site; it allows no eval of JS.
 const INBOX_POLICY = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 
-const digest = (s) => createHash('sha256').update(String(s)).digest();
-const sameCode = (header, code) => timingSafeEqual(digest(header ?? ''), digest(`Bearer ${code}`));
-/** A request as the inbox list shows it: everything but the note, which stays sealed. */
-const listed = ({ note, ...rest }) => ({ ...rest, has_note: !note.empty });
+// An inbox key is 128 random bits made by the browser that owns the inbox (public/inbox-key.js). Nobody types it.
+// The queue keeps only its SHA-256, so a copy of the queue opens no inbox.
+const KEY = /^[0-9a-f]{32}$/;
+const keyId = (key) => createHash('sha256').update(key).digest('hex');
+const bearer = (header) => /^Bearer (\S+)$/.exec(header ?? '')?.[1] ?? '';
+/** A request as the inbox list shows it: everything but the note, which stays sealed, and the inbox it sits in. */
+const listed = ({ note, inbox, ...rest }) => ({ ...rest, has_note: !note.empty });
+const MAX_QUEUE = 500; // the demo queue is in memory, so it has a ceiling; the oldest requests go first
+
+// Every inbox starts with the same two invented requests, so the page shows what an advisor sees at once.
+const SAMPLES = [
+  { first_name: 'Dani', question: 'are there seats left?', reasons: ['DIPLOMA_TIMING_UNKNOWN', 'UNKNOWN_SEATS'], next_step: 'ask_advisor_then_apply',
+    note: 'My dad Marcus Hale lost his job last month, so I need to work while I train. You can text me at 253-555-0119 or dani.r@example.com. We live at 418 Alder Street in Tacoma.' },
+  { first_name: 'Marcus', question: 'how much aid will I get?', reasons: ['UNKNOWN_AID_AMOUNT'], next_step: 'start_aid_application', note: '' },
+];
 
 /**
  * @param {{model?: object, logFile?: string|null, today?: () => string}} opts
@@ -52,9 +63,9 @@ export function todayIn(timeZone = 'America/Los_Angeles', now = new Date()) {
   return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
 }
 
-export function createApp({ model = mockModel, logFile = null, today = () => todayIn(), advisorCode = '', handoffCode = newHandoffCode } = {}) {
+export function createApp({ model = mockModel, logFile = null, today = () => todayIn(), handoffCode = newHandoffCode } = {}) {
   const gateway = createGateway({ model, logFile });
-  const handoffs = []; // stand-in for the advisor queue; served only to an advisor with the access code
+  const handoffs = []; // stand-in for the advisor queue; a request is served only to the inbox it was sent to
   const opens = []; // every time a sealed note was opened: why, which request, when. Never the text.
 
   async function plan({ answers, today: asOf }) {
@@ -91,7 +102,7 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
     return { kind: 'answer', topic, ...reply, facts, open, advisor: advisorFacts() };
   }
 
-  function handoff({ first_name = '', note = '', question = '', reasons = [], next_step = null }) {
+  function handoff({ first_name = '', note = '', question = '', reasons = [], next_step = null, inbox_key = '' }, sample = false) {
     const clean = (s, n) => String(s ?? '').slice(0, n);
     const raw = clean(note, 1000); // the last line that holds the note as plain text
     let code = handoffCode();
@@ -105,9 +116,12 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
       next_step: next_step ? clean(next_step, 40) : null,
       at: new Date().toISOString(),
       status: 'new',
+      sample,
+      inbox: KEY.test(String(inbox_key)) ? keyId(inbox_key) : null, // no key: the request is queued, and no inbox shows it
     };
     request.crisis = [request.first_name, raw, request.question].some(isCrisis);
     handoffs.push(request);
+    if (handoffs.length > MAX_QUEUE) handoffs.splice(0, handoffs.length - MAX_QUEUE);
     return {
       code: request.code,
       crisis: request.crisis,
@@ -116,15 +130,21 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
     };
   }
 
-  /** The advisor read path. It does not exist unless a code is configured, and it answers only to that code. */
+  /** The advisor read path. It answers only to an inbox key, and only with that inbox's requests. */
   async function advisor(req, res, pathname) {
-    if (!advisorCode) return send(res, 404, { error: 'Not found' });
-    if (!sameCode(req.headers.authorization, advisorCode)) return send(res, 401, { error: 'That access code is not right.' });
+    const key = bearer(req.headers.authorization);
+    if (!KEY.test(key)) return send(res, 401, { error: 'This inbox needs its key.' });
+    const inbox = keyId(key);
+    const mine = () => handoffs.filter((h) => h.inbox === inbox);
     const m = pathname.match(/^\/api\/advisor\/requests(?:\/(ADV-[A-Z2-9]{4})(\/status)?)?$/);
     if (!m) return send(res, 404, { error: 'Not found' });
     const [, code, status] = m;
-    if (!code) return req.method === 'GET' ? send(res, 200, { requests: handoffs.map(listed) }) : send(res, 404, { error: 'Not found' });
-    const request = handoffs.find((h) => h.code === code);
+    if (!code) {
+      if (req.method !== 'GET') return send(res, 404, { error: 'Not found' });
+      if (!mine().some((h) => h.sample)) for (const s of SAMPLES) handoff({ ...s, inbox_key: key }, true);
+      return send(res, 200, { requests: mine().map(listed) });
+    }
+    const request = mine().find((h) => h.code === code);
     if (!request) return send(res, 404, { error: 'Not found' });
     if (status && req.method === 'POST') {
       const next = (await readJson(req)).status;

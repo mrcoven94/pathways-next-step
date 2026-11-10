@@ -130,7 +130,7 @@ New acceptance criteria:
 21. Phone numbers and email addresses in a note are hidden from the advisor until switched on, one kind at a time, and the rest of the note is unchanged.
 10b. Crisis words in a note are still flagged once the note is sealed.
 
-`npm run mutate` now breaks 41 guards, 18 of them behind these criteria.
+`npm run mutate` now breaks 43 guards, 20 of them behind these criteria.
 
 ## Amendment (2026-11-10, second change): Rampart Edge from this site
 
@@ -143,3 +143,19 @@ New acceptance criteria:
 New acceptance criterion:
 
 22. No page, script or style names another host. Every vendored file matches the manifest and nothing else is in the folder. The real model, loaded from the vendored files inside `npm test` with no install, finds a phone number, an email address, a street address and a name in invented notes; masking hides each one; and it passes private notes that hold no identifier, which is why it is not the boundary.
+
+## Amendment (2026-11-10, third change): no access code
+
+David's review of the inbox: a demo link must open with no password, and the inbox asked for one.
+
+1. **The shared access code is gone**, with its server setting. A shared code also let anyone who held it read every note.
+2. **Each browser makes its own inbox key**: 128 random bits, kept on the device (`public/inbox-key.js`). Nobody types it. The planner sends it with a hand-off, and `/advisor` in the same browser sends it to read that inbox.
+3. **A request is served only to the inbox it was sent to.** The queue keeps the SHA-256 of the key, never the key. No key, or a malformed one, is 401. Another inbox's key is a valid key for another inbox: it lists none of this inbox's requests and gets 404 for them.
+4. **Every inbox starts with two invented requests**, marked as samples, so the page shows what an advisor sees on the first visit.
+5. **A hand-off with no key still lands in the queue**, as it did before there was an inbox. No inbox shows it.
+6. **The demo queue holds 500 requests.** The oldest go first.
+7. The key is not student data: it says where a request lands, not who she is. It still appears in no model prompt, log or reply (AC18).
+
+This replaces amendment 2 of the first change ("closed by default", 404 with no code configured, 401 with a wrong one). AC8, AC8b, AC18, AC20 and AC20b now use an inbox key where they used the code. AC20 reads: an inbox opens only with its own key, shows only its own requests, and its list never carries a note; listing and triage open nothing; a key is never stored or sent back.
+
+In production the key is replaced by the district's sign-in. That, and a queue that survives a restart, are named follow-ups and are not built here.

@@ -148,3 +148,11 @@ Tools: Claude Code (Opus 5.5) as the architect and builder. A Claude subagent re
 - **The line I kept:** The server never runs the detector on a note. It runs in the student's browser and the advisor's browser, the two places that already hold the note in the clear. A model on the server reading notes, however small, is the thing this task rules out.
 - **What Sol 6.1 found in the diff:** Four things, all fixed. With the real model, "My ID number is 1234567890" came back as an ID inside a phone number, the merge kept only the phone, and switching phones on showed the ID. A merged span now remembers every kind in it and shows only when all are on. The 4 second fallback covered loading but not reading, so a stalled read left the advisor on "Opening". The model test let any request that wasn't for a file through to the network, so a stray call to a model host would have passed; it now fails on any such request. And the rebuild script trusted whatever the registry served under the pinned version; it now checks the registry's checksum for each package before copying anything.
 
+## 17. "Remember no passwords" (David, 2026-11-10)
+
+- **AI built:** An advisor inbox behind a shared access code, set as a server variable and saved in the vault. It answered a real risk: the live site is public, so an open inbox would show any visitor's note to every other visitor.
+- **What David said:** "Remember no passwords, so I don't know why the advisor inbox has a passcode."
+- **Why he was right:** The people this is for are reviewers who should click a link and see the thing. A code they have to be sent is a wall in front of the demo, and a shared code is weak anyway: anyone holding it reads every note.
+- **What changed:** The risk is handled without anything to type. Each browser makes a random inbox key and sends it with a hand-off, and the inbox in that browser reads only those requests. Another visitor has another key and sees none of them. Every inbox starts with two invented requests. The shared code, its server setting and its checks are gone.
+- **What I got wrong in the process:** I changed the code before the checks this time. The checks were rewritten in the same sitting and the mutation run covers them, but the order in AGENTS.md is check first.
+

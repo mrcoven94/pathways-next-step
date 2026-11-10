@@ -2,7 +2,7 @@
 
 import { createApp } from '../src/app.js';
 
-const app = createApp({ logFile: '/tmp/model-calls.log', advisorCode: process.env.ADVISOR_CODE });
+const app = createApp({ logFile: '/tmp/model-calls.log' });
 
 export default function handler(req, res) {
   return app.handle(req, res);
