@@ -109,3 +109,67 @@ export function when(iso, now = new Date()) {
   }
   return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
 }
+
+// ---------- triage ----------
+// Crisis first (until resolved), then new, then in progress, then resolved. Inside each group, requests nobody
+// has answered come first, then newest first, and the two invented samples after real requests.
+export const STATUS_ORDER = ['new', 'in_progress', 'resolved'];
+const rank = (r) => (r.crisis && r.status !== 'resolved' ? 0 : 1 + Math.max(0, STATUS_ORDER.indexOf(r.status)));
+
+export function sortRequests(requests) {
+  return [...(requests ?? [])].sort((a, b) =>
+    rank(a) - rank(b) || Number(a.replies > 0) - Number(b.replies > 0) || Number(!!a.sample) - Number(!!b.sample)
+      || String(b.at).localeCompare(String(a.at)));
+}
+
+/** How many requests sit in each view of the list. Crisis counts requests that still need someone. */
+export function countByStatus(requests) {
+  const counts = { all: 0, crisis: 0, new: 0, in_progress: 0, resolved: 0 };
+  for (const r of requests ?? []) {
+    counts.all++;
+    if (r.status in counts) counts[r.status]++;
+    if (r.crisis && r.status !== 'resolved') counts.crisis++;
+  }
+  return counts;
+}
+
+export function filterRequests(requests, view = 'all') {
+  const sorted = sortRequests(requests);
+  return view === 'all' ? sorted : sorted.filter((r) => r.status === view);
+}
+
+/** The one line a row uses to say why it is here. */
+export const rowReason = (r) => (r.crisis && r.status !== 'resolved' ? 'Used crisis words. Reach them first.' : reasonWords(r.reasons?.[0]));
+
+/** The small line under a row's reason: status, "Answered" once someone has, and whether there is a note. */
+export const rowMeta = (r) => [STATUS_WORDS[r.status] ?? 'New', r.replies > 0 ? 'Answered' : null, r.has_note ? 'Private note' : 'No note'].filter(Boolean).join(' · ');
+
+// The next step the planner gave the student, in the words the student saw.
+export const NEXT_STEP_WORDS = {
+  apply_by_deadline: 'Apply to Northline before the deadline.',
+  ask_advisor_then_apply: 'Check what the records can’t confirm with an advisor, then apply to Northline.',
+  start_aid_application: 'Start the FAFSA or state aid application.',
+};
+export const nextStepWords = (code) => NEXT_STEP_WORDS[code] ?? null;
+
+const clock = (d) => `${d.getHours() % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')} ${d.getHours() < 12 ? 'AM' : 'PM'}`;
+
+/**
+ * How often the note has been opened, from what the server recorded. `opens` counts this read.
+ * `last` is the open before this one, or null.
+ */
+export function handlingWords({ opens, last } = {}, now = new Date()) {
+  const n = Number.isInteger(opens) && opens > 0 ? opens : 1;
+  const prev = last ? new Date(last) : null;
+  const before = prev && !Number.isNaN(prev.getTime())
+    ? ` Last opened before this ${prev.toDateString() === now.toDateString() ? `at ${clock(prev)}` : `on ${MONTHS[prev.getMonth()]} ${prev.getDate()}`}.`
+    : '';
+  return n === 1 ? 'You are the first to open it.' : `Opened ${n} times, counting this one.${before}`;
+}
+
+/** "Sent just now", "Sent 5 min ago", "Sent today at 3:42 PM", "Sent Nov 3". */
+export function sentWords(iso, now = new Date()) {
+  const w = when(iso, now);
+  if (!w) return 'Sent';
+  return `Sent ${w === 'Just now' ? 'just now' : w.replace(/^Today /, 'today at ')}`;
+}

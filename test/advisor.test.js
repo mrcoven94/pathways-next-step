@@ -104,3 +104,67 @@ test('AC21 two kinds found in the same text stay hidden until both are switched 
   const label = (on) => maskNote(text, spans, new Set(on)).find((s) => s.masked).type;
   assert.equal(label(['phone']), 'id', 'the label names the kind still hidden');
 });
+
+import { sortRequests, countByStatus, filterRequests, rowReason, nextStepWords, handlingWords, rowMeta } from '../public/advisor-client.js';
+
+const req = (code, status, extra = {}) => ({ code, status, at: '2026-11-10T10:00:00.000Z', crisis: false, sample: false, reasons: [], ...extra });
+
+test('AC21 the list puts crisis first, then new, in progress and resolved, newest first and samples last', () => {
+  const rows = [
+    req('R1', 'resolved'),
+    req('P1', 'in_progress'),
+    req('S1', 'new', { sample: true, at: '2026-11-10T12:00:00.000Z' }),
+    req('N1', 'new', { at: '2026-11-10T09:00:00.000Z' }),
+    req('N2', 'new', { at: '2026-11-10T11:00:00.000Z' }),
+    req('C1', 'in_progress', { crisis: true }),
+    req('C2', 'resolved', { crisis: true }),
+  ];
+  assert.deepEqual(sortRequests(rows).map((r) => r.code), ['C1', 'N2', 'N1', 'S1', 'P1', 'R1', 'C2']);
+  assert.deepEqual(rows.map((r) => r.code)[0], 'R1', 'sorting leaves the input alone');
+  assert.deepEqual(countByStatus(rows), { all: 7, crisis: 1, new: 3, in_progress: 2, resolved: 2 });
+  assert.deepEqual(filterRequests(rows, 'in_progress').map((r) => r.code), ['C1', 'P1']);
+  assert.deepEqual(filterRequests(rows, 'resolved').map((r) => r.code), ['R1', 'C2']);
+  assert.equal(filterRequests(rows).length, 7);
+  assert.deepEqual(countByStatus([]), { all: 0, crisis: 0, new: 0, in_progress: 0, resolved: 0 });
+});
+
+test('AC21 a row says why in plain words, and the next step reads as the student saw it', () => {
+  assert.equal(rowReason(req('C', 'new', { crisis: true, reasons: ['UNKNOWN_SEATS'] })), 'Used crisis words. Reach them first.');
+  assert.equal(rowReason(req('A', 'new', { reasons: ['UNKNOWN_AID_AMOUNT', 'UNKNOWN_SEATS'] })), 'How much aid they would get');
+  assert.equal(rowReason(req('B', 'new')), 'Asked for an advisor');
+  assert.equal(rowReason(req('D', 'resolved', { crisis: true, reasons: ['UNKNOWN_SEATS'] })), 'How many seats are left', 'a resolved crisis no longer jumps the queue');
+  assert.equal(nextStepWords('start_aid_application'), 'Start the FAFSA or state aid application.');
+  assert.equal(nextStepWords(null), null);
+  assert.equal(nextStepWords('<b>'), null, 'an unknown code shows nothing rather than itself');
+});
+
+test('AC21 the handling line counts opens from the server and names the open before this one', () => {
+  const now = new Date(2026, 10, 10, 15, 0);
+  assert.equal(handlingWords({ opens: 1, last: null }, now), 'You are the first to open it.');
+  assert.equal(handlingWords({ opens: 3, last: new Date(2026, 10, 10, 14, 5).toISOString() }, now),
+    'Opened 3 times, counting this one. Last opened before this at 2:05 PM.');
+  assert.match(handlingWords({ opens: 2, last: new Date(2026, 10, 3, 9, 0).toISOString() }, now), /Last opened before this on Nov 3\.$/);
+  assert.match(handlingWords({}, now), /first to open/);
+});
+
+test('AC21 the opened request says when it was sent in a plain sentence', async () => {
+  const { sentWords } = await import('../public/advisor-client.js');
+  const now = new Date(2026, 10, 10, 15, 0);
+  assert.equal(sentWords(new Date(2026, 10, 10, 14, 59, 50).toISOString(), now), 'Sent just now');
+  assert.equal(sentWords(new Date(2026, 10, 10, 14, 50).toISOString(), now), 'Sent 10 min ago');
+  assert.equal(sentWords(new Date(2026, 10, 10, 9, 5).toISOString(), now), 'Sent today at 9:05 AM');
+  assert.equal(sentWords(new Date(2026, 10, 3, 9, 5).toISOString(), now), 'Sent Nov 3');
+  assert.equal(sentWords('not a date', now), 'Sent');
+});
+
+test('AC21 unanswered work comes first inside each group, and the row says whether anyone answered', () => {
+  const rows = [
+    req('A1', 'new', { replies: 1, at: '2026-11-10T12:00:00.000Z' }),
+    req('U1', 'new', { replies: 0, at: '2026-11-10T09:00:00.000Z' }),
+    req('C1', 'new', { crisis: true, replies: 2 }),
+    req('P1', 'in_progress', { replies: 0 }),
+  ];
+  assert.deepEqual(sortRequests(rows).map((r) => r.code), ['C1', 'U1', 'A1', 'P1']);
+  assert.equal(rowMeta({ status: 'resolved', replies: 2, has_note: true }), 'Resolved · Answered · Private note');
+  assert.equal(rowMeta({ status: 'new', replies: 0, has_note: false }), 'New · No note');
+});

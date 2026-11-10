@@ -3,7 +3,8 @@
 // The only way to read it is Sealed.open, and every open leaves a record of who and why, never the text.
 
 const MARK = '[private]';
-const PURPOSES = ['advisor_read'];
+// Closed: the advisor reads a note, the advisor reads a reply, the student reads a reply. Each is counted apart.
+const PURPOSES = ['advisor_read', 'advisor_reply_read', 'student_reply_read'];
 
 export class Sealed {
   #text;

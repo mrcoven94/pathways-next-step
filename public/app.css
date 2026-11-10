@@ -245,6 +245,14 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .suggest .button { min-height: 44px; background: var(--paper); }
 .advisor > p + p { margin-top: 12px; }
 .advisor > .button { margin-top: 24px; }
+.answer { margin-top: 24px; }
+.answer h2 { margin: 0 0 8px; }
+.answer .thread { margin-top: 12px; }
+.answer .reply-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.answer .bubble .source { display: block; margin-top: 6px; }
+.answer .bubble.me .source { color: var(--on-pen-2); }
+.answer-form { margin-top: 16px; }
+.link.inline { display: inline; min-height: 0; padding: 12px 0; font-size: inherit; }
 
 /* ---------- crisis ---------- */
 .crisis {
