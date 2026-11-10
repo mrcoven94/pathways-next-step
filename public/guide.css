@@ -35,6 +35,9 @@ body[data-screen='guide'] .site-footer { max-width: 44rem; }
 .guide .video:has(video) { padding: 0; aspect-ratio: 16 / 9; }
 .guide .video video { width: 100%; height: 100%; display: block; background: var(--ink); }
 .guide .video a { color: var(--pen); font-weight: 600; }
+.guide .video:has(video) { box-shadow: var(--shadow); }
+.guide .video-note { margin-top: 10px; color: var(--muted); font-size: 0.875rem; }
+.guide .video-note a { color: var(--pen); }
 
 .guide .toc { margin-top: 28px; }
 .guide .toc ul { list-style: none; margin: 0; padding: 0; }
