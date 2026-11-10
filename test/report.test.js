@@ -112,3 +112,154 @@ test('AC23 the page and its scripts load nothing from another host', () => {
     assert.ok(!/url\(\s*["']?(https?:)?\/\//i.test(src), `${f} loads a url() from another host`);
   }
 });
+
+// ---- Review 11: the page must never show a wrong number, an active tag, or a verdict the data does not support.
+
+const client = await import('../public/report-client.js');
+const HOSTILE = '<img src=x onerror=alert(1)>';
+const fixturesText = read('public/data/synthetic-notes.json');
+const rampartData = () => clone(rampart);
+const view = (data = rampartData(), fx = { notes: fixtures }, match = true) => client.rampartView(data, fx, match);
+const cell = (html, rowLabel, col) => {
+  const row = html.split('<tr').find((r) => r.includes(`>${rowLabel}</th>`));
+  assert.ok(row, `no row ${rowLabel}`);
+  return row.match(new RegExp(`data-label="${col}">([^<]*)<`))?.[1];
+};
+const inert = (html) => !/<img|onerror=alert\(1\)>/.test(html.replace(/&lt;img src=x onerror=alert\(1\)&gt;/g, ''));
+
+test('AC23 the committed data shows 19 caught, 2 partly caught, 3 missed of 24, 12 of 12 private notes passed and 0 of 5 everyday notes blocked', () => {
+  const t = kindTotals(kindRows(run));
+  assert.deepEqual(t, { caught: 19, partial: 2, missed: 3, total: 24 });
+  const k = keyRows(run);
+  assert.deepEqual([k.sensitivePassed.count, k.sensitivePassed.total], [12, 12]);
+  assert.deepEqual([k.harmlessBlocked.count, k.harmlessBlocked.total], [0, 5]);
+  const v = view();
+  assert.equal(cell(v.kinds, 'All kinds', 'Caught'), '19');
+  assert.equal(cell(v.kinds, 'All kinds', 'Partly caught'), '2');
+  assert.equal(cell(v.kinds, 'All kinds', 'Missed'), '3');
+  assert.equal(cell(v.kinds, 'All kinds', 'Out of'), '24');
+  assert.match(v.key, /passed by the detector<\/th><td data-label="Result" class="big">12 of 12</);
+  assert.match(v.key, /wrongly blocked<\/th><td data-label="Result" class="big">0 of 5</);
+});
+
+test('AC23 each count lands in its own column of the rendered table', () => {
+  const d = rampartData();
+  d.runs[0].byType.phone = { caught: 1, partial: 2, total: 7, missed: ['c01', 'c03', 'c04'] };
+  const k = view(d).kinds;
+  assert.equal(cell(k, 'Phone numbers', 'Caught'), '1');
+  assert.equal(cell(k, 'Phone numbers', 'Partly caught'), '2');
+  assert.equal(cell(k, 'Phone numbers', 'Missed'), '4');
+  assert.equal(cell(k, 'Phone numbers', 'Out of'), '7');
+  assert.equal(cell(k, 'Names', 'Missed'), '1');
+});
+
+test('AC23 a hostile value in any field of the data comes out inert, previous-run cells included', () => {
+  const d = rampartData();
+  const r0 = d.runs[0];
+  r0.byType[HOSTILE] = { caught: 1, partial: 0, total: 1, missed: [] };
+  r0.perNote[0].id = HOSTILE; r0.perNote[1].group = HOSTILE; r0.perNote[2].spanTypes = [HOSTILE]; r0.perNote[3].ms = HOSTILE;
+  r0.package = HOSTILE; r0.version = HOSTILE; r0.runtime = HOSTILE; r0.date = HOSTILE;
+  const fx = clone(fixtures);
+  fx[1].text = HOSTILE; fx[2].expect[0].value = HOSTILE; fx[2].expect[0].type = HOSTILE;
+  const before = clone(r0); before.byType.phone.caught = HOSTILE;
+  d.runs = [r0, before];
+  const v = view(d, { notes: fx });
+  for (const html of [v.kinds, v.key, v.notes]) assert.ok(inert(html), html.slice(0, 300));
+  assert.match(cell(v.kinds, 'All kinds', 'Run before'), /could not be read/i);
+  const m = clone(runsOf(mutations)[0]);
+  m.mutations[0].what = HOSTILE; m.mutations[0].file = HOSTILE;
+  assert.ok(inert(client.checksView({ runs: [m] }).body));
+  m.mutations[0].caught = HOSTILE;
+  assert.ok(inert(client.checksView({ runs: [m] }).body));
+});
+
+test('AC23 counts that are not whole numbers of zero or more make the section say the data could not be read', () => {
+  for (const bad of [HOSTILE, -1, 1.5, '3', null, Infinity]) {
+    const d = rampartData();
+    d.runs[0].byType.phone.caught = bad;
+    const v = view(d);
+    assert.match(v.kinds, /This data could not be read\./, String(bad));
+    assert.ok(!v.kinds.includes('data-label="Caught"'));
+    assert.ok(inert(v.kinds));
+  }
+  const m = clone(runsOf(mutations)[0]); m.planned = -2;
+  assert.match(client.checksView({ runs: [m] }).body + client.checksView({ runs: [m] }).runText, /could not be read/);
+});
+
+test('AC23 a note with no fixture says so instead of a wrong verdict', () => {
+  const rows = new Map(noteRows(run, fixtures.filter((f) => f.id !== 'c01' && f.id !== 'h01')).map((n) => [n.id, n]));
+  assert.equal(rows.get('c01').result, 'No fixture for this note');
+  assert.equal(rows.get('h01').result, 'No fixture for this note');
+  const html = view(rampartData(), { notes: fixtures.filter((f) => f.id !== 'c01') }).notes;
+  assert.ok(!/Wrongly blocked/.test(html));
+  assert.match(html, /No fixture for this note/);
+});
+
+test('AC23 bad data in one section leaves the other section working', () => {
+  for (const bad of [{}, { runs: [{}] }, null, 'x', { runs: [null] }]) {
+    const v = client.rampartView(bad, { notes: fixtures }, true);
+    assert.match(v.kinds, /This data could not be read\./);
+    assert.match(client.checksView(mutations).body, /Caught/);
+    const c = client.checksView(bad);
+    assert.ok(/could not be read|No mutation run/.test(c.runText + c.body));
+    assert.match(view().kinds, /data-label="Caught">19</);
+  }
+  const v = client.rampartView(rampart, { notes: 'nope' }, true);
+  assert.match(v.kinds, /data-label="Caught">19</);
+  assert.match(v.notes, /could not be read/);
+});
+
+test('AC23 the notes are shown only when the notes file is the one this run measured', async () => {
+  assert.equal(typeof run.fixturesSha256, 'string');
+  assert.equal(await client.fixturesMatch(run, fixturesText), true);
+  assert.equal(await client.fixturesMatch(run, fixturesText.replace('206-555-0142', '206-555-0143')), false);
+  assert.equal(await client.fixturesMatch({ ...run, fixturesSha256: undefined }, fixturesText), false);
+  assert.equal(fixturesText, read('test/fixtures/synthetic-notes.json'));
+  const v = view(rampartData(), { notes: fixtures }, false);
+  assert.ok(!v.notes.includes('c01'));
+  assert.match(v.notes, /do not match/);
+});
+
+test('AC23 an unfinished mutation run is shown as unfinished, never as all caught', () => {
+  const m = clone(runsOf(mutations)[0]);
+  m.completed = false; m.planned = 43; m.mutations = m.mutations.slice(0, 5);
+  const v = client.checksView({ runs: [m] });
+  assert.match(v.runText, /did not finish/);
+  assert.match(v.runText, /5 of 43/);
+  assert.ok(!/breaks aimed at the note were caught/.test(v.runText));
+  const done = clone(runsOf(mutations)[0]);
+  Object.assign(done, { completed: true, planned: done.mutations.length });
+  done.mutations.forEach((x) => { x.caught = true; });
+  assert.match(client.checksView({ runs: [done] }).runText, new RegExp(`${done.mutations.length} of ${done.mutations.length} across the whole app`));
+  m.completed = true; // claims done but holds fewer outcomes than planned
+  assert.match(client.checksView({ runs: [m] }).runText, /did not finish/);
+});
+
+test('AC23 npm run mutate leaves a file that says the run did not finish when a mutation no longer applies', async () => {
+  const { mkdtempSync, mkdirSync, cpSync, writeFileSync, rmSync } = await import('node:fs');
+  const { spawnSync } = await import('node:child_process');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const dir = mkdtempSync(join(tmpdir(), 'pathways-mutate-test-'));
+  try {
+    mkdirSync(join(dir, 'scripts')); mkdirSync(join(dir, 'public/data'), { recursive: true });
+    cpSync(new URL('../scripts/mutate.mjs', import.meta.url), join(dir, 'scripts/mutate.mjs'));
+    writeFileSync(join(dir, 'public/client.js'), '// the first mutation no longer applies here\n');
+    writeFileSync(join(dir, 'public/data/mutations.json'), JSON.stringify(mutations));
+    const r = spawnSync(process.execPath, ['scripts/mutate.mjs'], { cwd: dir, encoding: 'utf8' });
+    assert.notEqual(r.status, 0);
+    const saved = JSON.parse(readFileSync(join(dir, 'public/data/mutations.json'), 'utf8'));
+    assert.equal(saved.runs[0].completed, false);
+    assert.equal(saved.runs[0].mutations.length, 0);
+    assert.equal(saved.runs.length, Math.min(10, mutations.runs.length + 1));
+    assert.match(client.checksView(saved).runText, /did not finish/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('AC23 the advisor sentence claims only what the detector finds', () => {
+  const ac21 = NOTE_CHECKS.find(([c]) => c === 'AC21')[1];
+  assert.match(ac21, /^Details the detector finds/);
+  assert.match(ac21, /one kind at a time/);
+});
