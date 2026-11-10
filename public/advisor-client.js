@@ -23,12 +23,13 @@ export const reasonWords = (code) => REASON_WORDS[code] ?? 'Asked for an advisor
 
 export const STATUS_WORDS = { new: 'New', in_progress: 'In progress', resolved: 'Resolved' };
 
-// Rampart span types mapped to one plain kind each. A name is not in this list on purpose.
+// Rampart span types mapped to one plain kind each. Every type Rampart Edge 2.0.5 returns is here.
 export const RAMPART_KINDS = {
-  PHONE: 'phone', EMAIL: 'email', ADDRESS: 'address', GOV_ID: 'id', OTHER_ID: 'id',
+  NAME: 'name', PHONE: 'phone', EMAIL: 'email', ADDRESS: 'address', GOV_ID: 'id', OTHER_ID: 'id',
   FINANCIAL: 'bank', DOB_KEYED: 'birthday', URL_HANDLE: 'handle',
 };
 export const KIND_WORDS = {
+  name: ['Names', 'name hidden'],
   phone: ['Phone numbers', 'phone hidden'],
   email: ['Email addresses', 'email hidden'],
   address: ['Addresses', 'address hidden'],
@@ -50,27 +51,31 @@ export function builtinSpans(text) {
   return out.sort((x, y) => x.start - y.start);
 }
 
-// Rampart spans ({start, end, type: 'PHONE'...}) to plain kinds; anything unmapped (a name) is dropped.
+// Rampart spans ({start, end, type: 'PHONE'...}) to plain kinds; a type Rampart does not document is dropped.
 export function fromRampart(spans) {
   return (spans ?? [])
     .filter((s) => RAMPART_KINDS[s.type] && Number.isInteger(s.start) && Number.isInteger(s.end) && s.end > s.start)
     .map((s) => ({ start: s.start, end: s.end, type: RAMPART_KINDS[s.type] }));
 }
 
-// Overlapping spans become one; the merged span keeps the type of the one that starts first (longest on a tie).
+// Overlapping spans become one, and the merged span remembers every kind inside it. It is shown only when all of
+// its kinds are switched on, so switching phone numbers on never shows an ID found in the same digits.
 export function mergeSpans(a = [], b = []) {
   const all = [...a, ...b].filter((s) => s.end > s.start).sort((x, y) => x.start - y.start || y.end - x.end);
   const out = [];
   for (const s of all) {
+    const kinds = s.kinds ?? [s.type];
     const last = out[out.length - 1];
-    if (last && s.start < last.end) last.end = Math.max(last.end, s.end);
-    else out.push({ ...s });
+    if (last && s.start < last.end) {
+      last.end = Math.max(last.end, s.end);
+      for (const k of kinds) if (!last.kinds.includes(k)) last.kinds.push(k);
+    } else out.push({ start: s.start, end: s.end, type: kinds[0], kinds: [...kinds] });
   }
   return out;
 }
 
 export function kindsIn(spans) {
-  return [...new Set((spans ?? []).map((s) => s.type))];
+  return [...new Set((spans ?? []).flatMap((s) => s.kinds ?? [s.type]))];
 }
 
 // Segments in order; joined with masked spans shown, they are exactly the input text.
@@ -83,7 +88,8 @@ export function maskNote(text, spans, shown = new Set()) {
     const end = Math.min(sp.end, s.length);
     if (start >= end) continue;
     if (start > at) segs.push({ text: s.slice(at, start), type: null, masked: false });
-    segs.push({ text: s.slice(start, end), type: sp.type, masked: !shown.has(sp.type) });
+    const hidden = sp.kinds.filter((k) => !shown.has(k)); // every kind in the span must be switched on
+    segs.push({ text: s.slice(start, end), type: hidden[0] ?? sp.type, masked: hidden.length > 0 });
     at = end;
   }
   if (at < s.length) segs.push({ text: s.slice(at), type: null, masked: false });

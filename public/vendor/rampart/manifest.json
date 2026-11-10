@@ -1,0 +1,44 @@
+{
+  "about": "Rampart Edge served from this site. Rebuild with node scripts/vendor-rampart.mjs; test/rampart.test.js checks every file against this list.",
+  "packages": [
+    {
+      "name": "@nationaldesignstudio/rampart-edge",
+      "version": "2.0.5",
+      "license": "CC0-1.0"
+    },
+    {
+      "name": "onnxruntime-web",
+      "version": "1.30.0",
+      "license": "MIT"
+    }
+  ],
+  "bundler": "esbuild@0.25.12",
+  "totalBytes": 9540973,
+  "files": [
+    {
+      "path": "model/onnx/model_q4.onnx",
+      "bytes": 1454373,
+      "sha256": "73fce00c229d8318d7e1f8decccc5ad2dbf7aa45a872364b54d632c38a9eb16c"
+    },
+    {
+      "path": "model/vocab.txt",
+      "bytes": 173327,
+      "sha256": "ee0684683c7fb15744d0136e671cd7def76ae4d4ddafb72ced864e94c8d32c9a"
+    },
+    {
+      "path": "ort-wasm-simd-threaded.mjs",
+      "bytes": 24387,
+      "sha256": "8d197e36cd136081d6e075107e3baf099777d13af1d76aaab36a01ca6ce6ec36"
+    },
+    {
+      "path": "ort-wasm-simd-threaded.wasm",
+      "bytes": 7638929,
+      "sha256": "97b22459054f652bf36caadc6d950375a38a164526d0e0eaf64ecbd4efb0cd28"
+    },
+    {
+      "path": "rampart-edge.mjs",
+      "bytes": 249957,
+      "sha256": "1c94c31ef9322265079c663a84d4489de3f8fc27548b0b4920261441704fb3e5"
+    }
+  ]
+}

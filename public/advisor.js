@@ -1,7 +1,8 @@
 // Advisor inbox: hand-off requests, one opened at a time, contact details masked until switched on.
 // Every student-typed field (first_name, question, note) is untrusted: it only reaches the page through esc() or textContent.
 
-import { esc, reasonWords, STATUS_WORDS, KIND_WORDS, builtinSpans, maskNote, kindsIn, when } from './advisor-client.js';
+import { esc, reasonWords, STATUS_WORDS, KIND_WORDS, builtinSpans, fromRampart, mergeSpans, maskNote, kindsIn, when } from './advisor-client.js';
+import { loadGate } from './rampart.js';
 
 const $ = (s) => document.querySelector(s);
 // The access code lives in this page's memory only. A reload asks for it again, and nothing on disk holds it.
@@ -47,10 +48,17 @@ function fail(e) {
 
 // ---------- Contact details ----------
 // This page holds the access code and students' notes, so it loads no code from any other site (the server
-// sends a policy that enforces it). The patterns here are built in. Rampart Edge runs on the student's
-// send screen today; it comes to this page once its files are served from this site.
+// sends a policy that enforces it). Rampart Edge is served from this site and runs here, in the advisor's
+// browser; the server never runs it. The built-in patterns are merged in, and stand alone if the model
+// is not ready within about 4 seconds, so the advisor is never kept waiting.
 async function findSpans(text) {
-  return builtinSpans(text);
+  const builtin = mergeSpans(builtinSpans(text));
+  const detect = (async () => {
+    const gate = await loadGate(4000);
+    return gate ? mergeSpans(fromRampart((await gate.check(text)).spans), builtin) : builtin;
+  })().catch(() => builtin);
+  // One deadline for loading and for reading the note. A result that arrives after it is dropped.
+  return Promise.race([detect, new Promise((resolve) => setTimeout(() => resolve(builtin), 4000))]);
 }
 
 // ---------- list ----------
@@ -139,6 +147,7 @@ $('#code-form').addEventListener('submit', (e) => {
   codeStore.set(state.code);
   $('#code-msg').textContent = '';
   $('#code').value = '';
+  loadGate(); // start loading the detector now, so it is ready when a note is opened
   loadList().catch(fail);
 });
 $('#sign-out').addEventListener('click', () => {

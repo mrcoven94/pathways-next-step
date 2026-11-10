@@ -386,10 +386,8 @@ function moveSuggestion(input, step) {
 // ---------- Rampart Edge: only where text leaves the phone (the advisor note), and only as a suggestion ----------
 let gate;
 function loadGate() {
-  gate ??= import('https://cdn.jsdelivr.net/npm/@nationaldesignstudio/rampart-edge@2.0.5/+esm')
-    .then(async (m) => { try { return await m.createGate(); } catch { return m.createValidatorGate ? await m.createValidatorGate() : null; } })
-    .catch(() => null);
-  return gate;
+  gate ??= import('./rampart.js'); // served from this site, the same copy the advisor inbox uses
+  return gate.then((m) => m.loadGate()).catch(() => null);
 }
 const SPAN_WORDS = { ADDRESS: 'an address', PHONE: 'a phone number', EMAIL: 'an email address', GOV_ID: 'an ID number', FINANCIAL: 'a bank or card number', DOB_KEYED: 'a birthday', URL_HANDLE: 'a social handle', OTHER_ID: 'an ID number' };
 
@@ -397,7 +395,8 @@ async function contactDetails(text) {
   const g = await Promise.race([loadGate(), new Promise((r) => setTimeout(() => r(null), 3000))]);
   if (!g) return null;
   try {
-    const d = await g.check(text);
+    const d = await Promise.race([g.check(text), new Promise((r) => setTimeout(() => r(null), 3000))]); // never keep her waiting to send
+    if (!d) return null;
     const spans = (d.spans ?? []).filter((s) => SPAN_WORDS[s.type]); // a name in a note to her own advisor is fine
     return d.verdict === 'BLOCK' && spans.length ? spans : null;
   } catch {

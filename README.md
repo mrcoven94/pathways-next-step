@@ -5,8 +5,8 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 - **Live:** https://pathways-next-step.vercel.app (records and every model call are at [/how](https://pathways-next-step.vercel.app/how))
 - **Run:** `npm start`, then open http://localhost:3000
 - **Advisor inbox:** `ADVISOR_CODE=<a code you choose> npm start`, then open http://localhost:3000/advisor. Without the variable the inbox does not exist (404).
-- **Test:** `npm test` (35 checks, prints pass or fail, writes `model-calls.log` with a summary at the top)
-- **Prove the tests bite:** `npm run mutate` breaks 38 guards, at least one behind every acceptance criterion, one at a time in a scratch copy. It confirms the named check fails each time.
+- **Test:** `npm test` (43 checks, prints pass or fail, writes `model-calls.log` with a summary at the top)
+- **Prove the tests bite:** `npm run mutate` breaks 41 guards, at least one behind every acceptance criterion, one at a time in a scratch copy. It confirms the named check fails each time.
 - **The 30-minute version:** tag [`v0.1-30min`](https://github.com/mrcoven94/pathways-next-step/tree/v0.1-30min) is the slice as it stood 23 minutes after the repo started, before any review. To run it: `git checkout v0.1-30min && npm test && npm start` (15 checks, all passing). Compare it with `main` to see what review added.
 - Node 20 or newer. No `npm install`, no API key, no accounts, no database.
 
@@ -42,7 +42,9 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 1. `checkPayload` in `src/core/gateway.js`: a model payload may hold only record IDs, codes and the exact text of record facts. A note is none of those, so it is refused before any call.
 2. `Sealed` in `src/core/private.js`: outside the advisor read path, the note is not a string anyone can pass along by accident.
 
-Rampart Edge is not the boundary and can't be. `npm run eval:rampart` runs it over 40 invented notes: it found every email and street address and 6 of 7 names, and it passed all 12 notes that hold no identifier at all but are the most private in the set (a parent's job loss, an eviction, a health worry). A detector finds contact details. It does not know what is private.
+Rampart Edge is served from this site (`public/vendor/rampart/`, about 9 MB, no request to any other host) and runs only in the two browsers that already hold the note: the student's send screen, where it suggests leaving contact details out, and the advisor inbox, where it hides names, addresses, phone numbers, emails and IDs until the advisor switches each kind on. The server never runs it. `npm test` runs the real model with no install (AC22).
+
+It is not the boundary and can't be. `npm run eval:rampart` runs it over 40 invented notes: it found every email and street address and 6 of 7 names, and it passed all 12 notes that hold no identifier at all but are the most private in the set (a parent's job loss, an eviction, a health worry). A detector finds contact details. It does not know what is private.
 
 **What the test proves (AC18 to AC21).** A sentinel string is planted in a note, and the run then looks everywhere it must not be:
 - every prompt the model was handed, recorded by a spy at `model.complete`, including calls made after the note is in the queue;
@@ -130,13 +132,13 @@ Every piece of student data the slice touches, checked against the code. "Model"
 | Saved plan | Her phone (`localStorage` `pathways.saved`): her taps and a timestamp | Her | No | She clears site data |
 | Advisor request code | Her phone (`pathways.handoff`, which also keeps the question she sent) and the server's in-memory queue | Her and the advisor | No | As for the first name |
 | Model log | `model-calls.log` and the "What the model saw" table | Anyone: it's public at `/how` | It is the record of what the model saw: codes and record text only | Kept for audit. Safe to keep, because it holds no student data by construction |
-| Network metadata (IP address, user agent) | Vercel's request logs. The CDN (jsdelivr) and Hugging Face also see it when the browser loads Rampart Edge for the advisor note | Platform operators | No | Platform retention. In production, Rampart is self-hosted so no third party sees the request |
+| Network metadata (IP address, user agent) | Vercel's request logs. No other host sees a request: Rampart Edge is served from this site | Platform operators | No | Platform retention. Until 2026-11-10 a CDN and a model host also saw it |
 
 What isn't collected at all: age or birth date, last name, phone, email, address, school, or any account. The app never asks for them. If she types contact details into the advisor note, Rampart Edge suggests taking them out, because the advisor replies inside Pathways.
 
 ## The checks
 
-`npm test` runs 35 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim: 38 deliberate breaks, every one caught. Writing it caught one weak test. AC5b had only checked the time zone it was handed, never the app's default (`docs/process.md`, entry 13).
+`npm test` runs 43 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim: 41 deliberate breaks, every one caught. Writing it caught one weak test. AC5b had only checked the time zone it was handed, never the app's default (`docs/process.md`, entry 13).
 
 "Today" is the date in Pacific time, so Northline stays open until midnight on Nov 30 (AC5b). To replay a plan on another date, add `?today=2026-12-05` to the URL. The screen then says it's showing a replay.
 
@@ -278,7 +280,7 @@ Anything outside these shapes returns 400. A request body over 20 KB is refused.
 
 ## Rough edges
 
-- Rampart Edge loads from a CDN and takes about 5 seconds the first time. If it doesn't load, the note goes as typed. In production it would be self-hosted.
+- Rampart Edge is about 9 MB of engine and model, served from this site and cached after the first load. If it isn't ready in about 4 seconds, the inbox uses built-in patterns for phone numbers and emails, and the student's note goes as typed.
 - The advisor queue and the "What the model saw" table are in memory on each server, so on the live site a request can be missing from the inbox if a different server instance answers. The full log from the test run is `model-calls.log`.
 - The topic matcher is a list of patterns. A question it doesn't recognize goes to an advisor, which is safe but sometimes unhelpful.
 - ADV-01 has no check date in the records ("n/a"), so its source line says so.
