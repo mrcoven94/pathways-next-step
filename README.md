@@ -4,8 +4,9 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 
 - **Live:** https://pathways-next-step.vercel.app (records and every model call are at [/how](https://pathways-next-step.vercel.app/how))
 - **Run:** `npm start`, then open http://localhost:3000
-- **Test:** `npm test` (24 checks, prints pass or fail, writes `model-calls.log` with a summary at the top)
-- **Prove the tests bite:** `npm run mutate` breaks 23 guards, at least one behind every acceptance criterion, one at a time in a scratch copy. It confirms the named check fails each time.
+- **Advisor inbox:** `ADVISOR_CODE=<a code you choose> npm start`, then open http://localhost:3000/advisor. Without the variable the inbox does not exist (404).
+- **Test:** `npm test` (34 checks, prints pass or fail, writes `model-calls.log` with a summary at the top)
+- **Prove the tests bite:** `npm run mutate` breaks 37 guards, at least one behind every acceptance criterion, one at a time in a scratch copy. It confirms the named check fails each time.
 - **The 30-minute version:** tag [`v0.1-30min`](https://github.com/mrcoven94/pathways-next-step/tree/v0.1-30min) is the slice as it stood 23 minutes after the repo started, before any review. To run it: `git checkout v0.1-30min && npm test && npm start` (15 checks, all passing). Compare it with `main` to see what review added.
 - Node 20 or newer. No `npm install`, no API key, no accounts, no database.
 
@@ -27,6 +28,44 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 **One thing they miss.** Every check runs against the scripted model. A real model's wording hasn't been tested, and connecting words could still mislead ("Cascade comes first") even though code draws the real order on screen.
 
 **Marcus.** The same gateway and checks apply, but the planner needs a new branch: PRG-05 and evening filters, and a layoff-notice tap checked in code against AID-B, never sent to the model.
+
+## The private note (added 2026-11-10)
+
+**The task.** A student leaves a private note for their advisor. The advisor can read it through the advisor workflow. It is never sent to an AI model.
+
+**What changed, and it is small.** The note was already captured and already kept away from the gateway by convention. Three things were missing, and each is now code:
+- **The advisor can read it.** `/advisor` is an inbox behind an access code. The list shows who asked and why, without the note. Opening a request opens the note.
+- **The note is sealed where it arrives** (`src/core/private.js`). It prints as "[private]" in JSON, strings, templates, logs and errors. One function can open it, and every open is recorded: why, which request, when, never the text.
+- **The gateway checks the copy it sends**, so an object can't show the check one thing and the prompt another.
+
+**Where the boundary is.** Two layers, both in code, neither a prompt:
+1. `checkPayload` in `src/core/gateway.js`: a model payload may hold only record IDs, codes and the exact text of record facts. A note is none of those, so it is refused before any call.
+2. `Sealed` in `src/core/private.js`: outside the advisor read path, the note is not a string anyone can pass along by accident.
+
+Rampart Edge is not the boundary and can't be. `npm run eval:rampart` runs it over 40 invented notes: it found every email and street address and 6 of 7 names, and it passed all 12 notes that hold no identifier at all but are the most private in the set (a parent's job loss, an eviction, a health worry). A detector finds contact details. It does not know what is private.
+
+**What the test proves (AC18 to AC21).** A sentinel string is planted in a note, and the run then looks everywhere it must not be:
+- every prompt the model was handed, recorded by a spy at `model.complete`, including calls made after the note is in the queue;
+- every line of `model-calls.log`, and that the spy and the log agree on the number of calls;
+- every response a caller without the access code can get, including replies to an unreadable request;
+- everything the server printed;
+- the queue itself as JSON, as a string, in a template and through `util.inspect`.
+
+It also proves the note arrives word for word through the advisor read, that one read is exactly one recorded open, and that the gateway refuses the note in 212 placements across both payload shapes. `npm run mutate` breaks each guard in turn. One of those mutations calls the model directly, around the gateway: the log never sees it and the old log-only check would have passed. The spy fails it.
+
+**What it misses.**
+- **The browser.** The inbox shows a student's text to an advisor. The page escapes it and a content security policy blocks outside code, and I checked a script-tag note by hand, but no automated test drives a real browser.
+- **A model client the test doesn't inject.** The spy sees calls through the app's model. Code that built its own client and called a provider would not be seen. The guard for that is review, plus a lint rule in production that only `gateway.js` may import a model client.
+- **The host.** Vercel's request logs, a crash dump or an error tracker could hold a request body. Nothing in the repo can test that.
+- **The raw request.** For one function call, before sealing, the note is a plain string in the request body. A debugger or a heap dump would show it.
+- **An advisor who copies it.** Once a person reads the note, software can't stop them pasting it into a chat tool.
+
+**How production differs.**
+- **Storage.** The queue is in memory, and on Vercel each server instance has its own, so a request can vanish on restart or land where the inbox isn't looking. Production needs a durable queue with the note encrypted as its own field, so the store and its backups hold ciphertext.
+- **Who the advisor is.** A shared access code is a stand-in. Production uses the district's sign-in, assigns each request to an advisor, and records the advisor's identity with every open.
+- **Retention.** Hand-offs are deleted 90 days after they're resolved, as in the data inventory below.
+- **The model.** A real provider goes behind the same gateway, under zero retention, with egress from the server limited to that provider. A daily canary student leaves a sentinel note and searches the provider-side log for it.
+- **Logging.** Request bodies are never logged at the host, and the error tracker is set to drop them.
 
 ## Section B: AI Usage Log
 
@@ -87,7 +126,7 @@ Every piece of student data the slice touches, checked against the code. "Model"
 | Programs she's weighing | Her phone, then `/api/plan` | Her and the planner | Only as record IDs, which are public program IDs | Not stored on the server |
 | Age, diploma, learn-by-doing taps | Her phone, then `/api/plan` | Her and the planner | **Codes derived from them do; the answers never do.** The model sees whether a listed rule applies (`AGE_RULE_MISSED`, `AGE_UNCONFIRMED`, `DIPLOMA_TIMING_UNKNOWN`). It never sees her age or a birth date. These codes are linked to no one, but they are derived from a minor's answers, and they appear in the public `/how` table | Not stored on the server |
 | Typed question | Her phone. Matched to a topic there | Her. Also the advisor, only if she taps "Ask an advisor about this" | **Never.** Only a topic code and record IDs | With the page. If sent to an advisor, as for the first name |
-| Advisor note | Her phone, then `/api/handoff` | The advisor | **Never.** The hand-off never touches the gateway (AC8) | As for the first name |
+| Advisor note | Her phone, then `/api/handoff`, where it is sealed | The advisor, through the inbox with the access code. Every open is recorded | **Never.** The gateway refuses it in any position, and outside the advisor read it prints as "[private]" (AC18, AC19) | As for the first name |
 | Saved plan | Her phone (`localStorage` `pathways.saved`): her taps and a timestamp | Her | No | She clears site data |
 | Advisor request code | Her phone (`pathways.handoff`, which also keeps the question she sent) and the server's in-memory queue | Her and the advisor | No | As for the first name |
 | Model log | `model-calls.log` and the "What the model saw" table | Anyone: it's public at `/how` | It is the record of what the model saw: codes and record text only | Kept for audit. Safe to keep, because it holds no student data by construction |
@@ -97,7 +136,7 @@ What isn't collected at all: age or birth date, last name, phone, email, address
 
 ## The checks
 
-`npm test` runs 24 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim: 23 deliberate breaks, every one caught. Writing it caught one weak test. AC5b had only checked the time zone it was handed, never the app's default (`docs/process.md`, entry 13).
+`npm test` runs 34 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim: 37 deliberate breaks, every one caught. Writing it caught one weak test. AC5b had only checked the time zone it was handed, never the app's default (`docs/process.md`, entry 13).
 
 "Today" is the date in Pacific time, so Northline stays open until midnight on Nov 30 (AC5b). To replay a plan on another date, add `?today=2026-12-05` to the URL. The screen then says it's showing a replay.
 
@@ -162,7 +201,10 @@ Typed text is turned into a topic code before any request is made.
 |---|---|---|
 | `POST /api/plan` | `answers`: program IDs plus yes, no or not sure taps. Optional `today` for replays | the plan (next step, programs, open questions, road), every fact with its source and check date, and the reply |
 | `POST /api/answer` | a `topic` code and record IDs, or a `cannot_confirm` code | the reply with its cited facts, or a can't-confirm message with the advisor |
-| `POST /api/handoff` | first name, note, question, reason codes, next-step action | a request code. It is never readable over HTTP |
+| `POST /api/handoff` | first name, note, question, reason codes, next-step action | a request code |
+| `GET /api/advisor/requests` | the advisor access code | the requests, without notes. 404 unless a code is set on the server, 401 without it |
+| `GET /api/advisor/requests/<code>` | the advisor access code | one request with its note, and the open is recorded |
+| `POST /api/advisor/requests/<code>/status` | the access code and a status | the request, without its note |
 | `GET /api/records` | nothing | the eight records |
 | `GET /api/log` | nothing | recent model calls, exactly as sent and received. They hold no student data, so they can be public |
 
@@ -237,7 +279,7 @@ Anything outside these shapes returns 400. A request body over 20 KB is refused.
 ## Rough edges
 
 - Rampart Edge loads from a CDN and takes about 5 seconds the first time. If it doesn't load, the note goes as typed. In production it would be self-hosted.
-- The advisor queue and the "What the model saw" table are in memory on each server. The full log from the test run is `model-calls.log`.
+- The advisor queue and the "What the model saw" table are in memory on each server, so on the live site a request can be missing from the inbox if a different server instance answers. The full log from the test run is `model-calls.log`.
 - The topic matcher is a list of patterns. A question it doesn't recognize goes to an advisor, which is safe but sometimes unhelpful.
 - ADV-01 has no check date in the records ("n/a"), so its source line says so.
 - The screens are checked by hand and through `public/client.js`. There's no automated browser test, to keep the zero-install promise.

@@ -7,7 +7,7 @@ import { MOCK_MODEL_NAME } from './core/mock-model.js';
 
 const port = Number(process.env.PORT ?? 3000);
 const logFile = fileURLToPath(new URL('../model-calls.log', import.meta.url));
-const app = createApp({ logFile, ...(process.env.PATHWAYS_TODAY && { today: () => process.env.PATHWAYS_TODAY }) });
+const app = createApp({ logFile, advisorCode: process.env.ADVISOR_CODE, ...(process.env.PATHWAYS_TODAY && { today: () => process.env.PATHWAYS_TODAY }) });
 
 createServer(app.handle).listen(port, () => {
   console.log(`Pathways is running at http://localhost:${port}`);

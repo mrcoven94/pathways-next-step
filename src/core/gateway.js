@@ -60,6 +60,15 @@ const SCHEMAS = {
   }),
 };
 
+/** The payload as plain data, exactly as it would be written into a prompt. */
+function plainCopy(payload) {
+  try {
+    return JSON.parse(JSON.stringify(payload));
+  } catch {
+    throw new PayloadRejected('payload: not plain data');
+  }
+}
+
 export function checkPayload(payload) {
   const schema = Object.hasOwn(SCHEMAS, payload?.task ?? '') ? SCHEMAS[payload.task] : null;
   if (!schema) throw new PayloadRejected(`task: ${JSON.stringify(payload?.task)} is not an allowed task`);
@@ -169,8 +178,10 @@ export function createGateway({ model, logFile = null, now = () => new Date() })
   const calls = [];
   let count = 0;
 
-  async function callModel(payload) {
-    checkPayload(payload); // throws before anything leaves
+  async function callModel(given) {
+    // Check the copy that will be sent, not the object that was handed in. A getter or a toJSON hook
+    // on the original could say one thing to the check and another to the prompt.
+    const payload = checkPayload(plainCopy(given)); // throws before anything leaves
     const sent = renderPrompt(payload);
     let received;
     try {

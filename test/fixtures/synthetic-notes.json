@@ -1,0 +1,49 @@
+{
+  "about": "Invented advisor notes for scripts/rampart-eval.mjs. Every person, number, address and email is made up: 555-01xx phones, example.com emails, invented streets. group is one of contact, name, address, sensitive, harmless.",
+  "notes": [
+    { "id": "c01", "group": "contact", "text": "Can you text me instead of emailing? My cell is 206-555-0142.", "expect": [{ "type": "phone", "value": "206-555-0142" }] },
+    { "id": "c02", "group": "contact", "text": "My school email gets blocked a lot, please use jaylen.okafor17@example.com for the FAFSA stuff.", "expect": [{ "type": "email", "value": "jaylen.okafor17@example.com" }] },
+    { "id": "c03", "group": "contact", "text": "If I miss the meeting call my mom at (425) 555-0187, she can answer questions about our taxes.", "expect": [{ "type": "phone", "value": "(425) 555-0187" }] },
+    { "id": "c04", "group": "contact", "text": "hey its me again, my number changed to 253 555 0119 and my email is mbrightwater@example.com", "expect": [{ "type": "phone", "value": "253 555 0119" }, { "type": "email", "value": "mbrightwater@example.com" }] },
+    { "id": "c05", "group": "contact", "text": "The scholarship form wants my birthday, it's 03/14/2009, is that right for the age cutoff?", "expect": [{ "type": "dob", "value": "03/14/2009" }] },
+    { "id": "c06", "group": "contact", "text": "My student ID is 40027195 if you need to look up my transcript.", "expect": [{ "type": "id", "value": "40027195" }] },
+    { "id": "c07", "group": "contact", "text": "I posted my portfolio on insta, it's @sketchesbyrue_ if you want to see it before the art school deadline.", "expect": [{ "type": "handle", "value": "@sketchesbyrue_" }] },
+    { "id": "c08", "group": "contact", "text": "Please don't call the house phone. Use my work number 360-555-0163 after 4pm, I'm at the bakery till then.", "expect": [{ "type": "phone", "value": "360-555-0163" }] },
+    { "id": "c09", "group": "contact", "text": "my dad wants to talk to you about the community college thing, his email is t.vasquez.home@example.com", "expect": [{ "type": "email", "value": "t.vasquez.home@example.com" }] },
+    { "id": "c10", "group": "contact", "text": "Born 11-02-2008 so I turn 18 before graduation. Does that change whose income goes on the form?", "expect": [{ "type": "dob", "value": "11-02-2008" }] },
+
+    { "id": "n01", "group": "name", "text": "My aunt Delphine Marchetti said she might cosign a loan but I don't know if that's smart.", "expect": [{ "type": "name", "value": "Delphine Marchetti" }] },
+    { "id": "n02", "group": "name", "text": "Can I ask Mr. Oduya Fenwright for my second recommendation letter or does it have to be a core teacher?", "expect": [{ "type": "name", "value": "Oduya Fenwright" }] },
+    { "id": "n03", "group": "name", "text": "Kenji Halvorsen and I want to apply to the same program, can we come to your office together?", "expect": [{ "type": "name", "value": "Kenji Halvorsen" }] },
+    { "id": "n04", "group": "name", "text": "my coach Brenna Castellanos says a D2 school might give me money for track, is that real?", "expect": [{ "type": "name", "value": "Brenna Castellanos" }] },
+    { "id": "n05", "group": "name", "text": "I live with my grandma Rosalind Achterberg now, so is she the parent on the FAFSA?", "expect": [{ "type": "name", "value": "Rosalind Achterberg" }] },
+    { "id": "n06", "group": "name", "text": "My caseworker is Priyanka Desrosiers, she said you two should talk about my foster youth waiver.", "expect": [{ "type": "name", "value": "Priyanka Desrosiers" }] },
+    { "id": "n07", "group": "name", "text": "Tobias Wren-Abernathy from my church runs a scholarship, should I apply even though it's small?", "expect": [{ "type": "name", "value": "Tobias Wren-Abernathy" }] },
+
+    { "id": "a01", "group": "address", "text": "We moved, the new place is 4417 Larkspur Hollow Rd, Renton, WA 98059, so mail goes there now.", "expect": [{ "type": "address", "value": "4417 Larkspur Hollow Rd, Renton, WA 98059" }] },
+    { "id": "a02", "group": "address", "text": "Can the acceptance packet go to 1290 Quillfeather Ave Apt 3B instead? Our mailbox at home gets stolen from.", "expect": [{ "type": "address", "value": "1290 Quillfeather Ave Apt 3B" }] },
+    { "id": "a03", "group": "address", "text": "i'm staying at my cousins at 88 Brindlewood Ct for a while if you need to send anything", "expect": [{ "type": "address", "value": "88 Brindlewood Ct" }] },
+    { "id": "a04", "group": "address", "text": "Our address for the residency form is 7302 Saltmarsh Lane, Tacoma, WA 98404. Does it count if we've only been here 8 months?", "expect": [{ "type": "address", "value": "7302 Saltmarsh Lane, Tacoma, WA 98404" }] },
+    { "id": "a05", "group": "address", "text": "Send the fee waiver to PO Box 5521, Kent, WA 98035 please, that's the only safe mail spot.", "expect": [{ "type": "address", "value": "PO Box 5521, Kent, WA 98035" }] },
+    { "id": "a06", "group": "address", "text": "The tour bus picks up at 615 Emberly Street right? I want to make sure I'm at the right corner.", "expect": [{ "type": "address", "value": "615 Emberly Street" }] },
+
+    { "id": "s01", "group": "sensitive", "text": "My mom lost her job last week and I don't know if I can still afford to apply anywhere. Please don't bring it up in class.", "expect": [] },
+    { "id": "s02", "group": "sensitive", "text": "We're sleeping in our car right now. Does that change anything for financial aid?", "expect": [] },
+    { "id": "s03", "group": "sensitive", "text": "My parents are undocumented and I'm scared that filling out the FAFSA will get them in trouble.", "expect": [] },
+    { "id": "s04", "group": "sensitive", "text": "I've been having panic attacks before tests and my grades dropped a lot this semester. I haven't told anyone at home.", "expect": [] },
+    { "id": "s05", "group": "sensitive", "text": "I'm pregnant and due in May. Can I still start college in the fall?", "expect": [] },
+    { "id": "s06", "group": "sensitive", "text": "My dad is in prison and my mom won't sign anything. How do I do financial aid without her?", "expect": [] },
+    { "id": "s07", "group": "sensitive", "text": "I failed chemistry and I'm going to lose my scholarship eligibility. I don't want my parents to find out from the school.", "expect": [] },
+    { "id": "s08", "group": "sensitive", "text": "Things at home aren't safe right now and I might need to move out before graduation. What happens to my applications?", "expect": [] },
+    { "id": "s09", "group": "sensitive", "text": "I have a seizure disorder and I'm worried colleges will see it if I ask for accommodations.", "expect": [] },
+    { "id": "s10", "group": "sensitive", "text": "We got an eviction notice. If we have to move to another district do I lose my spot in the dual credit program?", "expect": [] },
+    { "id": "s11", "group": "sensitive", "text": "I'm gay and my family doesn't know. Some of the schools on my list are religious and I'm not sure I'd be safe there.", "expect": [] },
+    { "id": "s12", "group": "sensitive", "text": "I've been working nights to help pay rent and I'm falling asleep in class. My GPA went from 3.6 to 2.9.", "expect": [] },
+
+    { "id": "h01", "group": "harmless", "text": "What time does the college fair start on Thursday?", "expect": [] },
+    { "id": "h02", "group": "harmless", "text": "Is it better to take AP Stats or AP Calc next year if I want to do nursing?", "expect": [] },
+    { "id": "h03", "group": "harmless", "text": "Thanks for the help with my essay, I submitted it last night!", "expect": [] },
+    { "id": "h04", "group": "harmless", "text": "Do community college credits transfer to state universities in Washington?", "expect": [] },
+    { "id": "h05", "group": "harmless", "text": "Can we meet during lunch instead of after school this week?", "expect": [] }
+  ]
+}

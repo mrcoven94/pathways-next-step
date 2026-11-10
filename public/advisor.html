@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pathways · Advisor inbox</title>
+  <meta name="theme-color" content="#ffffff">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/schibstedgrotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/advisor.css">
+  <script type="module" src="/advisor.js"></script>
+</head>
+<body data-screen="inbox" data-view="list">
+  <main id="app" class="inbox">
+    <nav class="topbar">
+      <a class="wordmark ink" href="/">Pathways</a>
+      <button class="link" type="button" id="sign-out" hidden>Sign out</button>
+    </nav>
+
+    <section id="gate" hidden>
+      <h1>Advisor inbox</h1>
+      <form id="code-form" class="code-form">
+        <label for="code">Access code</label>
+        <input id="code" name="code" type="password" autocomplete="off" spellcheck="false" required>
+        <p id="code-msg" class="msg" role="alert"></p>
+        <button class="button primary" type="submit">Open inbox</button>
+      </form>
+    </section>
+
+    <p id="off" class="msg-block" hidden>The advisor inbox is not switched on for this server.</p>
+
+    <div id="inbox" class="panes" hidden>
+      <section class="list-pane" aria-labelledby="inbox-title">
+        <h1 id="inbox-title">Inbox</h1>
+        <ul id="requests" class="requests"></ul>
+      </section>
+      <section id="detail" class="detail-pane" aria-live="polite"></section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p class="demo">Demo: synthetic students and requests.</p>
+  </footer>
+</body>
+</html>
