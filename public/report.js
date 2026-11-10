@@ -1,13 +1,19 @@
 // /report: reads public/data/*.json and fills the page. The HTML is built and escaped in report-client.js;
 // this file only assigns it. Each section renders on its own, so bad data in one never stops the other.
 
-import { runsOf, fixturesMatch, rampartView, checksView } from './report-client.js';
+import { runsOf, fixturesMatch, rampartView, checksView, criteriaView } from './report-client.js';
 
 const $ = (s) => document.querySelector(s);
 const getText = (url) => fetch(url).then((r) => (r.ok ? r.text() : null)).catch(() => null);
 const parse = (text) => { try { return JSON.parse(text); } catch { return null; } };
 
 const [rampartText, fixturesText, mutationsText] = await Promise.all([getText('/data/rampart-eval.json'), getText('/data/synthetic-notes.json'), getText('/data/mutations.json')]);
+
+try {
+  $('#criteria-body').innerHTML = criteriaView(parse(mutationsText));
+} catch {
+  $('#criteria-body').textContent = 'This data could not be read.';
+}
 
 try {
   const data = parse(rampartText);
