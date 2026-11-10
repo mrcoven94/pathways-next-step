@@ -1,8 +1,9 @@
 // HTTP API and static files. Used by server.js locally and api/index.js on Vercel.
 // The name and advisor note arrive only at /api/handoff, which never touches the gateway.
-// The note is sealed there. Only the advisor read path opens it, and only for the browser that holds that inbox's key.
+// The note is sealed there. Only the advisor read path opens it, and every open is recorded.
+// In this demo that path is public: there is no sign-in, and nothing in the queue belongs to a real student.
 
-import { createHash, randomInt } from 'node:crypto';
+import { randomInt } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,22 +36,15 @@ function newHandoffCode() {
 
 const STATUSES = ['new', 'in_progress', 'resolved'];
 const PAGES = { '/': 'index.html', '/how': 'how.html', '/advisor': 'advisor.html' };
-// The inbox shows student-typed text to a signed-in advisor, so it may load nothing from anywhere else.
+// The inbox shows student-typed text, so it may load nothing from anywhere else.
 // 'wasm-unsafe-eval' lets the page compile Rampart Edge's WASM engine from this site; it allows no eval of JS.
 const INBOX_POLICY = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 
-// An inbox key is 128 random bits made by the browser that owns the inbox (public/inbox-key.js). Nobody types it.
-// The queue keeps only its SHA-256, so a copy of the queue opens no inbox.
-const KEY = /^[0-9a-f]{32}$/;
-const keyId = (key) => createHash('sha256').update(key).digest('hex');
-const bearer = (header) => /^Bearer (\S+)$/.exec(header ?? '')?.[1] ?? '';
-/** A request as the inbox list shows it: everything but the note, which stays sealed, and the inbox it sits in. */
-const listed = ({ note, inbox, ...rest }) => ({ ...rest, has_note: !note.empty });
-// The demo queue is in memory, so it has ceilings. One inbox can't fill it, and the oldest requests go first.
-const MAX_QUEUE = 500;
-const MAX_PER_INBOX = 20;
+/** A request as the inbox list shows it: everything but the note, which stays sealed until the request is opened. */
+const listed = ({ note, ...rest }) => ({ ...rest, has_note: !note.empty });
+const MAX_QUEUE = 500; // the demo queue is in memory, so it has a ceiling; the oldest requests go first
 
-// Every inbox shows the same two invented requests, so the page shows what an advisor sees at once.
+// The inbox always shows two invented requests, so the page shows what an advisor sees at once.
 // They are made once and kept apart from the queue: listing them costs real requests no room.
 const SAMPLES = [
   { first_name: 'Dani', question: 'are there seats left?', reasons: ['DIPLOMA_TIMING_UNKNOWN', 'UNKNOWN_SEATS'], next_step: 'ask_advisor_then_apply',
@@ -68,10 +62,10 @@ export function todayIn(timeZone = 'America/Los_Angeles', now = new Date()) {
 
 export function createApp({ model = mockModel, logFile = null, today = () => todayIn(), handoffCode = newHandoffCode } = {}) {
   const gateway = createGateway({ model, logFile });
-  const handoffs = []; // stand-in for the advisor queue; a request is served only to the inbox it was sent to
+  const handoffs = []; // stand-in for the advisor queue; served only by the advisor routes below
   const samples = SAMPLES.map((s, i) => ({
     code: `ADV-SMP${'AB'[i]}`, first_name: s.first_name, note: seal(s.note), question: s.question, reasons: s.reasons,
-    next_step: s.next_step, at: new Date().toISOString(), status: 'new', sample: true, inbox: null, crisis: false,
+    next_step: s.next_step, at: new Date().toISOString(), status: 'new', sample: true, crisis: false,
   }));
   const used = new Set(samples.map((s) => s.code)); // every code ever given out, so one is never given twice
   const opens = []; // every time a sealed note was opened: why, which request, when. Never the text.
@@ -110,7 +104,7 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
     return { kind: 'answer', topic, ...reply, facts, open, advisor: advisorFacts() };
   }
 
-  function handoff({ first_name = '', note = '', question = '', reasons = [], next_step = null, inbox_key = '' }) {
+  function handoff({ first_name = '', note = '', question = '', reasons = [], next_step = null }) {
     const clean = (s, n) => String(s ?? '').slice(0, n);
     const raw = clean(note, 1000); // the last line that holds the note as plain text
     let code = handoffCode();
@@ -126,12 +120,9 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
       at: new Date().toISOString(),
       status: 'new',
       sample: false,
-      inbox: KEY.test(String(inbox_key)) ? keyId(inbox_key) : null, // no key: the request is queued, and no inbox shows it
     };
     request.crisis = [request.first_name, raw, request.question].some(isCrisis);
     handoffs.push(request);
-    const own = request.inbox ? handoffs.filter((h) => h.inbox === request.inbox) : [];
-    if (own.length > MAX_PER_INBOX) handoffs.splice(handoffs.indexOf(own[0]), 1);
     if (handoffs.length > MAX_QUEUE) handoffs.splice(0, handoffs.length - MAX_QUEUE);
     return {
       code: request.code,
@@ -141,25 +132,20 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
     };
   }
 
-  /** The advisor read path. It answers only to an inbox key, and only with that inbox's requests. */
+  /** The advisor read path: list without notes, open one request, set a status. Public in this demo. */
   async function advisor(req, res, pathname) {
-    const key = bearer(req.headers.authorization);
-    if (!KEY.test(key)) return send(res, 401, { error: 'This inbox needs its key.' });
-    const inbox = keyId(key);
-    const mine = () => handoffs.filter((h) => h.inbox === inbox);
     const m = pathname.match(/^\/api\/advisor\/requests(?:\/(ADV-[A-Z2-9]{4})(\/status)?)?$/);
     if (!m) return send(res, 404, { error: 'Not found' });
     const [, code, status] = m;
     if (!code) {
       if (req.method !== 'GET') return send(res, 404, { error: 'Not found' });
-      return send(res, 200, { requests: [...mine(), ...samples].map(listed) });
+      return send(res, 200, { requests: [...handoffs, ...samples].map(listed) });
     }
-    const request = mine().find((h) => h.code === code) ?? samples.find((h) => h.code === code);
+    const request = handoffs.find((h) => h.code === code) ?? samples.find((h) => h.code === code);
     if (!request) return send(res, 404, { error: 'Not found' });
     if (status && req.method === 'POST') {
       const next = (await readJson(req)).status;
       if (!STATUSES.includes(next)) return send(res, 400, { error: 'Status must be new, in_progress or resolved.' });
-      if (request.sample) return send(res, 200, { request: { ...listed(request), status: next } }); // every inbox shares the samples, so they never change
       request.status = next;
       return send(res, 200, { request: listed(request) });
     }

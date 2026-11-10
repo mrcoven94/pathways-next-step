@@ -2,7 +2,6 @@
 // sends them to an advisor. Questions are matched here and only topic codes go to the server.
 
 import { stepsFor, withName, askRequest, handoffRequest, suggestionsFor, matchSuggestions, previewQuestion } from './client.js';
-import { inboxKey, inboxLink } from './inbox-key.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -432,7 +431,7 @@ function renderAdvisor() {
       <nav class="topbar"><button class="link" type="button" data-action="to-plan">Back</button></nav>
       <h1>Sent to an advisor</h1>
       <p class="lede-ink">Your request code is <strong>${esc(state.handoff.code)}</strong>. They answer within 2 business days. ${source('ADV-01')}</p>
-      <p class="label">${esc(state.handoff.label)} Demo: no person receives this. <a href="${inboxLink()}">See what the advisor sees</a>.</p>
+      <p class="label">${esc(state.handoff.label)} Demo: no person receives this. <a href="/advisor">See what the advisor sees</a>.</p>
       <div class="actions"><button class="button primary" type="button" data-action="to-plan">Back to my plan</button></div>`;
     return show('advisor');
   }
@@ -449,7 +448,7 @@ function renderAdvisor() {
       <input id="adv-name" type="text" maxlength="40" value="${esc(state.name)}" autocapitalize="words" spellcheck="false">
       <label for="adv-note">Anything else? <span class="optional">Optional</span></label>
       <textarea id="adv-note" rows="4" maxlength="1000"></textarea>
-      <p class="hint-ink">Only your advisor reads this.</p>
+      <p class="hint-ink">Demo: the advisor inbox is public. Don’t type anything real.</p>
       <div class="suggest" id="adv-suggest" hidden></div>
       <button class="button primary" type="submit">Send to an advisor</button>
     </form>`;
@@ -477,7 +476,6 @@ async function sendHandoffOnce(skipScreen) {
     question: state.pending?.question ?? '',
     reasons: [...(plan?.escalations.map((e) => e.code) ?? ['OUTSIDE_PREVIEW']), ...(state.pending?.code ? [state.pending.code] : [])],
     nextStep: plan?.next_step.action ?? null,
-    inboxKey: inboxKey(),
   });
   if (req.crisis) return showCrisis();
 

@@ -3,13 +3,12 @@
 
 import { esc, reasonWords, STATUS_WORDS, KIND_WORDS, builtinSpans, fromRampart, mergeSpans, maskNote, kindsIn, when } from './advisor-client.js';
 import { loadGate } from './rampart.js';
-import { inboxKey } from './inbox-key.js';
 
 const $ = (s) => document.querySelector(s);
-const state = { key: inboxKey(), requests: [], open: null, spans: [], shown: new Set() };
+const state = { requests: [], open: null, spans: [], shown: new Set() };
 
 async function api(path, init = {}) {
-  const res = await fetch(path, { ...init, headers: { ...(init.headers ?? {}), Authorization: `Bearer ${state.key}`, ...(init.body ? { 'Content-Type': 'application/json' } : {}) } });
+  const res = await fetch(path, { ...init, headers: { ...(init.headers ?? {}), ...(init.body ? { 'Content-Type': 'application/json' } : {}) } });
   if (!res.ok) throw new Error(String(res.status));
   return res.json();
 }
@@ -23,7 +22,7 @@ function failList() {
 }
 
 // ---------- Contact details ----------
-// This page holds this browser's inbox key and students' notes, so it loads no code from any other site (the server
+// This page shows students' notes, so it loads no code from any other site (the server
 // sends a policy that enforces it). Rampart Edge is served from this site and runs here, in the advisor's
 // browser; the server never runs it. The built-in patterns are merged in, and stand alone if the model
 // is not ready within about 4 seconds, so the advisor is never kept waiting.

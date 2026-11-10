@@ -28,11 +28,10 @@ export function askRequest(text, considering) {
 /**
  * The advisor request: the one place her name, note and question leave the phone, to a person.
  * A crisis in any field stops the send and shows 988 and 911 instead.
- * The inbox key says which inbox the request lands in (public/inbox-key.js). It is not about her and never reaches the model.
  */
-export function handoffRequest({ name = '', note = '', question = '', reasons = [], nextStep = null, inboxKey = '' }) {
+export function handoffRequest({ name = '', note = '', question = '', reasons = [], nextStep = null }) {
   if ([name, note, question].some(isCrisis)) return { crisis: true };
-  return { body: { first_name: name.trim(), note: note.trim(), question: question.trim(), reasons: [...new Set(reasons)], next_step: nextStep, ...(inboxKey && { inbox_key: inboxKey }) } };
+  return { body: { first_name: name.trim(), note: note.trim(), question: question.trim(), reasons: [...new Set(reasons)], next_step: nextStep } };
 }
 
 // Questions the box can suggest as she types, scoped to what she's weighing. Every one routes to

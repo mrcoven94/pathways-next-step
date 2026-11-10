@@ -24,7 +24,7 @@ This repo is a small slice of Pathways (CampusEvolve) for one persona: Dani, 17,
 | `src/app.js` | HTTP API and static files. `api/index.js` wraps it for Vercel. |
 | `public/client.js` | What the browser sends, without the DOM, so tests run the page's own logic. |
 | `public/app.js` | The screens. |
-| `public/advisor.js`, `public/advisor-client.js` | The advisor inbox at `/advisor`. Loads nothing from another site. No sign-in: it reads the requests sent with this browser's inbox key (`public/inbox-key.js`). |
+| `public/advisor.js`, `public/advisor-client.js` | The advisor inbox at `/advisor`. Loads nothing from another site. No sign-in: the demo inbox is public. |
 | `public/rampart.js`, `public/vendor/rampart/` | Rampart Edge, served from this site. Rebuilt only by `scripts/vendor-rampart.mjs`; never edit the vendored files by hand. Runs in the browser only, never on the server. |
 | `test/` | One test per acceptance criterion in SPEC.md, named `AC<n>`. |
 | `docs/process.md` | Every time a person or a check corrected the AI. Append, never rewrite. |
