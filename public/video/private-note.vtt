@@ -1,0 +1,247 @@
+WEBVTT
+
+00:00:00.592 --> 00:00:02.372
+This is the task from our call.
+
+00:00:02.732 --> 00:00:05.212
+A student leaves a private note for their advisor.
+
+00:00:05.492 --> 00:00:07.832
+It must never be sent to an AI model.
+
+00:00:08.092 --> 00:00:11.712
+Make the smallest safe change, and show how you verify it.
+
+00:00:12.764 --> 00:00:15.844
+Pathways helps a student pick a next step after high school.
+
+00:00:16.224 --> 00:00:18.024
+This planner already existed.
+
+00:00:18.304 --> 00:00:22.924
+Code chooses the step, and a language model supplies the wording through one file,
+
+00:00:23.084 --> 00:00:23.924
+the gateway.
+
+00:00:24.244 --> 00:00:26.824
+Here that model is a scripted stand-in.
+
+00:00:28.832 --> 00:00:31.472
+The note box and the gateway already existed.
+
+00:00:31.812 --> 00:00:35.572
+Three things were missing: a way for an advisor to read the note,
+
+00:00:35.792 --> 00:00:40.382
+protection against printing it by accident, and a test that watches model calls
+
+00:00:40.412 --> 00:00:41.932
+made outside the gateway.
+
+00:00:42.552 --> 00:00:43.832
+Dani writes a note.
+
+00:00:44.232 --> 00:00:46.092
+Everything in it is invented.
+
+00:00:49.059 --> 00:00:53.819
+A small detector model, running in her browser, finds the phone number and the email,
+
+00:00:53.939 --> 00:00:55.559
+and suggests leaving them out.
+
+00:00:55.899 --> 00:00:57.359
+She sends it as it is.
+
+00:00:59.004 --> 00:01:00.844
+This is the advisor inbox.
+
+00:01:01.184 --> 00:01:03.984
+In this demo it is public, with no sign-in.
+
+00:01:04.244 --> 00:01:07.884
+The students are invented, and no real advisor receives anything.
+
+00:01:08.484 --> 00:01:12.204
+The list leaves the note out, and so does opening a request.
+
+00:01:12.604 --> 00:01:17.504
+Open the note is the one route that returns it, and each open is recorded.
+
+00:01:17.904 --> 00:01:22.474
+Names and contact details stay hidden on screen until the advisor switches that
+
+00:01:22.504 --> 00:01:23.404
+kind on.
+
+00:01:27.108 --> 00:01:29.308
+The boundary is two layers of code.
+
+00:01:29.648 --> 00:01:32.908
+First, the server seals the note before it queues it.
+
+00:01:33.228 --> 00:01:38.138
+As JSON, as a string, or in an error, it prints as the word private,
+
+00:01:38.168 --> 00:01:39.008
+in brackets.
+
+00:01:39.448 --> 00:01:41.388
+Only the advisor route opens it.
+
+00:01:41.668 --> 00:01:45.028
+That prevents accidental printing, not deliberate access.
+
+00:01:45.501 --> 00:01:47.141
+Second, the gateway.
+
+00:01:47.501 --> 00:01:51.741
+It checks a plain copy of each payload and accepts only listed codes,
+
+00:01:51.901 --> 00:01:54.721
+record IDs, and exact record facts.
+
+00:01:55.001 --> 00:01:56.801
+A note is none of those.
+
+00:01:57.041 --> 00:02:00.141
+A test rejects it in two hundred and twelve placements.
+
+00:02:00.576 --> 00:02:05.256
+On the server, the change is three files and about two hundred added lines.
+
+00:02:06.752 --> 00:02:09.892
+This is a prompt the gateway recorded on the live server,
+
+00:02:10.112 --> 00:02:11.272
+word for word.
+
+00:02:11.612 --> 00:02:13.232
+Codes and record facts.
+
+00:02:13.512 --> 00:02:15.692
+Not Dani’s name, not her note.
+
+00:02:17.237 --> 00:02:21.857
+To verify it, a test puts a marker that exists nowhere else into a note,
+
+00:02:21.937 --> 00:02:25.417
+and confirms the advisor route returns the note unchanged.
+
+00:02:26.017 --> 00:02:30.136
+Then it searches for that marker in each prompt a spy on the model captured,
+
+00:02:30.317 --> 00:02:33.947
+the gateway’s log, the other replies, the server’s output,
+
+00:02:33.977 --> 00:02:34.837
+and the queue.
+
+00:02:35.240 --> 00:02:36.840
+Now I break it on purpose.
+
+00:02:37.280 --> 00:02:41.000
+One added line hands the note straight to the model, around the gateway,
+
+00:02:41.040 --> 00:02:42.720
+and swallows any error.
+
+00:02:43.020 --> 00:02:47.310
+The gateway’s log never records that call, so a scan of the log alone would miss
+
+00:02:47.340 --> 00:02:47.720
+it.
+
+00:02:48.240 --> 00:02:50.000
+The spy does not miss it.
+
+00:02:50.240 --> 00:02:53.940
+The test fails, and names the marker inside a model prompt.
+
+00:02:55.833 --> 00:02:59.333
+The saved mutation run breaks the app one guard at a time,
+
+00:02:59.493 --> 00:03:02.013
+and every break made its test fail.
+
+00:03:02.353 --> 00:03:04.573
+This table lists the ones aimed at the note.
+
+00:03:06.516 --> 00:03:09.256
+A second model reviewed the plan and the code.
+
+00:03:09.576 --> 00:03:12.376
+The copy check in the gateway came from that review.
+
+00:03:13.634 --> 00:03:17.874
+The detector is Rampart Edge, from the US National Design Studio.
+
+00:03:18.174 --> 00:03:20.414
+It is itself a small AI model.
+
+00:03:20.794 --> 00:03:24.884
+Served from this site, it runs in the app only in the two browsers that already
+
+00:03:24.914 --> 00:03:25.754
+hold the note.
+
+00:03:26.074 --> 00:03:29.334
+The server runs no model on a note, not even this one.
+
+00:03:29.874 --> 00:03:31.674
+And it is not the boundary.
+
+00:03:32.094 --> 00:03:37.014
+On forty invented notes, it flagged nothing in the twelve about sensitive situations,
+
+00:03:37.234 --> 00:03:42.634
+a parent’s job loss, an eviction, a health worry, because they hold no identifier.
+
+00:03:43.154 --> 00:03:48.664
+Arjun raised a related limit on our call: a troubling sentence may match no crisis
+
+00:03:48.694 --> 00:03:49.254
+pattern.
+
+00:03:49.614 --> 00:03:52.854
+Finding identifiers cannot tell you a note is private.
+
+00:03:54.153 --> 00:03:55.833
+What this does not prove.
+
+00:03:56.273 --> 00:03:59.113
+The boundary has not met a real provider’s model.
+
+00:03:59.453 --> 00:04:01.553
+No test drives a real browser.
+
+00:04:01.833 --> 00:04:04.973
+The spy cannot see a model client it was not handed.
+
+00:04:05.173 --> 00:04:07.453
+And host logs are outside the repo.
+
+00:04:07.993 --> 00:04:12.033
+Production still needs sign-in, access limited to the assigned advisor,
+
+00:04:12.333 --> 00:04:15.293
+and an encrypted queue that survives a restart.
+
+00:04:15.633 --> 00:04:16.953
+Those are not built.
+
+00:04:17.553 --> 00:04:18.433
+One more gap.
+
+00:04:18.893 --> 00:04:21.393
+The crisis check is a list of patterns.
+
+00:04:21.713 --> 00:04:25.453
+Saying "I want to disappear" does not show the crisis card.
+
+00:04:26.648 --> 00:04:31.308
+The planner, the inbox, the report and the code are public at these links.
+
+00:04:31.608 --> 00:04:32.568
+Thank you both.
