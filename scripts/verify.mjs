@@ -19,6 +19,11 @@ if (!base) {
 const checks = [
   ['GET /', async () => { const r = await fetch(base + '/'); const t = await r.text(); return r.ok && t.includes('Let’s find your next step') && t.includes('tel:988'); }],
   ['GET /how', async () => { const r = await fetch(base + '/how'); return r.ok && (await r.text()).includes('What the model saw'); }],
+  ['GET /report', async () => {
+    const r = await fetch(base + '/report'); const t = await r.text();
+    const data = await Promise.all(['/report.js', '/report-client.js', '/data/rampart-eval.json', '/data/mutations.json', '/data/synthetic-notes.json'].map((p) => fetch(base + p).then((x) => x.ok)));
+    return r.ok && t.includes('What protects the private note') && data.every(Boolean);
+  }],
   ['GET /src/core/topics.js', async () => (await fetch(base + '/src/core/topics.js')).ok],
   ['GET /src/core/gateway.js is not served', async () => (await fetch(base + '/src/core/gateway.js')).status === 404],
   ['GET /advisor opens with no sign-in, and the list carries no note', async () => {

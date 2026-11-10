@@ -1,0 +1,1310 @@
+{
+  "runs": [
+    {
+      "date": "2026-11-10T20:40:48.407Z",
+      "node": "v26.13.0",
+      "completed": true,
+      "planned": 44,
+      "mutations": [
+        {
+          "what": "The browser sends her typed words with the topic",
+          "file": "public/client.js",
+          "check": "AC8",
+          "caught": true
+        },
+        {
+          "what": "The server tries to send her name to the model (the gateway refuses it, so the plan fails)",
+          "file": "src/app.js",
+          "check": "AC1",
+          "caught": true
+        },
+        {
+          "what": "The allowlist accepts inherited names like \"constructor\"",
+          "file": "src/core/gateway.js",
+          "check": "AC9",
+          "caught": true
+        },
+        {
+          "what": "Numbers are allowed in the model's own words",
+          "file": "src/core/gateway.js",
+          "check": "AC7b",
+          "caught": true
+        },
+        {
+          "what": "Months are allowed in the model's own words",
+          "file": "src/core/gateway.js",
+          "check": "AC7b",
+          "caught": true
+        },
+        {
+          "what": "Crisis words are matched without fixing phone apostrophes",
+          "file": "src/core/topics.js",
+          "check": "AC10",
+          "caught": true
+        },
+        {
+          "what": "The age rule is ignored",
+          "file": "src/core/planner.js",
+          "check": "AC3",
+          "caught": true
+        },
+        {
+          "what": "Seat questions go to the model instead of an advisor",
+          "file": "src/core/topics.js",
+          "check": "AC6",
+          "caught": true
+        },
+        {
+          "what": "A passed start date is offered as the next step",
+          "file": "src/core/planner.js",
+          "check": "AC14",
+          "caught": true
+        },
+        {
+          "what": "Facts lose their last-checked date",
+          "file": "src/core/records.js",
+          "check": "AC2",
+          "caught": true
+        },
+        {
+          "what": "\"No diploma yet\" no longer sends her to an advisor",
+          "file": "src/core/planner.js",
+          "check": "AC4",
+          "caught": true
+        },
+        {
+          "what": "The Nov 30 deadline never passes",
+          "file": "src/core/planner.js",
+          "check": "AC5",
+          "caught": true
+        },
+        {
+          "what": "\"Today\" is the UTC date",
+          "file": "src/app.js",
+          "check": "AC5b",
+          "caught": true
+        },
+        {
+          "what": "The scripted model claims she is eligible",
+          "file": "src/core/mock-model.js",
+          "check": "AC7a",
+          "caught": true
+        },
+        {
+          "what": "Facts are shown as raw record text instead of sentences",
+          "file": "src/core/templates.js",
+          "check": "AC7c",
+          "caught": true
+        },
+        {
+          "what": "Model calls stop being logged",
+          "file": "src/core/gateway.js",
+          "check": "AC11",
+          "caught": true
+        },
+        {
+          "what": "The advisor queue is served over HTTP",
+          "file": "src/app.js",
+          "check": "AC8b",
+          "caught": true
+        },
+        {
+          "what": "Bad requests crash with a 500 instead of a 400",
+          "file": "src/app.js",
+          "check": "AC9b",
+          "caught": true
+        },
+        {
+          "what": "Everyone is asked her age, even for Cascade only",
+          "file": "src/core/planner.js",
+          "check": "AC12",
+          "caught": true
+        },
+        {
+          "what": "No fallback path when everything she picked is ruled out",
+          "file": "src/core/planner.js",
+          "check": "AC13",
+          "caught": true
+        },
+        {
+          "what": "A suggested question leads nowhere",
+          "file": "public/client.js",
+          "check": "AC15",
+          "caught": true
+        },
+        {
+          "what": "The advisor answer date is wrong",
+          "file": "src/core/planner.js",
+          "check": "AC17",
+          "caught": true
+        },
+        {
+          "what": "Thanksgiving counts as a business day",
+          "file": "src/core/planner.js",
+          "check": "AC17",
+          "caught": true
+        },
+        {
+          "what": "The note is kept in the queue as plain text",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "A sealed note gives up its text as JSON",
+          "file": "src/core/private.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The hand-off sends the note straight to the model, around the gateway (the log never sees it)",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The hand-off prints the note to the server log",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "A request that is not JSON gets the parser's error back, which quotes the note",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "Opening a note leaves no record",
+          "file": "src/core/private.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The gateway checks the object it was handed, not the copy it sends",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "Extra fields are allowed in a model payload",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "A refused payload is quoted in the error",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "The inbox list carries the note",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "Two requests can share a code",
+          "file": "src/app.js",
+          "check": "AC20b",
+          "caught": true
+        },
+        {
+          "what": "A code is given out again once its request has left the queue",
+          "file": "src/app.js",
+          "check": "AC20b",
+          "caught": true
+        },
+        {
+          "what": "Crisis words in a sealed note are missed",
+          "file": "src/app.js",
+          "check": "AC10b",
+          "caught": true
+        },
+        {
+          "what": "Contact details in a note are shown to the advisor without asking",
+          "file": "public/advisor-client.js",
+          "check": "AC21",
+          "caught": true
+        },
+        {
+          "what": "Switching one kind on shows another kind found in the same text",
+          "file": "public/advisor-client.js",
+          "check": "AC21",
+          "caught": true
+        },
+        {
+          "what": "The detector is loaded from a CDN again",
+          "file": "public/rampart.js",
+          "check": "AC22",
+          "caught": true
+        },
+        {
+          "what": "Names in a note are shown to the advisor without asking",
+          "file": "public/advisor-client.js",
+          "check": "AC21",
+          "caught": true
+        },
+        {
+          "what": "The demo queue has no ceiling",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "A status change sends the note back",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "A kind with nothing expected shows up as an empty row on /report",
+          "file": "public/report-client.js",
+          "check": "AC23",
+          "caught": true
+        },
+        {
+          "what": "The report shows the missed count in the Caught column",
+          "file": "public/report-client.js",
+          "check": "AC23",
+          "caught": true
+        }
+      ]
+    },
+    {
+      "date": "2026-11-10T20:38:00.786Z",
+      "node": "v26.13.0",
+      "completed": true,
+      "planned": 43,
+      "mutations": [
+        {
+          "what": "The browser sends her typed words with the topic",
+          "file": "public/client.js",
+          "check": "AC8",
+          "caught": true
+        },
+        {
+          "what": "The server tries to send her name to the model (the gateway refuses it, so the plan fails)",
+          "file": "src/app.js",
+          "check": "AC1",
+          "caught": true
+        },
+        {
+          "what": "The allowlist accepts inherited names like \"constructor\"",
+          "file": "src/core/gateway.js",
+          "check": "AC9",
+          "caught": true
+        },
+        {
+          "what": "Numbers are allowed in the model's own words",
+          "file": "src/core/gateway.js",
+          "check": "AC7b",
+          "caught": true
+        },
+        {
+          "what": "Months are allowed in the model's own words",
+          "file": "src/core/gateway.js",
+          "check": "AC7b",
+          "caught": true
+        },
+        {
+          "what": "Crisis words are matched without fixing phone apostrophes",
+          "file": "src/core/topics.js",
+          "check": "AC10",
+          "caught": true
+        },
+        {
+          "what": "The age rule is ignored",
+          "file": "src/core/planner.js",
+          "check": "AC3",
+          "caught": true
+        },
+        {
+          "what": "Seat questions go to the model instead of an advisor",
+          "file": "src/core/topics.js",
+          "check": "AC6",
+          "caught": true
+        },
+        {
+          "what": "A passed start date is offered as the next step",
+          "file": "src/core/planner.js",
+          "check": "AC14",
+          "caught": true
+        },
+        {
+          "what": "Facts lose their last-checked date",
+          "file": "src/core/records.js",
+          "check": "AC2",
+          "caught": true
+        },
+        {
+          "what": "\"No diploma yet\" no longer sends her to an advisor",
+          "file": "src/core/planner.js",
+          "check": "AC4",
+          "caught": true
+        },
+        {
+          "what": "The Nov 30 deadline never passes",
+          "file": "src/core/planner.js",
+          "check": "AC5",
+          "caught": true
+        },
+        {
+          "what": "\"Today\" is the UTC date",
+          "file": "src/app.js",
+          "check": "AC5b",
+          "caught": true
+        },
+        {
+          "what": "The scripted model claims she is eligible",
+          "file": "src/core/mock-model.js",
+          "check": "AC7a",
+          "caught": true
+        },
+        {
+          "what": "Facts are shown as raw record text instead of sentences",
+          "file": "src/core/templates.js",
+          "check": "AC7c",
+          "caught": true
+        },
+        {
+          "what": "Model calls stop being logged",
+          "file": "src/core/gateway.js",
+          "check": "AC11",
+          "caught": true
+        },
+        {
+          "what": "The advisor queue is served over HTTP",
+          "file": "src/app.js",
+          "check": "AC8b",
+          "caught": true
+        },
+        {
+          "what": "Bad requests crash with a 500 instead of a 400",
+          "file": "src/app.js",
+          "check": "AC9b",
+          "caught": true
+        },
+        {
+          "what": "Everyone is asked her age, even for Cascade only",
+          "file": "src/core/planner.js",
+          "check": "AC12",
+          "caught": true
+        },
+        {
+          "what": "No fallback path when everything she picked is ruled out",
+          "file": "src/core/planner.js",
+          "check": "AC13",
+          "caught": true
+        },
+        {
+          "what": "A suggested question leads nowhere",
+          "file": "public/client.js",
+          "check": "AC15",
+          "caught": true
+        },
+        {
+          "what": "The advisor answer date is wrong",
+          "file": "src/core/planner.js",
+          "check": "AC17",
+          "caught": true
+        },
+        {
+          "what": "Thanksgiving counts as a business day",
+          "file": "src/core/planner.js",
+          "check": "AC17",
+          "caught": true
+        },
+        {
+          "what": "The note is kept in the queue as plain text",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "A sealed note gives up its text as JSON",
+          "file": "src/core/private.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The hand-off sends the note straight to the model, around the gateway (the log never sees it)",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The hand-off prints the note to the server log",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "A request that is not JSON gets the parser's error back, which quotes the note",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "Opening a note leaves no record",
+          "file": "src/core/private.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The gateway checks the object it was handed, not the copy it sends",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "Extra fields are allowed in a model payload",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "A refused payload is quoted in the error",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "The inbox list carries the note",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "Two requests can share a code",
+          "file": "src/app.js",
+          "check": "AC20b",
+          "caught": true
+        },
+        {
+          "what": "A code is given out again once its request has left the queue",
+          "file": "src/app.js",
+          "check": "AC20b",
+          "caught": true
+        },
+        {
+          "what": "Crisis words in a sealed note are missed",
+          "file": "src/app.js",
+          "check": "AC10b",
+          "caught": true
+        },
+        {
+          "what": "Contact details in a note are shown to the advisor without asking",
+          "file": "public/advisor-client.js",
+          "check": "AC21",
+          "caught": true
+        },
+        {
+          "what": "Switching one kind on shows another kind found in the same text",
+          "file": "public/advisor-client.js",
+          "check": "AC21",
+          "caught": true
+        },
+        {
+          "what": "The detector is loaded from a CDN again",
+          "file": "public/rampart.js",
+          "check": "AC22",
+          "caught": true
+        },
+        {
+          "what": "Names in a note are shown to the advisor without asking",
+          "file": "public/advisor-client.js",
+          "check": "AC21",
+          "caught": true
+        },
+        {
+          "what": "The demo queue has no ceiling",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "A status change sends the note back",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "A kind with nothing expected shows up as an empty row on /report",
+          "file": "public/report-client.js",
+          "check": "AC23",
+          "caught": true
+        }
+      ]
+    },
+    {
+      "date": "2026-11-10T20:30:53.646Z",
+      "node": "v26.13.0",
+      "mutations": [
+        {
+          "what": "The browser sends her typed words with the topic",
+          "file": "public/client.js",
+          "check": "AC8",
+          "caught": true
+        },
+        {
+          "what": "The server tries to send her name to the model (the gateway refuses it, so the plan fails)",
+          "file": "src/app.js",
+          "check": "AC1",
+          "caught": true
+        },
+        {
+          "what": "The allowlist accepts inherited names like \"constructor\"",
+          "file": "src/core/gateway.js",
+          "check": "AC9",
+          "caught": true
+        },
+        {
+          "what": "Numbers are allowed in the model's own words",
+          "file": "src/core/gateway.js",
+          "check": "AC7b",
+          "caught": true
+        },
+        {
+          "what": "Months are allowed in the model's own words",
+          "file": "src/core/gateway.js",
+          "check": "AC7b",
+          "caught": true
+        },
+        {
+          "what": "Crisis words are matched without fixing phone apostrophes",
+          "file": "src/core/topics.js",
+          "check": "AC10",
+          "caught": true
+        },
+        {
+          "what": "The age rule is ignored",
+          "file": "src/core/planner.js",
+          "check": "AC3",
+          "caught": true
+        },
+        {
+          "what": "Seat questions go to the model instead of an advisor",
+          "file": "src/core/topics.js",
+          "check": "AC6",
+          "caught": true
+        },
+        {
+          "what": "A passed start date is offered as the next step",
+          "file": "src/core/planner.js",
+          "check": "AC14",
+          "caught": true
+        },
+        {
+          "what": "Facts lose their last-checked date",
+          "file": "src/core/records.js",
+          "check": "AC2",
+          "caught": true
+        },
+        {
+          "what": "\"No diploma yet\" no longer sends her to an advisor",
+          "file": "src/core/planner.js",
+          "check": "AC4",
+          "caught": true
+        },
+        {
+          "what": "The Nov 30 deadline never passes",
+          "file": "src/core/planner.js",
+          "check": "AC5",
+          "caught": true
+        },
+        {
+          "what": "\"Today\" is the UTC date",
+          "file": "src/app.js",
+          "check": "AC5b",
+          "caught": true
+        },
+        {
+          "what": "The scripted model claims she is eligible",
+          "file": "src/core/mock-model.js",
+          "check": "AC7a",
+          "caught": true
+        },
+        {
+          "what": "Facts are shown as raw record text instead of sentences",
+          "file": "src/core/templates.js",
+          "check": "AC7c",
+          "caught": true
+        },
+        {
+          "what": "Model calls stop being logged",
+          "file": "src/core/gateway.js",
+          "check": "AC11",
+          "caught": true
+        },
+        {
+          "what": "The advisor queue is served over HTTP",
+          "file": "src/app.js",
+          "check": "AC8b",
+          "caught": true
+        },
+        {
+          "what": "Bad requests crash with a 500 instead of a 400",
+          "file": "src/app.js",
+          "check": "AC9b",
+          "caught": true
+        },
+        {
+          "what": "Everyone is asked her age, even for Cascade only",
+          "file": "src/core/planner.js",
+          "check": "AC12",
+          "caught": true
+        },
+        {
+          "what": "No fallback path when everything she picked is ruled out",
+          "file": "src/core/planner.js",
+          "check": "AC13",
+          "caught": true
+        },
+        {
+          "what": "A suggested question leads nowhere",
+          "file": "public/client.js",
+          "check": "AC15",
+          "caught": true
+        },
+        {
+          "what": "The advisor answer date is wrong",
+          "file": "src/core/planner.js",
+          "check": "AC17",
+          "caught": true
+        },
+        {
+          "what": "Thanksgiving counts as a business day",
+          "file": "src/core/planner.js",
+          "check": "AC17",
+          "caught": true
+        },
+        {
+          "what": "The note is kept in the queue as plain text",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "A sealed note gives up its text as JSON",
+          "file": "src/core/private.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The hand-off sends the note straight to the model, around the gateway (the log never sees it)",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The hand-off prints the note to the server log",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "A request that is not JSON gets the parser's error back, which quotes the note",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "Opening a note leaves no record",
+          "file": "src/core/private.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The gateway checks the object it was handed, not the copy it sends",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "Extra fields are allowed in a model payload",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "A refused payload is quoted in the error",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "The inbox list carries the note",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "Two requests can share a code",
+          "file": "src/app.js",
+          "check": "AC20b",
+          "caught": true
+        },
+        {
+          "what": "A code is given out again once its request has left the queue",
+          "file": "src/app.js",
+          "check": "AC20b",
+          "caught": true
+        },
+        {
+          "what": "Crisis words in a sealed note are missed",
+          "file": "src/app.js",
+          "check": "AC10b",
+          "caught": true
+        },
+        {
+          "what": "Contact details in a note are shown to the advisor without asking",
+          "file": "public/advisor-client.js",
+          "check": "AC21",
+          "caught": true
+        },
+        {
+          "what": "Switching one kind on shows another kind found in the same text",
+          "file": "public/advisor-client.js",
+          "check": "AC21",
+          "caught": true
+        },
+        {
+          "what": "The detector is loaded from a CDN again",
+          "file": "public/rampart.js",
+          "check": "AC22",
+          "caught": true
+        },
+        {
+          "what": "Names in a note are shown to the advisor without asking",
+          "file": "public/advisor-client.js",
+          "check": "AC21",
+          "caught": true
+        },
+        {
+          "what": "The demo queue has no ceiling",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "A status change sends the note back",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "A kind with nothing expected shows up as an empty row on /report",
+          "file": "public/report-client.js",
+          "check": "AC23",
+          "caught": true
+        }
+      ]
+    },
+    {
+      "date": "2026-11-10T20:23:18.688Z",
+      "node": "v26.13.0",
+      "mutations": [
+        {
+          "what": "The browser sends her typed words with the topic",
+          "file": "public/client.js",
+          "check": "AC8",
+          "caught": true
+        },
+        {
+          "what": "The server tries to send her name to the model (the gateway refuses it, so the plan fails)",
+          "file": "src/app.js",
+          "check": "AC1",
+          "caught": true
+        },
+        {
+          "what": "The allowlist accepts inherited names like \"constructor\"",
+          "file": "src/core/gateway.js",
+          "check": "AC9",
+          "caught": true
+        },
+        {
+          "what": "Numbers are allowed in the model's own words",
+          "file": "src/core/gateway.js",
+          "check": "AC7b",
+          "caught": true
+        },
+        {
+          "what": "Months are allowed in the model's own words",
+          "file": "src/core/gateway.js",
+          "check": "AC7b",
+          "caught": true
+        },
+        {
+          "what": "Crisis words are matched without fixing phone apostrophes",
+          "file": "src/core/topics.js",
+          "check": "AC10",
+          "caught": true
+        },
+        {
+          "what": "The age rule is ignored",
+          "file": "src/core/planner.js",
+          "check": "AC3",
+          "caught": true
+        },
+        {
+          "what": "Seat questions go to the model instead of an advisor",
+          "file": "src/core/topics.js",
+          "check": "AC6",
+          "caught": true
+        },
+        {
+          "what": "A passed start date is offered as the next step",
+          "file": "src/core/planner.js",
+          "check": "AC14",
+          "caught": true
+        },
+        {
+          "what": "Facts lose their last-checked date",
+          "file": "src/core/records.js",
+          "check": "AC2",
+          "caught": true
+        },
+        {
+          "what": "\"No diploma yet\" no longer sends her to an advisor",
+          "file": "src/core/planner.js",
+          "check": "AC4",
+          "caught": true
+        },
+        {
+          "what": "The Nov 30 deadline never passes",
+          "file": "src/core/planner.js",
+          "check": "AC5",
+          "caught": true
+        },
+        {
+          "what": "\"Today\" is the UTC date",
+          "file": "src/app.js",
+          "check": "AC5b",
+          "caught": true
+        },
+        {
+          "what": "The scripted model claims she is eligible",
+          "file": "src/core/mock-model.js",
+          "check": "AC7a",
+          "caught": true
+        },
+        {
+          "what": "Facts are shown as raw record text instead of sentences",
+          "file": "src/core/templates.js",
+          "check": "AC7c",
+          "caught": true
+        },
+        {
+          "what": "Model calls stop being logged",
+          "file": "src/core/gateway.js",
+          "check": "AC11",
+          "caught": true
+        },
+        {
+          "what": "The advisor queue is served over HTTP",
+          "file": "src/app.js",
+          "check": "AC8b",
+          "caught": true
+        },
+        {
+          "what": "Bad requests crash with a 500 instead of a 400",
+          "file": "src/app.js",
+          "check": "AC9b",
+          "caught": true
+        },
+        {
+          "what": "Everyone is asked her age, even for Cascade only",
+          "file": "src/core/planner.js",
+          "check": "AC12",
+          "caught": true
+        },
+        {
+          "what": "No fallback path when everything she picked is ruled out",
+          "file": "src/core/planner.js",
+          "check": "AC13",
+          "caught": true
+        },
+        {
+          "what": "A suggested question leads nowhere",
+          "file": "public/client.js",
+          "check": "AC15",
+          "caught": true
+        },
+        {
+          "what": "The advisor answer date is wrong",
+          "file": "src/core/planner.js",
+          "check": "AC17",
+          "caught": true
+        },
+        {
+          "what": "Thanksgiving counts as a business day",
+          "file": "src/core/planner.js",
+          "check": "AC17",
+          "caught": true
+        },
+        {
+          "what": "The note is kept in the queue as plain text",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "A sealed note gives up its text as JSON",
+          "file": "src/core/private.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The hand-off sends the note straight to the model, around the gateway (the log never sees it)",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The hand-off prints the note to the server log",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "A request that is not JSON gets the parser's error back, which quotes the note",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "Opening a note leaves no record",
+          "file": "src/core/private.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The gateway checks the object it was handed, not the copy it sends",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "Extra fields are allowed in a model payload",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "A refused payload is quoted in the error",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "The advisor inbox answers without a key",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "One browser can open a request sent to another browser's inbox",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "The inbox list shows every browser's requests",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "The queue keeps the inbox key itself, not its hash",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "The inbox list carries the note",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "Two requests can share a code",
+          "file": "src/app.js",
+          "check": "AC20b",
+          "caught": true
+        },
+        {
+          "what": "Crisis words in a sealed note are missed",
+          "file": "src/app.js",
+          "check": "AC10b",
+          "caught": true
+        },
+        {
+          "what": "Contact details in a note are shown to the advisor without asking",
+          "file": "public/advisor-client.js",
+          "check": "AC21",
+          "caught": true
+        },
+        {
+          "what": "Switching one kind on shows another kind found in the same text",
+          "file": "public/advisor-client.js",
+          "check": "AC21",
+          "caught": true
+        },
+        {
+          "what": "The detector is loaded from a CDN again",
+          "file": "public/rampart.js",
+          "check": "AC22",
+          "caught": true
+        },
+        {
+          "what": "Names in a note are shown to the advisor without asking",
+          "file": "public/advisor-client.js",
+          "check": "AC21",
+          "caught": true
+        },
+        {
+          "what": "A kind with nothing expected shows up as an empty row on /report",
+          "file": "public/report-client.js",
+          "check": "AC23",
+          "caught": true
+        }
+      ]
+    },
+    {
+      "date": "2026-11-10T20:07:32.739Z",
+      "node": "v26.13.0",
+      "mutations": [
+        {
+          "what": "The browser sends her typed words with the topic",
+          "file": "public/client.js",
+          "check": "AC8",
+          "caught": true
+        },
+        {
+          "what": "The server tries to send her name to the model (the gateway refuses it, so the plan fails)",
+          "file": "src/app.js",
+          "check": "AC1",
+          "caught": true
+        },
+        {
+          "what": "The allowlist accepts inherited names like \"constructor\"",
+          "file": "src/core/gateway.js",
+          "check": "AC9",
+          "caught": true
+        },
+        {
+          "what": "Numbers are allowed in the model's own words",
+          "file": "src/core/gateway.js",
+          "check": "AC7b",
+          "caught": true
+        },
+        {
+          "what": "Months are allowed in the model's own words",
+          "file": "src/core/gateway.js",
+          "check": "AC7b",
+          "caught": true
+        },
+        {
+          "what": "Crisis words are matched without fixing phone apostrophes",
+          "file": "src/core/topics.js",
+          "check": "AC10",
+          "caught": true
+        },
+        {
+          "what": "The age rule is ignored",
+          "file": "src/core/planner.js",
+          "check": "AC3",
+          "caught": true
+        },
+        {
+          "what": "Seat questions go to the model instead of an advisor",
+          "file": "src/core/topics.js",
+          "check": "AC6",
+          "caught": true
+        },
+        {
+          "what": "A passed start date is offered as the next step",
+          "file": "src/core/planner.js",
+          "check": "AC14",
+          "caught": true
+        },
+        {
+          "what": "Facts lose their last-checked date",
+          "file": "src/core/records.js",
+          "check": "AC2",
+          "caught": true
+        },
+        {
+          "what": "\"No diploma yet\" no longer sends her to an advisor",
+          "file": "src/core/planner.js",
+          "check": "AC4",
+          "caught": true
+        },
+        {
+          "what": "The Nov 30 deadline never passes",
+          "file": "src/core/planner.js",
+          "check": "AC5",
+          "caught": true
+        },
+        {
+          "what": "\"Today\" is the UTC date",
+          "file": "src/app.js",
+          "check": "AC5b",
+          "caught": true
+        },
+        {
+          "what": "The scripted model claims she is eligible",
+          "file": "src/core/mock-model.js",
+          "check": "AC7a",
+          "caught": true
+        },
+        {
+          "what": "Facts are shown as raw record text instead of sentences",
+          "file": "src/core/templates.js",
+          "check": "AC7c",
+          "caught": true
+        },
+        {
+          "what": "Model calls stop being logged",
+          "file": "src/core/gateway.js",
+          "check": "AC11",
+          "caught": true
+        },
+        {
+          "what": "The advisor queue is served over HTTP",
+          "file": "src/app.js",
+          "check": "AC8b",
+          "caught": true
+        },
+        {
+          "what": "Bad requests crash with a 500 instead of a 400",
+          "file": "src/app.js",
+          "check": "AC9b",
+          "caught": true
+        },
+        {
+          "what": "Everyone is asked her age, even for Cascade only",
+          "file": "src/core/planner.js",
+          "check": "AC12",
+          "caught": true
+        },
+        {
+          "what": "No fallback path when everything she picked is ruled out",
+          "file": "src/core/planner.js",
+          "check": "AC13",
+          "caught": true
+        },
+        {
+          "what": "A suggested question leads nowhere",
+          "file": "public/client.js",
+          "check": "AC15",
+          "caught": true
+        },
+        {
+          "what": "The advisor answer date is wrong",
+          "file": "src/core/planner.js",
+          "check": "AC17",
+          "caught": true
+        },
+        {
+          "what": "Thanksgiving counts as a business day",
+          "file": "src/core/planner.js",
+          "check": "AC17",
+          "caught": true
+        },
+        {
+          "what": "The note is kept in the queue as plain text",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "A sealed note gives up its text as JSON",
+          "file": "src/core/private.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The hand-off sends the note straight to the model, around the gateway (the log never sees it)",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The hand-off prints the note to the server log",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "A request that is not JSON gets the parser's error back, which quotes the note",
+          "file": "src/app.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "Opening a note leaves no record",
+          "file": "src/core/private.js",
+          "check": "AC18",
+          "caught": true
+        },
+        {
+          "what": "The gateway checks the object it was handed, not the copy it sends",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "Extra fields are allowed in a model payload",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "A refused payload is quoted in the error",
+          "file": "src/core/gateway.js",
+          "check": "AC19",
+          "caught": true
+        },
+        {
+          "what": "The advisor inbox answers without the access code",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "The advisor inbox is open on a server with no access code set",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "The inbox list carries the note",
+          "file": "src/app.js",
+          "check": "AC20",
+          "caught": true
+        },
+        {
+          "what": "Two requests can share a code",
+          "file": "src/app.js",
+          "check": "AC20b",
+          "caught": true
+        },
+        {
+          "what": "Crisis words in a sealed note are missed",
+          "file": "src/app.js",
+          "check": "AC10b",
+          "caught": true
+        },
+        {
+          "what": "Contact details in a note are shown to the advisor without asking",
+          "file": "public/advisor-client.js",
+          "check": "AC21",
+          "caught": true
+        }
+      ]
+    }
+  ]
+}

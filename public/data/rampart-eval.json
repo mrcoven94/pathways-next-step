@@ -1,0 +1,1334 @@
+{
+  "runs": [
+    {
+      "date": "2026-11-10T20:36:07.264Z",
+      "package": "@nationaldesignstudio/rampart-edge",
+      "version": "2.0.5",
+      "runtime": "node v26.13.0, onnxruntime-web@1.30.0",
+      "basis": "model",
+      "fallbackReason": null,
+      "decisionBasesSeen": [
+        "model",
+        "validator-and-model",
+        "clear"
+      ],
+      "notes": 40,
+      "fixturesSha256": "f443e6e1923628ed8da77750458ccd5723cc727b11d015c9957b1b07c5e4672e",
+      "coverageRule": "caught = every character of the expected value lies inside a returned span of any type",
+      "byType": {
+        "phone": {
+          "caught": 2,
+          "partial": 2,
+          "total": 4,
+          "missed": [
+            "c03",
+            "c04"
+          ]
+        },
+        "email": {
+          "caught": 3,
+          "partial": 0,
+          "total": 3,
+          "missed": []
+        },
+        "address": {
+          "caught": 6,
+          "partial": 0,
+          "total": 6,
+          "missed": []
+        },
+        "name": {
+          "caught": 6,
+          "partial": 0,
+          "total": 7,
+          "missed": [
+            "n02"
+          ]
+        },
+        "dob": {
+          "caught": 2,
+          "partial": 0,
+          "total": 2,
+          "missed": []
+        },
+        "id": {
+          "caught": 0,
+          "partial": 0,
+          "total": 1,
+          "missed": [
+            "c06"
+          ]
+        },
+        "handle": {
+          "caught": 0,
+          "partial": 0,
+          "total": 1,
+          "missed": [
+            "c07"
+          ]
+        }
+      },
+      "sensitiveNoIdentifiers": {
+        "allowed": 12,
+        "total": 12,
+        "blocked": []
+      },
+      "harmlessWronglyBlocked": {
+        "blocked": 0,
+        "total": 5,
+        "ids": []
+      },
+      "medianMsPerNote": 6.926,
+      "perNote": [
+        {
+          "id": "c01",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "PHONE"
+          ],
+          "ms": 23.799
+        },
+        {
+          "id": "c02",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "validator-and-model",
+          "spanTypes": [
+            "EMAIL"
+          ],
+          "ms": 9.92
+        },
+        {
+          "id": "c03",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "PHONE"
+          ],
+          "ms": 8.788
+        },
+        {
+          "id": "c04",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "validator-and-model",
+          "spanTypes": [
+            "PHONE",
+            "PHONE",
+            "EMAIL"
+          ],
+          "ms": 7.99
+        },
+        {
+          "id": "c05",
+          "group": "contact",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [
+            "DOB_KEYED"
+          ],
+          "ms": 7.397
+        },
+        {
+          "id": "c06",
+          "group": "contact",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 6.116
+        },
+        {
+          "id": "c07",
+          "group": "contact",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 7.695
+        },
+        {
+          "id": "c08",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "PHONE"
+          ],
+          "ms": 8.275
+        },
+        {
+          "id": "c09",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "validator-and-model",
+          "spanTypes": [
+            "EMAIL"
+          ],
+          "ms": 7.195
+        },
+        {
+          "id": "c10",
+          "group": "contact",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [
+            "DOB_KEYED"
+          ],
+          "ms": 6.806
+        },
+        {
+          "id": "n01",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 6.914
+        },
+        {
+          "id": "n02",
+          "group": "name",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 6.923
+        },
+        {
+          "id": "n03",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 6.679
+        },
+        {
+          "id": "n04",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 6.74
+        },
+        {
+          "id": "n05",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 6.61
+        },
+        {
+          "id": "n06",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 6.947
+        },
+        {
+          "id": "n07",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 6.642
+        },
+        {
+          "id": "a01",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 7.447
+        },
+        {
+          "id": "a02",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 7.345
+        },
+        {
+          "id": "a03",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 6.536
+        },
+        {
+          "id": "a04",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 8.244
+        },
+        {
+          "id": "a05",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 7.099
+        },
+        {
+          "id": "a06",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 6.928
+        },
+        {
+          "id": "s01",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 7.818
+        },
+        {
+          "id": "s02",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 5.925
+        },
+        {
+          "id": "s03",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 6.78
+        },
+        {
+          "id": "s04",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 7.228
+        },
+        {
+          "id": "s05",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 5.915
+        },
+        {
+          "id": "s06",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 6.838
+        },
+        {
+          "id": "s07",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 7.33
+        },
+        {
+          "id": "s08",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 6.911
+        },
+        {
+          "id": "s09",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 6.177
+        },
+        {
+          "id": "s10",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 7.063
+        },
+        {
+          "id": "s11",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 9.06
+        },
+        {
+          "id": "s12",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 8.249
+        },
+        {
+          "id": "h01",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 4.926
+        },
+        {
+          "id": "h02",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 6.296
+        },
+        {
+          "id": "h03",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 5.402
+        },
+        {
+          "id": "h04",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 5.443
+        },
+        {
+          "id": "h05",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 5.224
+        }
+      ]
+    },
+    {
+      "date": "2026-11-10T20:23:20.500Z",
+      "package": "@nationaldesignstudio/rampart-edge",
+      "version": "2.0.5",
+      "runtime": "node v26.13.0, onnxruntime-web@1.30.0",
+      "basis": "model",
+      "fallbackReason": null,
+      "decisionBasesSeen": [
+        "model",
+        "validator-and-model",
+        "clear"
+      ],
+      "notes": 40,
+      "coverageRule": "caught = every character of the expected value lies inside a returned span of any type",
+      "byType": {
+        "phone": {
+          "caught": 2,
+          "partial": 2,
+          "total": 4,
+          "missed": [
+            "c03",
+            "c04"
+          ]
+        },
+        "email": {
+          "caught": 3,
+          "partial": 0,
+          "total": 3,
+          "missed": []
+        },
+        "address": {
+          "caught": 6,
+          "partial": 0,
+          "total": 6,
+          "missed": []
+        },
+        "name": {
+          "caught": 6,
+          "partial": 0,
+          "total": 7,
+          "missed": [
+            "n02"
+          ]
+        },
+        "dob": {
+          "caught": 2,
+          "partial": 0,
+          "total": 2,
+          "missed": []
+        },
+        "id": {
+          "caught": 0,
+          "partial": 0,
+          "total": 1,
+          "missed": [
+            "c06"
+          ]
+        },
+        "handle": {
+          "caught": 0,
+          "partial": 0,
+          "total": 1,
+          "missed": [
+            "c07"
+          ]
+        }
+      },
+      "sensitiveNoIdentifiers": {
+        "allowed": 12,
+        "total": 12,
+        "blocked": []
+      },
+      "harmlessWronglyBlocked": {
+        "blocked": 0,
+        "total": 5,
+        "ids": []
+      },
+      "medianMsPerNote": 22.665,
+      "perNote": [
+        {
+          "id": "c01",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "PHONE"
+          ],
+          "ms": 115.818
+        },
+        {
+          "id": "c02",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "validator-and-model",
+          "spanTypes": [
+            "EMAIL"
+          ],
+          "ms": 33.723
+        },
+        {
+          "id": "c03",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "PHONE"
+          ],
+          "ms": 29.1
+        },
+        {
+          "id": "c04",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "validator-and-model",
+          "spanTypes": [
+            "PHONE",
+            "PHONE",
+            "EMAIL"
+          ],
+          "ms": 24.076
+        },
+        {
+          "id": "c05",
+          "group": "contact",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [
+            "DOB_KEYED"
+          ],
+          "ms": 23.249
+        },
+        {
+          "id": "c06",
+          "group": "contact",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 19.991
+        },
+        {
+          "id": "c07",
+          "group": "contact",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 30.643
+        },
+        {
+          "id": "c08",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "PHONE"
+          ],
+          "ms": 37.512
+        },
+        {
+          "id": "c09",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "validator-and-model",
+          "spanTypes": [
+            "EMAIL"
+          ],
+          "ms": 36.906
+        },
+        {
+          "id": "c10",
+          "group": "contact",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [
+            "DOB_KEYED"
+          ],
+          "ms": 37.144
+        },
+        {
+          "id": "n01",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 70.539
+        },
+        {
+          "id": "n02",
+          "group": "name",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 81.767
+        },
+        {
+          "id": "n03",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 24.188
+        },
+        {
+          "id": "n04",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 21.072
+        },
+        {
+          "id": "n05",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 22.764
+        },
+        {
+          "id": "n06",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 23.577
+        },
+        {
+          "id": "n07",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 21.263
+        },
+        {
+          "id": "a01",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 25.074
+        },
+        {
+          "id": "a02",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 21.579
+        },
+        {
+          "id": "a03",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 19.356
+        },
+        {
+          "id": "a04",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 25.692
+        },
+        {
+          "id": "a05",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 24.192
+        },
+        {
+          "id": "a06",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 23.991
+        },
+        {
+          "id": "s01",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 26.713
+        },
+        {
+          "id": "s02",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 19.617
+        },
+        {
+          "id": "s03",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 21.054
+        },
+        {
+          "id": "s04",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 21.738
+        },
+        {
+          "id": "s05",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 18.352
+        },
+        {
+          "id": "s06",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 19.788
+        },
+        {
+          "id": "s07",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 20.271
+        },
+        {
+          "id": "s08",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 19.246
+        },
+        {
+          "id": "s09",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 17.636
+        },
+        {
+          "id": "s10",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 21.795
+        },
+        {
+          "id": "s11",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 24.904
+        },
+        {
+          "id": "s12",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 22.567
+        },
+        {
+          "id": "h01",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 14.617
+        },
+        {
+          "id": "h02",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 17.781
+        },
+        {
+          "id": "h03",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 15.432
+        },
+        {
+          "id": "h04",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 15.318
+        },
+        {
+          "id": "h05",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 16.031
+        }
+      ]
+    },
+    {
+      "date": "2026-11-10T19:36:31.889Z",
+      "package": "@nationaldesignstudio/rampart-edge",
+      "version": "2.0.5",
+      "runtime": "node v26.13.0, onnxruntime-web@1.30.0",
+      "basis": "model",
+      "fallbackReason": null,
+      "decisionBasesSeen": [
+        "model",
+        "validator-and-model",
+        "clear"
+      ],
+      "notes": 40,
+      "coverageRule": "caught = every character of the expected value lies inside a returned span of any type",
+      "byType": {
+        "phone": {
+          "caught": 2,
+          "partial": 2,
+          "total": 4,
+          "missed": [
+            "c03",
+            "c04"
+          ]
+        },
+        "email": {
+          "caught": 3,
+          "partial": 0,
+          "total": 3,
+          "missed": []
+        },
+        "address": {
+          "caught": 6,
+          "partial": 0,
+          "total": 6,
+          "missed": []
+        },
+        "name": {
+          "caught": 6,
+          "partial": 0,
+          "total": 7,
+          "missed": [
+            "n02"
+          ]
+        },
+        "dob": {
+          "caught": 2,
+          "partial": 0,
+          "total": 2,
+          "missed": []
+        },
+        "id": {
+          "caught": 0,
+          "partial": 0,
+          "total": 1,
+          "missed": [
+            "c06"
+          ]
+        },
+        "handle": {
+          "caught": 0,
+          "partial": 0,
+          "total": 1,
+          "missed": [
+            "c07"
+          ]
+        }
+      },
+      "sensitiveNoIdentifiers": {
+        "allowed": 12,
+        "total": 12,
+        "blocked": []
+      },
+      "harmlessWronglyBlocked": {
+        "blocked": 0,
+        "total": 5,
+        "ids": []
+      },
+      "medianMsPerNote": 100.248,
+      "perNote": [
+        {
+          "id": "c01",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "PHONE"
+          ],
+          "ms": 392.123
+        },
+        {
+          "id": "c02",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "validator-and-model",
+          "spanTypes": [
+            "EMAIL"
+          ],
+          "ms": 81.269
+        },
+        {
+          "id": "c03",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "PHONE"
+          ],
+          "ms": 111.598
+        },
+        {
+          "id": "c04",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "validator-and-model",
+          "spanTypes": [
+            "PHONE",
+            "PHONE",
+            "EMAIL"
+          ],
+          "ms": 37.699
+        },
+        {
+          "id": "c05",
+          "group": "contact",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [
+            "DOB_KEYED"
+          ],
+          "ms": 161.78
+        },
+        {
+          "id": "c06",
+          "group": "contact",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 38.101
+        },
+        {
+          "id": "c07",
+          "group": "contact",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 177.977
+        },
+        {
+          "id": "c08",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "PHONE"
+          ],
+          "ms": 155.862
+        },
+        {
+          "id": "c09",
+          "group": "contact",
+          "verdict": "BLOCK",
+          "basis": "validator-and-model",
+          "spanTypes": [
+            "EMAIL"
+          ],
+          "ms": 76.722
+        },
+        {
+          "id": "c10",
+          "group": "contact",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [
+            "DOB_KEYED"
+          ],
+          "ms": 77.17
+        },
+        {
+          "id": "n01",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 40.803
+        },
+        {
+          "id": "n02",
+          "group": "name",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 148.536
+        },
+        {
+          "id": "n03",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 196.186
+        },
+        {
+          "id": "n04",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 88.898
+        },
+        {
+          "id": "n05",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 88.511
+        },
+        {
+          "id": "n06",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 67.293
+        },
+        {
+          "id": "n07",
+          "group": "name",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "NAME"
+          ],
+          "ms": 158.889
+        },
+        {
+          "id": "a01",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 117.723
+        },
+        {
+          "id": "a02",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 56.717
+        },
+        {
+          "id": "a03",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 120.096
+        },
+        {
+          "id": "a04",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 115.676
+        },
+        {
+          "id": "a05",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 143.401
+        },
+        {
+          "id": "a06",
+          "group": "address",
+          "verdict": "BLOCK",
+          "basis": "model",
+          "spanTypes": [
+            "ADDRESS"
+          ],
+          "ms": 57.358
+        },
+        {
+          "id": "s01",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 189.772
+        },
+        {
+          "id": "s02",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 88.834
+        },
+        {
+          "id": "s03",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 174.207
+        },
+        {
+          "id": "s04",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 79.459
+        },
+        {
+          "id": "s05",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 135.211
+        },
+        {
+          "id": "s06",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 143.477
+        },
+        {
+          "id": "s07",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 78.574
+        },
+        {
+          "id": "s08",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 166.18
+        },
+        {
+          "id": "s09",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 28.921
+        },
+        {
+          "id": "s10",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 144.083
+        },
+        {
+          "id": "s11",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 67.791
+        },
+        {
+          "id": "s12",
+          "group": "sensitive",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 159.967
+        },
+        {
+          "id": "h01",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 34.664
+        },
+        {
+          "id": "h02",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 32.89
+        },
+        {
+          "id": "h03",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 84.79
+        },
+        {
+          "id": "h04",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 165.766
+        },
+        {
+          "id": "h05",
+          "group": "harmless",
+          "verdict": "ALLOW",
+          "basis": "clear",
+          "spanTypes": [],
+          "ms": 48.857
+        }
+      ]
+    }
+  ]
+}

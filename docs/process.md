@@ -157,3 +157,11 @@ Tools: Claude Code (Opus 5.5) as the architect and builder. A Claude subagent re
 - **Why he was right:** I was protecting data that does not exist. The reviewers are the audience, the students are invented, and every line of key handling was a line they would have to read to trust the part that matters, which is that the note never reaches a model. The right size for a demo is an honest label, not a mechanism.
 - **What changed:** The inbox is open. The planner's note box and the foot of the inbox say it is public and that nothing real should be typed. The key is out of the code and into the walkthrough as the next step for a public demo. Three things from that work stayed because they are about the queue, not the key: the invented samples sit apart from it, it has a ceiling, and a request code is never given out twice.
 - **What I got wrong in the process:** I changed the code before the checks, twice. The checks were rewritten in the same sitting and the mutation run covers them, but the order in AGENTS.md is check first.
+
+## 18. "We should have reporting for Rampart" (David, 2026-11-10)
+
+- **What David said:** Look at the Front Door model report. This slice should report on Rampart and its checks the same way.
+- **What was built:** `/report`, a public page that reads only JSON: what the detector caught, partly caught and missed on 40 invented notes, the private notes it passes, each check that guards the note, and every mutation aimed at it. An Opus agent built it from Front Door's report as the model.
+- **What Sol 6.1 found in it:** Six things, all fixed. Counts from the data went into the page unescaped. A mutation run that crashed partway left the last clean result in place, so the page would have kept saying everything was caught. A note with a missing fixture was labelled "wrongly blocked". New results could be paired with old note text. One sentence said details stay hidden when the detector misses some. And the checks proved the totals add up, not that the page shows the right number in the right column.
+- **What changed:** Every value is escaped and counts are validated. The mutation script writes its file as it goes and marks it finished only at the end, and the page shows an unfinished run as unfinished. Results carry the hash of the notes they measured. The checks now read the rendered table.
+

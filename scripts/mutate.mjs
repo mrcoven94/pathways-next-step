@@ -1,7 +1,7 @@
 // `npm run mutate`: proves the checks catch what they claim. Each mutation breaks one guard in a
 // scratch copy of the repo; the named check must then fail. A mutation that survives is a weak test.
 
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -94,12 +94,37 @@ const MUTATIONS = [
     'if (handoffs.length > MAX_QUEUE) handoffs.splice(0, handoffs.length - MAX_QUEUE);', '', 'AC20'],
   ['A status change sends the note back', 'src/app.js',
     'request.status = next;\n      return send(res, 200, { request: listed(request) });', "request.status = next;\n      return send(res, 200, { request: { ...listed(request), note: Sealed.open(request.note, [], { purpose: 'advisor_read', code }) } });", 'AC20'],
+  ['A kind with nothing expected shows up as an empty row on /report', 'public/report-client.js',
+    '.filter(([, r]) => r.total > 0)', '.filter(([, r]) => r.total >= 0)', 'AC23'],
+  ['The report shows the missed count in the Caught column', 'public/report-client.js',
+    '      <td data-label="Caught">${esc(r.caught)}</td>', '      <td data-label="Caught">${esc(r.missed)}</td>', 'AC23'],
 ];
+
+// For /report: this run first, then up to nine earlier runs. The file is written before the first
+// mutation (marked unfinished), after each outcome, and once more marked completed, so a crash or a
+// mutation that no longer applies leaves a file that says the run did not finish.
+const dataFile = join(root, 'public/data/mutations.json');
+const savedBefore = existsSync(dataFile) ? readFileSync(dataFile, 'utf8') : null;
+let earlier = [];
+try { earlier = JSON.parse(savedBefore).runs ?? []; } catch {}
+const results = [];
+const thisRun = { date: new Date().toISOString(), node: process.version, completed: false, planned: MUTATIONS.length, mutations: results };
+function save() {
+  thisRun.date = new Date().toISOString();
+  mkdirSync(join(root, 'public/data'), { recursive: true });
+  const tmp = `${dataFile}.${process.pid}.tmp`;
+  writeFileSync(tmp, JSON.stringify({ runs: [thisRun, ...earlier].slice(0, 10) }, null, 2) + '\n');
+  renameSync(tmp, dataFile);
+}
+save();
 
 let survived = 0;
 for (const [what, file, from, to, check] of MUTATIONS) {
   const dir = mkdtempSync(join(tmpdir(), 'pathways-mutant-'));
   cpSync(root, dir, { recursive: true, filter: (p) => !p.includes('/.git') && !p.includes('/.vercel') });
+  // The copy sees the data as it was before this run started, not the half-written run.
+  if (savedBefore !== null) writeFileSync(join(dir, 'public/data/mutations.json'), savedBefore);
+  else rmSync(join(dir, 'public/data/mutations.json'), { force: true });
   const path = join(dir, file);
   const source = readFileSync(path, 'utf8');
   if (!source.includes(from)) throw new Error(`Mutation "${what}" no longer applies to ${file}. Update scripts/mutate.mjs.`);
@@ -107,8 +132,14 @@ for (const [what, file, from, to, check] of MUTATIONS) {
   const run = spawnSync(process.execPath, ['scripts/test.mjs'], { cwd: dir, encoding: 'utf8' });
   const caught = run.status !== 0 && new RegExp(`^✖ ${check}\\b`, 'm').test(run.stdout);
   if (!caught) survived++;
+  results.push({ what, file, check, caught });
+  save();
   console.log(`${caught ? 'CAUGHT  ' : 'SURVIVED'}  ${what}  (expected ${check} to fail)`);
   rmSync(dir, { recursive: true, force: true });
 }
 console.log(`\n${survived ? 'FAIL' : 'PASS'}: ${MUTATIONS.length - survived} of ${MUTATIONS.length} mutations caught.`);
+
+thisRun.completed = true;
+save();
+console.log('Wrote public/data/mutations.json');
 process.exit(survived ? 1 : 0);

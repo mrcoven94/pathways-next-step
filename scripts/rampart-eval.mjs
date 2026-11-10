@@ -4,6 +4,7 @@
 // Writes what it measured to docs/rampart-eval.json. Rampart is a third layer, not the boundary that keeps
 // a note away from a model; the "sensitive, no identifiers" row is the evidence for that.
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
@@ -14,7 +15,17 @@ const PKG = '@nationaldesignstudio/rampart-edge';
 const VERSION = '2.0.5';
 const ORT = 'onnxruntime-web@1.30.0'; // the version whose trimmed engine the package bundles
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const fixtures = JSON.parse(fs.readFileSync(path.join(root, 'test/fixtures/synthetic-notes.json'), 'utf8')).notes;
+// Read once: the bytes measured here are the bytes published, and their SHA-256 goes inside the results.
+const fixturesText = fs.readFileSync(path.join(root, 'test/fixtures/synthetic-notes.json'), 'utf8');
+const fixturesSha256 = createHash('sha256').update(fixturesText, 'utf8').digest('hex');
+const fixtures = JSON.parse(fixturesText).notes;
+// Every file goes through a temp file and a rename, so a reader never sees half a file.
+const writeAtomic = (file, text) => {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = `${file}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, text);
+  fs.renameSync(tmp, file);
+};
 const outFile = path.join(root, 'docs/rampart-eval.json');
 
 // 1. Install outside the repo (cached between runs).
@@ -123,6 +134,7 @@ const report = {
   fallbackReason,
   decisionBasesSeen: basesSeen,
   notes: results.length,
+  fixturesSha256,
   coverageRule: 'caught = every character of the expected value lies inside a returned span of any type',
   byType: Object.fromEntries(TYPES.filter((t) => byType[t].total).map((t) => [t, byType[t]])),
   sensitiveNoIdentifiers: { allowed: sensitiveAllowed.length, total: sensitive.length, blocked: sensitive.filter((r) => r.d.verdict === 'BLOCK').map((r) => r.note.id) },
@@ -130,6 +142,16 @@ const report = {
   medianMsPerNote: Number(median.toFixed(3)),
   perNote: results.map(({ note, d, ms }) => ({ id: note.id, group: note.group, verdict: d.verdict, basis: d.basis, spanTypes: d.spans.map((s) => s.type), ms: Number(ms.toFixed(3)) })),
 };
-fs.mkdirSync(path.dirname(outFile), { recursive: true });
-fs.writeFileSync(outFile, JSON.stringify(report, null, 2) + '\n');
+writeAtomic(outFile, JSON.stringify(report, null, 2) + '\n');
 console.log(`\nWrote ${path.relative(root, outFile)}`);
+
+// 7. The same run for /report, newest first, keeping up to nine earlier runs. An older file holding one
+//    bare run (no runs list) counts as one earlier run. The notes go first: the run carries their SHA-256,
+//    and the page shows each note only when the notes file matches it, so an interruption between the
+//    two writes can never pair new results with old note text.
+writeAtomic(path.join(root, 'public/data/synthetic-notes.json'), fixturesText);
+const dataFile = path.join(root, 'public/data/rampart-eval.json');
+let earlier = [];
+try { const prev = JSON.parse(fs.readFileSync(dataFile, 'utf8')); earlier = prev.runs ?? [prev]; } catch {}
+writeAtomic(dataFile, JSON.stringify({ runs: [report, ...earlier].slice(0, 10) }, null, 2) + '\n');
+console.log(`Wrote ${path.relative(root, dataFile)} and public/data/synthetic-notes.json`);

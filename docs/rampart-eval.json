@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-10T19:36:31.889Z",
+  "date": "2026-11-10T20:36:07.264Z",
   "package": "@nationaldesignstudio/rampart-edge",
   "version": "2.0.5",
   "runtime": "node v26.13.0, onnxruntime-web@1.30.0",
@@ -11,6 +11,7 @@
     "clear"
   ],
   "notes": 40,
+  "fixturesSha256": "f443e6e1923628ed8da77750458ccd5723cc727b11d015c9957b1b07c5e4672e",
   "coverageRule": "caught = every character of the expected value lies inside a returned span of any type",
   "byType": {
     "phone": {
@@ -75,7 +76,7 @@
     "total": 5,
     "ids": []
   },
-  "medianMsPerNote": 100.248,
+  "medianMsPerNote": 6.926,
   "perNote": [
     {
       "id": "c01",
@@ -85,7 +86,7 @@
       "spanTypes": [
         "PHONE"
       ],
-      "ms": 392.123
+      "ms": 23.799
     },
     {
       "id": "c02",
@@ -95,7 +96,7 @@
       "spanTypes": [
         "EMAIL"
       ],
-      "ms": 81.269
+      "ms": 9.92
     },
     {
       "id": "c03",
@@ -105,7 +106,7 @@
       "spanTypes": [
         "PHONE"
       ],
-      "ms": 111.598
+      "ms": 8.788
     },
     {
       "id": "c04",
@@ -117,7 +118,7 @@
         "PHONE",
         "EMAIL"
       ],
-      "ms": 37.699
+      "ms": 7.99
     },
     {
       "id": "c05",
@@ -127,7 +128,7 @@
       "spanTypes": [
         "DOB_KEYED"
       ],
-      "ms": 161.78
+      "ms": 7.397
     },
     {
       "id": "c06",
@@ -135,7 +136,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 38.101
+      "ms": 6.116
     },
     {
       "id": "c07",
@@ -143,7 +144,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 177.977
+      "ms": 7.695
     },
     {
       "id": "c08",
@@ -153,7 +154,7 @@
       "spanTypes": [
         "PHONE"
       ],
-      "ms": 155.862
+      "ms": 8.275
     },
     {
       "id": "c09",
@@ -163,7 +164,7 @@
       "spanTypes": [
         "EMAIL"
       ],
-      "ms": 76.722
+      "ms": 7.195
     },
     {
       "id": "c10",
@@ -173,7 +174,7 @@
       "spanTypes": [
         "DOB_KEYED"
       ],
-      "ms": 77.17
+      "ms": 6.806
     },
     {
       "id": "n01",
@@ -183,7 +184,7 @@
       "spanTypes": [
         "NAME"
       ],
-      "ms": 40.803
+      "ms": 6.914
     },
     {
       "id": "n02",
@@ -191,7 +192,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 148.536
+      "ms": 6.923
     },
     {
       "id": "n03",
@@ -201,7 +202,7 @@
       "spanTypes": [
         "NAME"
       ],
-      "ms": 196.186
+      "ms": 6.679
     },
     {
       "id": "n04",
@@ -211,7 +212,7 @@
       "spanTypes": [
         "NAME"
       ],
-      "ms": 88.898
+      "ms": 6.74
     },
     {
       "id": "n05",
@@ -221,7 +222,7 @@
       "spanTypes": [
         "NAME"
       ],
-      "ms": 88.511
+      "ms": 6.61
     },
     {
       "id": "n06",
@@ -231,7 +232,7 @@
       "spanTypes": [
         "NAME"
       ],
-      "ms": 67.293
+      "ms": 6.947
     },
     {
       "id": "n07",
@@ -241,7 +242,7 @@
       "spanTypes": [
         "NAME"
       ],
-      "ms": 158.889
+      "ms": 6.642
     },
     {
       "id": "a01",
@@ -251,7 +252,7 @@
       "spanTypes": [
         "ADDRESS"
       ],
-      "ms": 117.723
+      "ms": 7.447
     },
     {
       "id": "a02",
@@ -261,7 +262,7 @@
       "spanTypes": [
         "ADDRESS"
       ],
-      "ms": 56.717
+      "ms": 7.345
     },
     {
       "id": "a03",
@@ -271,7 +272,7 @@
       "spanTypes": [
         "ADDRESS"
       ],
-      "ms": 120.096
+      "ms": 6.536
     },
     {
       "id": "a04",
@@ -281,7 +282,7 @@
       "spanTypes": [
         "ADDRESS"
       ],
-      "ms": 115.676
+      "ms": 8.244
     },
     {
       "id": "a05",
@@ -291,7 +292,7 @@
       "spanTypes": [
         "ADDRESS"
       ],
-      "ms": 143.401
+      "ms": 7.099
     },
     {
       "id": "a06",
@@ -301,7 +302,7 @@
       "spanTypes": [
         "ADDRESS"
       ],
-      "ms": 57.358
+      "ms": 6.928
     },
     {
       "id": "s01",
@@ -309,7 +310,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 189.772
+      "ms": 7.818
     },
     {
       "id": "s02",
@@ -317,7 +318,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 88.834
+      "ms": 5.925
     },
     {
       "id": "s03",
@@ -325,7 +326,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 174.207
+      "ms": 6.78
     },
     {
       "id": "s04",
@@ -333,7 +334,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 79.459
+      "ms": 7.228
     },
     {
       "id": "s05",
@@ -341,7 +342,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 135.211
+      "ms": 5.915
     },
     {
       "id": "s06",
@@ -349,7 +350,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 143.477
+      "ms": 6.838
     },
     {
       "id": "s07",
@@ -357,7 +358,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 78.574
+      "ms": 7.33
     },
     {
       "id": "s08",
@@ -365,7 +366,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 166.18
+      "ms": 6.911
     },
     {
       "id": "s09",
@@ -373,7 +374,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 28.921
+      "ms": 6.177
     },
     {
       "id": "s10",
@@ -381,7 +382,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 144.083
+      "ms": 7.063
     },
     {
       "id": "s11",
@@ -389,7 +390,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 67.791
+      "ms": 9.06
     },
     {
       "id": "s12",
@@ -397,7 +398,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 159.967
+      "ms": 8.249
     },
     {
       "id": "h01",
@@ -405,7 +406,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 34.664
+      "ms": 4.926
     },
     {
       "id": "h02",
@@ -413,7 +414,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 32.89
+      "ms": 6.296
     },
     {
       "id": "h03",
@@ -421,7 +422,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 84.79
+      "ms": 5.402
     },
     {
       "id": "h04",
@@ -429,7 +430,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 165.766
+      "ms": 5.443
     },
     {
       "id": "h05",
@@ -437,7 +438,7 @@
       "verdict": "ALLOW",
       "basis": "clear",
       "spanTypes": [],
-      "ms": 48.857
+      "ms": 5.224
     }
   ]
 }
