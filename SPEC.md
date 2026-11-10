@@ -26,7 +26,7 @@ Done looks like this: Dani says where she is and what she's weighing, answers on
    - Dani's first name may be asked. It stays on her device and goes into the advisor hand-off, never to the model. The model writes `{first_name}` and the browser fills it in after the reply comes back.
    - Typed text (the question box, the advisor note) never reaches the model. Questions are matched against a fixed topic list and only the topic code is sent.
    - Every string in a model payload must come from a closed set: topic codes, record IDs, decision codes, canonical record fact text. The gateway throws on anything else.
-   - Rampart Edge (an in-browser personal info detector) runs on the advisor note, the one piece of typed text that leaves the phone, and only suggests removing contact details (amended: it no longer touches the question box). It is the third layer, not the boundary: its published catch rate on name-only messages is 49.6%.
+   - Rampart Edge (an in-browser personal info detector) runs on the advisor note, the one piece of typed text that leaves the phone, and only suggests removing contact details (amended: it no longer touches the question box; amended 2026-11-10: it is served from this site, and also hides personal details in the advisor inbox). It is the third layer, not the boundary: its published catch rate on name-only messages is 49.6%.
 7. Every model call is logged to `model-calls.log`: the exact text sent, the exact text returned, and the validator verdict.
 8. The model is a clearly labeled scripted stand-in. No API keys, no paid services, no accounts, no database.
 9. `npm start` runs it. `npm test` runs the checks and prints pass or fail. No `npm install`. Node 20 or newer.
@@ -130,4 +130,16 @@ New acceptance criteria:
 21. Phone numbers and email addresses in a note are hidden from the advisor until switched on, one kind at a time, and the rest of the note is unchanged.
 10b. Crisis words in a note are still flagged once the note is sealed.
 
-`npm run mutate` now breaks 38 guards, 15 of them behind these criteria.
+`npm run mutate` now breaks 40 guards, 17 of them behind these criteria.
+
+## Amendment (2026-11-10, second change): Rampart Edge from this site
+
+1. **No other host.** Rampart Edge, its engine and its model are files in `public/vendor/rampart/`, rebuilt by `scripts/vendor-rampart.mjs` from pinned versions and listed with sizes and SHA-256 in `manifest.json`. The student's send screen and the advisor inbox load that copy. Nothing in the app is fetched from a CDN or a model host.
+2. **Where it runs.** Only in the two browsers that already hold the note in the clear: the student's, before she sends, and the advisor's, after they open it. The server never runs any model on a note, the detector included.
+3. **What it does in the inbox.** Every kind of personal detail it finds (names, addresses, phone numbers, email addresses, ID numbers, bank numbers, birthdays, handles) is hidden until the advisor switches that kind on. The built-in patterns are merged in, and stand alone if the model isn't ready in about 4 seconds.
+4. **What it is not.** It is still not the boundary. The note never goes to a model in any form, redacted or not.
+5. The inbox policy adds `script-src 'self' 'wasm-unsafe-eval'` so the engine can compile. Nothing else is loosened.
+
+New acceptance criterion:
+
+22. No page, script or style names another host. Every vendored file matches the manifest and nothing else is in the folder. The real model, loaded from the vendored files inside `npm test` with no install, finds a phone number, an email address, a street address and a name in invented notes; masking hides each one; and it passes private notes that hold no identifier, which is why it is not the boundary.

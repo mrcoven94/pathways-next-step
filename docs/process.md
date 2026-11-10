@@ -140,3 +140,10 @@ Tools: Claude Code (Opus 5.5) as the architect and builder. A Claude subagent re
 - **What changed:** Rejections say where the problem is and never what was there. AC19 reads every rejection for the sentinel. Sign-out clears the page and drops answers that arrive late. The phone pattern covers local and international numbers, with dates and other numbers left alone. AC18 scans every reply.
 - **What I didn't change:** The queue is still in memory, so on the live site a request can be missing from the inbox. That needs storage, which the spec rules out, and it is written up as its own decision.
 
+## 16. "Incorporate Rampart, serve it from our own site" (David, 2026-11-10)
+
+- **What I had shipped:** An inbox that hid phone numbers and emails with built-in patterns, and a note in the README that Rampart Edge would come to the inbox later. Sol had flagged the CDN import as third-party code on a page that holds notes, and I had answered by leaving the detector out.
+- **What David said:** Rampart is key, and it should be served from our own site. Leaving it out fixed the third-party problem by dropping the feature.
+- **What changed:** The package, its engine and its model are vendored into `public/vendor/rampart/` with a manifest of sizes and hashes, and both pages load that copy. The inbox hides every kind Rampart finds, names included. The policy on the inbox gained one allowance, for compiling WASM. `npm test` now runs the real model with no install.
+- **The line I kept:** The server never runs the detector on a note. It runs in the student's browser and the advisor's browser, the two places that already hold the note in the clear. A model on the server reading notes, however small, is the thing this task rules out.
+

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { builtinSpans, mergeSpans, maskNote, kindsIn, esc, fromRampart } from '../public/advisor-client.js';
+import { builtinSpans, mergeSpans, maskNote, kindsIn, esc, fromRampart, KIND_WORDS } from '../public/advisor-client.js';
 
 const NOTE = 'Hi, this is Dani. Call me at 206-555-0142 or email dani.r@example.com after 4.';
 const join = (segs) => segs.map((s) => s.text).join('');
@@ -12,7 +12,7 @@ test('AC21 phone and email in a note are masked by default', () => {
   const masked = segs.filter((s) => s.masked);
   assert.deepEqual(masked.map((s) => [s.type, s.text]), [['phone', '206-555-0142'], ['email', 'dani.r@example.com']]);
   assert.ok(segs.filter((s) => !s.masked).every((s) => !s.text.includes('555') && !s.text.includes('@')));
-  assert.ok(segs.some((s) => !s.masked && s.text.includes('Dani')), 'a name in a note to their own advisor stays visible');
+  assert.ok(segs.some((s) => !s.masked && s.text.includes('Dani')), 'the built-in patterns find no names; names come from Rampart');
 });
 
 test('AC21 switching one kind on reveals only that kind', () => {
@@ -31,7 +31,7 @@ test('AC21 text outside spans is unchanged and in order', () => {
 
 test('AC21 overlapping spans from Rampart and the built-in patterns merge', () => {
   const rampart = fromRampart([{ start: 29, end: 36, type: 'PHONE' }, { start: 12, end: 16, type: 'PERSON' }]);
-  assert.deepEqual(rampart, [{ start: 29, end: 36, type: 'phone' }], 'a name from Rampart is not masked');
+  assert.deepEqual(rampart, [{ start: 29, end: 36, type: 'phone' }], 'a type Rampart does not return is dropped');
   const merged = mergeSpans(rampart, builtinSpans(NOTE));
   assert.equal(merged.length, 2);
   assert.deepEqual(merged[0], { start: 29, end: 41, type: 'phone' });
@@ -59,4 +59,34 @@ test('AC21 local and international phone numbers are hidden too, and dates and o
   for (const plain of ['Applications close Nov 30, 2026.', 'It starts 2027-03-01 in room 204.', 'I have 3.5 and 18 credits, about 5,000 saved.', 'My zip is 98101-1234.']) {
     assert.deepEqual(builtinSpans(plain), [], plain);
   }
+});
+
+// Spans exactly as Rampart Edge 2.0.5 returned them for this invented note (vendored model, run under Node).
+const RAMPART_NOTE = 'My aunt Delphine Marchetti lives at 4418 Larkspur Ave NE, Seattle, WA 98105 and email jaylen.okafor17@example.com';
+const RAMPART_SPANS = [
+  { start: 8, end: 26, type: 'NAME', probability: 0.9978512561456658, source: 'model' },
+  { start: 36, end: 75, type: 'ADDRESS', probability: 0.9999134728596436, source: 'model' },
+  { start: 86, end: 113, type: 'EMAIL', probability: 1, source: 'validator', rule: 'email' },
+];
+
+test('AC21 every Rampart span type maps to a kind with plain words, names included', () => {
+  for (const type of ['NAME', 'ADDRESS', 'EMAIL', 'PHONE', 'GOV_ID', 'FINANCIAL', 'DOB_KEYED', 'URL_HANDLE', 'OTHER_ID']) {
+    const [span] = fromRampart([{ start: 0, end: 4, type }]);
+    assert.ok(span, type);
+    assert.ok(KIND_WORDS[span.type], `${type} has words`);
+  }
+  assert.deepEqual(fromRampart([{ start: 8, end: 26, type: 'NAME' }]), [{ start: 8, end: 26, type: 'name' }]);
+  assert.deepEqual(KIND_WORDS.name, ['Names', 'name hidden']);
+});
+
+test('AC21 a real Rampart result hides the name, the address and the email, each behind its own switch', () => {
+  const spans = mergeSpans(fromRampart(RAMPART_SPANS), builtinSpans(RAMPART_NOTE));
+  assert.deepEqual(kindsIn(spans), ['name', 'address', 'email']);
+  const segs = maskNote(RAMPART_NOTE, spans, new Set());
+  assert.deepEqual(segs.filter((s) => s.masked).map((s) => [s.type, s.text]),
+    [['name', 'Delphine Marchetti'], ['address', '4418 Larkspur Ave NE, Seattle, WA 98105'], ['email', 'jaylen.okafor17@example.com']]);
+  assert.equal(join(segs), RAMPART_NOTE);
+  const names = maskNote(RAMPART_NOTE, spans, new Set(['name']));
+  assert.equal(names.find((s) => s.type === 'name').masked, false);
+  assert.ok(names.filter((s) => s.type !== 'name' && s.type).every((s) => s.masked));
 });

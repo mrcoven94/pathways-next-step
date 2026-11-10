@@ -17,7 +17,7 @@ import { seal, Sealed } from './core/private.js';
 const PUBLIC = fileURLToPath(new URL('../public/', import.meta.url));
 const CORE = fileURLToPath(new URL('./core/', import.meta.url));
 const BROWSER_MODULES = new Set(['topics.js', 'planner.js', 'records.js']); // pure modules the browser shares; never the gateway
-const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.wasm': 'application/wasm', '.onnx': 'application/octet-stream', '.txt': 'text/plain; charset=utf-8', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json' };
 
 const toPayloadFact = ({ record_id, key, text }) => ({ record_id, key, text });
 const withChecked = (f) => ({ ...f, checked: getRecord(f.record_id).checked });
@@ -36,7 +36,8 @@ function newHandoffCode() {
 const STATUSES = ['new', 'in_progress', 'resolved'];
 const PAGES = { '/': 'index.html', '/how': 'how.html', '/advisor': 'advisor.html' };
 // The inbox shows student-typed text to a signed-in advisor, so it may load nothing from anywhere else.
-const INBOX_POLICY = "default-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
+// 'wasm-unsafe-eval' lets the page compile Rampart Edge's WASM engine from this site; it allows no eval of JS.
+const INBOX_POLICY = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 
 const digest = (s) => createHash('sha256').update(String(s)).digest();
 const sameCode = (header, code) => timingSafeEqual(digest(header ?? ''), digest(`Bearer ${code}`));

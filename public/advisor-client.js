@@ -23,12 +23,13 @@ export const reasonWords = (code) => REASON_WORDS[code] ?? 'Asked for an advisor
 
 export const STATUS_WORDS = { new: 'New', in_progress: 'In progress', resolved: 'Resolved' };
 
-// Rampart span types mapped to one plain kind each. A name is not in this list on purpose.
+// Rampart span types mapped to one plain kind each. Every type Rampart Edge 2.0.5 returns is here.
 export const RAMPART_KINDS = {
-  PHONE: 'phone', EMAIL: 'email', ADDRESS: 'address', GOV_ID: 'id', OTHER_ID: 'id',
+  NAME: 'name', PHONE: 'phone', EMAIL: 'email', ADDRESS: 'address', GOV_ID: 'id', OTHER_ID: 'id',
   FINANCIAL: 'bank', DOB_KEYED: 'birthday', URL_HANDLE: 'handle',
 };
 export const KIND_WORDS = {
+  name: ['Names', 'name hidden'],
   phone: ['Phone numbers', 'phone hidden'],
   email: ['Email addresses', 'email hidden'],
   address: ['Addresses', 'address hidden'],
@@ -50,7 +51,7 @@ export function builtinSpans(text) {
   return out.sort((x, y) => x.start - y.start);
 }
 
-// Rampart spans ({start, end, type: 'PHONE'...}) to plain kinds; anything unmapped (a name) is dropped.
+// Rampart spans ({start, end, type: 'PHONE'...}) to plain kinds; a type Rampart does not document is dropped.
 export function fromRampart(spans) {
   return (spans ?? [])
     .filter((s) => RAMPART_KINDS[s.type] && Number.isInteger(s.start) && Number.isInteger(s.end) && s.end > s.start)

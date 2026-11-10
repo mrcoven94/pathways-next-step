@@ -86,6 +86,10 @@ const MUTATIONS = [
     'request.crisis = [request.first_name, raw, request.question].some(isCrisis);', 'request.crisis = [request.first_name, request.note, request.question].some(isCrisis);', 'AC10b'],
   ['Contact details in a note are shown to the advisor without asking', 'public/advisor-client.js',
     'segs.push({ text: s.slice(start, end), type: sp.type, masked: !shown.has(sp.type) });', 'segs.push({ text: s.slice(start, end), type: sp.type, masked: false });', 'AC21'],
+  ['The detector is loaded from a CDN again', 'public/rampart.js',
+    "const BASE = new URL('./vendor/rampart/', import.meta.url);", "const BASE = new URL('https://cdn.jsdelivr.net/npm/@nationaldesignstudio/rampart-edge@2.0.5/', import.meta.url);", 'AC22'],
+  ['Names in a note are shown to the advisor without asking', 'public/advisor-client.js',
+    "  NAME: 'name', PHONE: 'phone', EMAIL: 'email', ADDRESS: 'address', GOV_ID: 'id', OTHER_ID: 'id',", "  PHONE: 'phone', EMAIL: 'email', ADDRESS: 'address', GOV_ID: 'id', OTHER_ID: 'id',", 'AC21'],
 ];
 
 let survived = 0;
