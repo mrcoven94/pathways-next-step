@@ -165,3 +165,11 @@ Tools: Claude Code (Opus 5.5) as the architect and builder. A Claude subagent re
 - **What Sol 6.1 found in it:** Six things, all fixed. Counts from the data went into the page unescaped. A mutation run that crashed partway left the last clean result in place, so the page would have kept saying everything was caught. A note with a missing fixture was labelled "wrongly blocked". New results could be paired with old note text. One sentence said details stay hidden when the detector misses some. And the checks proved the totals add up, not that the page shows the right number in the right column.
 - **What changed:** Every value is escaped and counts are validated. The mutation script writes its file as it goes and marks it finished only at the end, and the page shows an unfinished run as unfinished. Results carry the hash of the notes they measured. The checks now read the rendered table.
 
+## 19. Two phrases I said were handled, and were not (the interview, 2026-11-10)
+
+- **Asked on the call:** What happens today when a student types "I want to disappear" or "my parents kicked me out and I have nowhere to sleep"?
+- **What I said:** That the app shows a help card and that a fuller crisis tier was out of scope for 30 minutes.
+- **What the code did:** Neither phrase matched. The pattern list had "want to die" and "not safe at home" and nothing for wanting to disappear or having nowhere to sleep. Both went to an advisor as an unmatched question, with no 988 and 911 card. I found this by running the two phrases through the code after the call instead of trusting my memory of it.
+- **What changed:** Both families of phrase now show the card at once, with a check (AC10c) that also holds the everyday uses of the same words out of it, and two mutations.
+- **What did not change:** It is still a list. The reviewer's larger point stands: a troubling sentence can use no trigger words, and only something that reads meaning can catch it. That is named in SPEC.md as the next layer, with the constraint that it may not put a model on the server in front of a private note.
+

@@ -66,3 +66,25 @@ test('AC10 crisis: crisis words in any box stop the request and show 988 and 911
   assert.match(page, /id="crisis"[\s\S]*tel:911[\s\S]*tel:988/);
   assert.equal(s.app.gateway.calls.length, before);
 });
+
+test('AC10c the phrases the interview panel asked about show 988 and 911, and everyday uses of the same words do not', async () => {
+  const { isCrisis } = await import('../src/core/topics.js');
+  // Asked on 2026-11-10: what happens when a student types these? Before this check, both went to an advisor as an unmatched question.
+  for (const q of [
+    'I want to disappear', 'i just want to disappear', 'I wish I could disappear', 'I wish I could just disappear forever',
+    'my parents kicked me out and I have nowhere to sleep', 'My mom kicked me out', 'I got kicked out of my house', 'I have nowhere to stay tonight',
+    'I have no place to sleep', 'we are homeless right now', 'I\u2019m homeless', 'I am sleeping in my car', 'they threw me out',
+  ]) {
+    assert.equal(isCrisis(q), true, q);
+    assert.deepEqual(askRequest(q), { crisis: true }, `question box: ${q}`);
+    assert.deepEqual(handoffRequest({ note: q }), { crisis: true }, `advisor note: ${q}`);
+  }
+  // The same words in an ordinary question still get an answer or an advisor, not the card.
+  for (const q of [
+    'my teacher kicked me out of class, can I still apply', 'I got kicked out of the program last year', 'does the Nov 30 deadline disappear if I miss it',
+    'will my saved plan disappear', 'is there anywhere to stay near Cascade', 'how do homeless students apply for aid',
+  ]) {
+    assert.equal(isCrisis(q), false, q);
+  }
+});
+

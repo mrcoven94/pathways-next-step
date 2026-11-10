@@ -2,7 +2,9 @@
 // this module returns codes and record IDs only, and runs in the browser before any request.
 // Order matters: crisis first, then the four unknowns the records can't answer, then topics.
 
-const CRISIS = /\b(kill(ing)? myself|kms|suicid\w*|end (it all|my life|myself)|want to die|(don'?t|do not|dont) want to (live|be (here|alive))|no reason to live|better off dead|hurt(ing)? myself|self[- ]?harm|cutting myself|being abused|abus(e|ing) me|not safe at home|unsafe at home|someone (is )?hurting me)\b/i;
+// The second half was added after the 2026-11-10 interview: wanting to disappear, and having nowhere to sleep.
+// A list like this is a floor. A sentence can be alarming with none of these words in it.
+const CRISIS = /\b(kill(ing)? myself|kms|suicid\w*|end (it all|my life|myself)|want to die|(don'?t|do not|dont) want to (live|be (here|alive))|no reason to live|better off dead|hurt(ing)? myself|self[- ]?harm|cutting myself|being abused|abus(e|ing) me|not safe at home|unsafe at home|someone (is )?hurting me|(want to|wanna|wish i could|going to) (just )?disappear|kicked me out(?! of (the |my )?(class|school|program|team|club|course))|kicked out of (my|the|our) (house|home|apartment|place)|threw me out|nowhere to (sleep|stay|live|go)|no place to (sleep|stay|live)|(i'?m|i am|we'?re|we are) homeless|sleeping (in (my|the|a|our) car|outside|on the street))\b/i;
 
 // Phones type curly apostrophes and extra spaces. Match on one plain form.
 const plain = (text) => String(text ?? '').replace(/[\u2018\u2019\u02bc]/g, "'").replace(/\s+/g, ' ').slice(0, 500);
