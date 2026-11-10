@@ -2,6 +2,7 @@
 // sends them to an advisor. Questions are matched here and only topic codes go to the server.
 
 import { stepsFor, withName, askRequest, handoffRequest, suggestionsFor, matchSuggestions, previewQuestion } from './client.js';
+import { sentWords } from './advisor-client.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -280,6 +281,7 @@ function renderPlan() {
       ${summary.cites.filter((id) => id !== head.when?.record_id).map((id) => source(id, plan.programs.find((p) => p.record_id === id)?.facts[0].checked ?? plan.aid.find((f) => f.record_id === id)?.checked)).join(' ')}
       ${actions(plan, head.when)}
       <p class="label">${esc(plan.label)}</p>
+      ${state.handoff ? `<p class="label">You asked an advisor (${esc(state.handoff.code)}). <button class="link inline" type="button" data-action="my-request">See your request and answer</button></p>` : ''}
     </section>
 
     ${check.length ? `<section class="open" aria-labelledby="open-title">
@@ -426,15 +428,7 @@ function renderAdvisor() {
   const plan = state.result?.plan;
   const check = plan ? checkList(plan) : [];
   const key = JSON.stringify([plan?.answers ?? state.answers.stage, state.pending?.question ?? null]);
-  if (state.handoff && state.handoff.key === key) {
-    $('#advisor').innerHTML = `
-      <nav class="topbar"><button class="link" type="button" data-action="to-plan">Back</button></nav>
-      <h1>Sent to an advisor</h1>
-      <p class="lede-ink">Your request code is <strong>${esc(state.handoff.code)}</strong>. They answer within 2 business days. ${source('ADV-01')}</p>
-      <p class="label">${esc(state.handoff.label)} Demo: no person receives this. <a href="/advisor">See what the advisor sees</a>.</p>
-      <div class="actions"><button class="button primary" type="button" data-action="to-plan">Back to my plan</button></div>`;
-    return show('advisor');
-  }
+  if (state.handoff && state.handoff.key === key) return renderSent();
   $('#advisor').innerHTML = `
     <nav class="topbar"><button class="link" type="button" data-action="to-plan">Back</button></nav>
     <h1>Ask an advisor</h1>
@@ -454,6 +448,88 @@ function renderAdvisor() {
     </form>`;
   show('advisor');
   (window.requestIdleCallback ?? setTimeout)(() => loadGate());
+}
+
+// ---------- her request and its answer ----------
+// The request code kept on this phone is what lets her read the answer. The server sends back only the status
+// and the replies, never her note. It is checked when this screen opens and when she asks, never on a timer.
+function renderSent() {
+  const h = state.handoff;
+  $('#advisor').innerHTML = `
+    <nav class="topbar"><button class="link" type="button" data-action="from-request">Back</button></nav>
+    <h1>Sent to an advisor</h1>
+    <p class="lede-ink">Your request code is <strong>${esc(h.code)}</strong>.</p>
+    <div class="answer" id="answer" aria-live="polite"><p class="hint-ink">Checking for an answer…</p></div>
+    <div class="actions" id="answer-actions"></div>
+    <p class="label">${esc(h.label ?? '')} <a href="/advisor#${esc(h.code)}">See what the advisor sees</a>.</p>`;
+  answerActions(false);
+  show('advisor');
+  checkAnswer();
+}
+
+// No answer yet: checking is the thing to do. Once there is one, going back is, and checking again stays at hand.
+function answerActions(answered) {
+  const back = `<button class="button ${answered ? 'primary' : 'secondary'}" type="button" data-action="from-request">${state.result ? 'Back to my plan' : 'Back to the start'}</button>`;
+  const check = `<button class="button ${answered ? 'secondary' : 'primary'}" type="button" data-action="check-answer">${answered ? 'Check for new replies' : 'Check for an answer'}</button>`;
+  $('#answer-actions').innerHTML = answered ? `${back}<div class="row">${check}</div>` : `${check}<div class="row">${back}</div>`;
+}
+
+let checking = 0;
+async function checkAnswer() {
+  const box = $('#answer');
+  const button = $('[data-action=check-answer]');
+  if (!box || !state.handoff) return;
+  const ticket = ++checking;
+  if (button) { button.disabled = true; button.textContent = 'Checking…'; }
+  let html;
+  let answered = false;
+  try {
+    const res = await fetch(`/api/handoff/${encodeURIComponent(state.handoff.code)}`);
+    if (res.status === 404) html = '<h2>This request isn’t in the demo inbox anymore</h2><p>Demo requests are cleared when the server restarts. You can send a new one from your plan.</p>';
+    else if (!res.ok) throw new Error(String(res.status));
+    else {
+      const { replies } = await res.json();
+      answered = replies.some((r) => r.from !== 'student');
+      const mine = (r) => r.from === 'student';
+      html = replies.length
+        ? `<h2>${answered ? 'Your conversation' : 'No answer yet'}</h2>
+          <div class="thread">${replies.map((r) => `<div class="bubble ${mine(r) ? 'me' : 'them'}"><p class="reply-text">${esc(r.text)}</p><span class="source">${mine(r) ? 'You' : 'From the advisor inbox'} · ${esc(sentWords(r.at).replace(/^Sent /, ''))}</span></div>`).join('')}</div>
+          <p class="label">Demo: anyone can type a reply in the public inbox, so this is not from a real advisor.</p>
+          ${replies.length < 10 ? `<form id="answer-form" class="ask-form answer-form" autocomplete="off">
+            <label class="visually-hidden" for="answer-input">Write back</label>
+            <input id="answer-input" type="text" maxlength="1000" placeholder="Write back">
+            <button class="button small" type="submit">Send</button>
+          </form>` : ''}`
+        : `<h2>No answer yet</h2><p>They answer within 2 business days. ${source('ADV-01')}</p>`;
+    }
+  } catch {
+    html = '<h2>We couldn’t check just now</h2><p>Check your connection, then try again.</p>';
+  }
+  if (ticket !== checking || !$('#answer')) return;
+  $('#answer').innerHTML = html;
+  answerActions(answered);
+}
+
+// She writes back on the same thread. Crisis words show the help card first, like everywhere else.
+let writing = false;
+async function writeBack() {
+  const input = $('#answer-input');
+  const text = input?.value.trim();
+  if (!text || writing || !state.handoff) return;
+  if (handoffRequest({ note: text }).crisis) showCrisis();
+  writing = true;
+  const button = $('#answer-form button');
+  button.disabled = true;
+  try {
+    const res = await fetch(`/api/handoff/${encodeURIComponent(state.handoff.code)}/reply`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }) });
+    if (!res.ok) throw new Error(String(res.status));
+    await checkAnswer();
+  } catch {
+    button.disabled = false;
+    button.textContent = 'Try again';
+  } finally {
+    writing = false;
+  }
 }
 
 let sending = false;
@@ -566,6 +642,9 @@ document.addEventListener('click', (e) => {
       renderAdvisor();
     },
     'to-plan': () => (state.result ? show('plan') : renderOutside()),
+    'from-request': () => (state.result ? show('plan') : show('start')),
+    'my-request': renderSent,
+    'check-answer': checkAnswer,
     'open-saved': () => { state.answers = { stage: 'high_school', ...store.get('saved').answers }; makePlan(); },
     'close-crisis': () => { $('#crisis').hidden = true; },
     'strip-note': stripNote,
@@ -593,6 +672,7 @@ document.addEventListener('submit', (e) => {
     onType(input);
   }
   if (e.target.id === 'advisor-form') sendHandoff();
+  if (e.target.id === 'answer-form') writeBack();
 });
 
 document.addEventListener('input', (e) => { if (e.target.id === 'ask-input') onType(e.target); });
@@ -605,3 +685,4 @@ document.addEventListener('keydown', (e) => {
 
 $('#first-name').value = state.name;
 $('#resume').hidden = !store.get('saved');
+$('#my-request').hidden = !state.handoff?.code;

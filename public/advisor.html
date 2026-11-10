@@ -11,22 +11,28 @@
   <link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/app.css">
   <link rel="stylesheet" href="/advisor.css">
+  <link rel="stylesheet" href="/nav.css">
+  <script type="module" src="/nav.js"></script>
   <script type="module" src="/advisor.js"></script>
 </head>
 <body data-screen="inbox" data-view="list">
   <main id="app" class="inbox">
-    <nav class="topbar">
+    <nav class="topbar" aria-label="Pathways">
       <a class="wordmark ink" href="/">Pathways</a>
       <a class="link" href="/">Back to the planner</a>
     </nav>
 
-    <div id="inbox" class="panes">
+    <div class="panes">
       <section class="list-pane" aria-labelledby="inbox-title">
         <h1 id="inbox-title">Inbox</h1>
-        <ul id="requests" class="requests"></ul>
+        <div id="views" class="views" role="group" aria-label="Show requests"></div>
+        <ul id="requests" class="requests" aria-busy="true" aria-labelledby="inbox-title">
+          <li class="empty">Loading requests…</li>
+        </ul>
       </section>
-      <section id="detail" class="detail-pane" aria-live="polite"></section>
+      <section id="detail" class="detail-pane" aria-label="Request"></section>
     </div>
+    <p id="said" class="visually-hidden" role="status" aria-live="polite"></p>
   </main>
 
   <footer class="site-footer">

@@ -61,14 +61,14 @@ test('AC23 each note says whether its details were caught, partly caught or miss
 test('AC23 the checks table lists every criterion that guards the note with the mutations aimed at it', () => {
   const r = runsOf(mutations)[0];
   const rows = checkRows(r);
-  assert.deepEqual(rows.map((c) => c.check), ['AC8', 'AC8b', 'AC10b', 'AC18', 'AC19', 'AC20', 'AC20b', 'AC21', 'AC22']);
+  assert.deepEqual(rows.map((c) => c.check), ['AC8', 'AC8b', 'AC10b', 'AC18', 'AC19', 'AC20', 'AC20b', 'AC20c', 'AC21', 'AC22', 'AC25']);
   const s = mutationSummary(r);
   assert.equal(s.noteTotal, rows.reduce((n, c) => n + c.mutations.length, 0));
   assert.equal(s.total, r.mutations.length);
   const broken = clone(r);
   broken.mutations.find((m) => m.check === 'AC18').caught = false;
   assert.equal(mutationSummary(broken).noteCaught, s.noteCaught - 1);
-  assert.equal(NOTE_CHECKS.length, 9);
+  assert.equal(NOTE_CHECKS.length, 11);
 });
 
 test('AC23 one run shows no comparison; two runs compare this run with the one before', () => {
@@ -262,4 +262,90 @@ test('AC23 the advisor sentence claims only what the detector finds', () => {
   const ac21 = NOTE_CHECKS.find(([c]) => c === 'AC21')[1];
   assert.match(ac21, /^Details the detector finds/);
   assert.match(ac21, /one kind at a time/);
+});
+
+// ---- The four acceptance criteria, first on the page.
+
+const TASK_WORDS = [
+  'Capture the note and make it available through the intended advisor workflow, or explicitly identify the missing infrastructure needed to do so.',
+  'The note does not enter model request payloads; enforce this at a trustworthy boundary.',
+  'Add an automated regression test (for example, a sentinel and model-calls.log inspection) that would fail on leakage.',
+  'Explain what the test proves, what it misses, and how the behavior would differ in production.',
+];
+const criterionHtml = (html, n) => html.split('<article').find((a) => a.includes(`id="criterion-ac${n}"`));
+const finishedRun = () => { const r = clone(runsOf(mutations)[0]); r.completed = true; r.planned = r.mutations.length; return r; };
+
+test('AC23 each acceptance criterion quotes the task word for word, first on the page', () => {
+  assert.deepEqual(client.CRITERIA.map((c) => c.words), TASK_WORDS);
+  assert.deepEqual(client.CRITERIA.map((c) => c.name), [1, 2, 3, 4].map((n) => `Acceptance criterion ${n}`));
+  const html = client.criteriaView(mutations);
+  TASK_WORDS.forEach((w, i) => assert.ok(criterionHtml(html, i + 1).includes(esc(w)), `criterion ${i + 1}`));
+  const page = read('public/report.html');
+  assert.ok(page.indexOf('id="h-criteria"') < page.indexOf('id="h-rampart"'));
+  assert.match(criterionHtml(html, 1), /a queue that survives a restart, and district sign-in/);
+  assert.match(criterionHtml(html, 2), /never runs any model on a note, not even the detector/);
+  assert.match(criterionHtml(html, 4), /No check can prove an explanation/);
+});
+
+test('AC23 the criteria counts equal the committed mutations counted by hand', () => {
+  const r = finishedRun();
+  const html = client.criteriaView({ runs: [r] });
+  const byCheck = {};
+  for (const m of r.mutations) { byCheck[m.check] ??= { aimed: 0, caught: 0 }; byCheck[m.check].aimed += 1; if (m.caught === true) byCheck[m.check].caught += 1; }
+  const want = { 1: ['AC18', 'AC20', 'AC20b', 'AC20c', 'AC25', 'AC21'], 2: ['AC19', 'AC8', 'AC8b', 'AC22'], 3: ['AC18'] };
+  for (const [n, ids] of Object.entries(want)) {
+    const c = client.CRITERIA[n - 1];
+    assert.deepEqual(c.checks.map(([id]) => id), ids);
+    const ev = client.criterionEvidence(c, r);
+    const a = criterionHtml(html, n);
+    for (const row of ev.rows) {
+      const hand = byCheck[row.check] ?? { aimed: 0, caught: 0 };
+      assert.deepEqual([row.aimed, row.caught], [hand.aimed, hand.caught], row.check);
+      const li = a.split('<li>').find((l) => l.startsWith(`<strong>${row.check}</strong>`));
+      assert.ok(li.includes(hand.aimed ? `${hand.caught} of ${hand.aimed} breaks caught` : 'not in this run yet'), li);
+    }
+  }
+  const caughtAll = r.mutations.filter((m) => m.caught === true).length;
+  assert.ok(criterionHtml(html, 3).includes(`The whole mutation run</strong>: ${caughtAll} of ${r.mutations.length} breaks caught`));
+  assert.equal(client.criterionEvidence(client.CRITERIA[3], r).rows.length, 0);
+});
+
+test('AC23 a check with no mutations says not in this run yet, never zero of zero', () => {
+  const r = finishedRun();
+  r.mutations = r.mutations.filter((m) => m.check !== 'AC20b');
+  r.planned = r.mutations.length;
+  const a1 = criterionHtml(client.criteriaView({ runs: [r] }), 1);
+  for (const id of ['AC20b', 'AC20c', 'AC25']) {
+    const li = a1.split('<li>').find((l) => l.startsWith(`<strong>${id}</strong>`));
+    assert.ok(li.includes('not in this run yet'), id);
+  }
+  assert.ok(!/0 of 0/.test(a1));
+  for (const id of ['AC20c', 'AC25']) assert.match(client.checksView({ runs: [r] }).body.split('<tr').find((t) => t.includes(`>${id}</th>`)), /Not in this run yet/);
+});
+
+test('AC23 an unfinished latest run is never shown as all caught in the criteria', () => {
+  const m = clone(runsOf(mutations)[0]);
+  m.completed = false; m.planned = 99; m.mutations = m.mutations.slice(0, 5).map((x) => ({ ...x, caught: true }));
+  const html = client.criteriaView({ runs: [m] });
+  assert.match(html, /did not finish, so no counts are shown/);
+  assert.ok(!/breaks caught/.test(html));
+  assert.ok(!/breaks caught/.test(client.criteriaView({ runs: [] })));
+  assert.match(client.criteriaView(null), /No mutation run has been saved yet/);
+  assert.match(client.criteriaView({ runs: [{}] }), /could not be read/);
+});
+
+test('AC23 hostile strings in the mutation data come out inert in the criteria', () => {
+  const r = finishedRun();
+  r.mutations[0].what = HOSTILE; r.mutations[0].file = HOSTILE; r.mutations[0].check = HOSTILE; r.date = HOSTILE;
+  assert.ok(inert(client.criteriaView({ runs: [r] })));
+  r.mutations[1].caught = HOSTILE;
+  assert.ok(inert(client.criteriaView({ runs: [r] })));
+});
+
+test('AC23 the criteria link to the live pages and the four guide anchors', () => {
+  const html = client.criteriaView(mutations);
+  for (let n = 1; n <= 4; n += 1) assert.ok(criterionHtml(html, n).includes(`href="/guide#ac${n}"`), `ac${n}`);
+  assert.ok(criterionHtml(html, 1).includes('href="/advisor"'));
+  assert.ok(criterionHtml(html, 2).includes('href="/how"'));
+  assert.ok(!/href="(https?:)?\/\//.test(html));
 });

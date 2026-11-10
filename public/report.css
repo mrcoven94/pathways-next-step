@@ -47,3 +47,12 @@
   .kinds tbody tr { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0 8px; }
   .kinds tbody th, .kinds .bar-cell, .kinds td[data-label='Run before'] { grid-column: 1 / -1; }
 }
+
+.criterion { margin-top: 36px; max-width: 64ch; }
+.criterion h3 { margin-top: 0; }
+.criterion blockquote { margin: 0 0 12px; color: var(--ink); font-weight: 550; }
+.criterion > p + p, .criterion > ul + p, .criterion > ul + h4 { margin-top: 12px; }
+.criterion h4 { margin: 16px 0 6px; font-size: 1rem; }
+.criterion .evidence { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 6px; }
+.criterion .see { display: flex; flex-wrap: wrap; gap: 0 20px; }
+.criterion .see a { color: var(--pen); font-weight: 550; display: inline-flex; align-items: center; min-height: 44px; }

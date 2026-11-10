@@ -24,6 +24,11 @@ const checks = [
     const data = await Promise.all(['/report.js', '/report-client.js', '/data/rampart-eval.json', '/data/mutations.json', '/data/synthetic-notes.json'].map((p) => fetch(base + p).then((x) => x.ok)));
     return r.ok && t.includes('What protects the private note') && data.every(Boolean);
   }],
+  ['GET /guide', async () => {
+    const r = await fetch(base + '/guide');
+    const t = await r.text();
+    return r.ok && t.includes('Acceptance criterion 4') && (await fetch(base + '/guide.css')).ok;
+  }],
   ['GET /src/core/topics.js', async () => (await fetch(base + '/src/core/topics.js')).ok],
   ['GET /src/core/gateway.js is not served', async () => (await fetch(base + '/src/core/gateway.js')).status === 404],
   ['GET /advisor opens with no sign-in, and the list carries no note', async () => {
