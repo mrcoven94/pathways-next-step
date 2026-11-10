@@ -16,13 +16,14 @@ export const REASON_CODES = [
   'START_DATE_PASSED', 'STALE_RECORD', 'APPLY_DEADLINE_UNLISTED',
 ];
 
+// A rejection names where the problem is, never what was there: the refused value could be a student's words.
 export class PayloadRejected extends Error {}
 
 const oneOf = (allowed) => (v, path) => {
-  if (!allowed.includes(v)) throw new PayloadRejected(`${path}: ${JSON.stringify(v)} is not an allowed value`);
+  if (!allowed.includes(v)) throw new PayloadRejected(`${path}: not an allowed value`);
 };
 const recordId = (v, path) => {
-  if (!getRecord(v)) throw new PayloadRejected(`${path}: ${JSON.stringify(v)} is not a record ID`);
+  if (!getRecord(v)) throw new PayloadRejected(`${path}: not a record ID`);
 };
 const factText = (v, path) => {
   if (!CANONICAL_FACT_TEXT.has(v)) throw new PayloadRejected(`${path}: text is not a canonical record fact`);
@@ -33,7 +34,7 @@ const list = (item) => (v, path) => {
 };
 const shape = (keys) => (v, path) => {
   if (!v || typeof v !== 'object' || Array.isArray(v)) throw new PayloadRejected(`${path}: expected an object`);
-  for (const k of Object.keys(v)) if (!Object.hasOwn(keys, k)) throw new PayloadRejected(`${path}.${k}: field is not allowed`);
+  for (const k of Object.keys(v)) if (!Object.hasOwn(keys, k)) throw new PayloadRejected(`${path}: has a field that is not allowed`);
   for (const [k, check] of Object.entries(keys)) check(v[k], `${path}.${k}`);
 };
 
@@ -71,7 +72,7 @@ function plainCopy(payload) {
 
 export function checkPayload(payload) {
   const schema = Object.hasOwn(SCHEMAS, payload?.task ?? '') ? SCHEMAS[payload.task] : null;
-  if (!schema) throw new PayloadRejected(`task: ${JSON.stringify(payload?.task)} is not an allowed task`);
+  if (!schema) throw new PayloadRejected('task: not an allowed task');
   schema(payload, 'payload');
   return payload;
 }

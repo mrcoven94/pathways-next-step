@@ -8,12 +8,15 @@ const $ = (s) => document.querySelector(s);
 let memory = '';
 const codeStore = { get: () => memory, set: (v) => { memory = v; }, clear: () => { memory = ''; } };
 
-const state = { code: codeStore.get(), requests: [], open: null, spans: [], shown: new Set() };
+const state = { session: 0, code: codeStore.get(), requests: [], open: null, spans: [], shown: new Set() };
 
+class Stale extends Error {}
 class Unauthorized extends Error {}
 class Off extends Error {}
 async function api(path, init = {}) {
+  const session = state.session;
   const res = await fetch(path, { ...init, headers: { ...(init.headers ?? {}), Authorization: `Bearer ${state.code}`, ...(init.body ? { 'Content-Type': 'application/json' } : {}) } });
+  if (session !== state.session) throw new Stale(); // signed out, or signed in again, while this was on its way
   if (res.status === 401) throw new Unauthorized();
   if (res.status === 404) throw new Off();
   if (!res.ok) throw new Error(String(res.status));
@@ -28,6 +31,7 @@ function view(name) {
 }
 
 function fail(e) {
+  if (e instanceof Stale) return; // an answer to a session that has ended is dropped, never shown
   if (e instanceof Unauthorized) {
     codeStore.clear();
     state.code = '';
@@ -129,6 +133,7 @@ async function setStatus(status) {
 // ---------- events ----------
 $('#code-form').addEventListener('submit', (e) => {
   e.preventDefault();
+  state.session++;
   state.code = $('#code').value.trim();
   if (!state.code) return;
   codeStore.set(state.code);
@@ -138,7 +143,9 @@ $('#code-form').addEventListener('submit', (e) => {
 });
 $('#sign-out').addEventListener('click', () => {
   codeStore.clear();
-  Object.assign(state, { code: '', requests: [], open: null, spans: [], shown: new Set() });
+  Object.assign(state, { session: state.session + 1, ticket: (state.ticket ?? 0) + 1, code: '', requests: [], open: null, spans: [], shown: new Set() });
+  $('#requests').innerHTML = ''; // nothing a student wrote stays on the page after sign-out
+  $('#detail').innerHTML = '';
   document.body.dataset.view = 'list';
   view('gate');
 });

@@ -38,7 +38,8 @@ export const KIND_WORDS = {
   handle: ['Social handles', 'handle hidden'],
 };
 
-const PHONE = /(?:\+?1[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)/g;
+// Three shapes: a number with a country code, a ten-digit number, and a local seven-digit number.
+const PHONE = /\+\d{1,3}(?:[\s.-]?\(?\d{1,4}\)?){2,5}|(?:\+?1[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)|(?<![\d-])\d{3}[\s.-]\d{4}(?!\d)/g;
 const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/g;
 
 export function builtinSpans(text) {

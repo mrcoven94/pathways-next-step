@@ -49,3 +49,14 @@ test('AC21 a note with script tags comes back as plain text segments, and esc ma
   assert.ok(!html.includes('<') && !html.includes('"'));
   assert.equal(esc(`<b a="1">'&`), '&lt;b a=&quot;1&quot;&gt;&#39;&amp;');
 });
+
+test('AC21 local and international phone numbers are hidden too, and dates and other numbers are left alone', () => {
+  for (const phone of ['555-0147', '555 0147', '253-555-0119', '(425) 555-0187', '+1 253 555 0119', '+44 20 7946 0958']) {
+    const text = `Call me at ${phone}. Thanks`;
+    const shown = maskNote(text, builtinSpans(text), new Set()).filter((s) => !s.masked).map((s) => s.text).join('');
+    assert.equal(shown, 'Call me at . Thanks', phone);
+  }
+  for (const plain of ['Applications close Nov 30, 2026.', 'It starts 2027-03-01 in room 204.', 'I have 3.5 and 18 credits, about 5,000 saved.', 'My zip is 98101-1234.']) {
+    assert.deepEqual(builtinSpans(plain), [], plain);
+  }
+});

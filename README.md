@@ -5,8 +5,8 @@ Dani, 17, should apply to the Northline Electrical Apprenticeship before applica
 - **Live:** https://pathways-next-step.vercel.app (records and every model call are at [/how](https://pathways-next-step.vercel.app/how))
 - **Run:** `npm start`, then open http://localhost:3000
 - **Advisor inbox:** `ADVISOR_CODE=<a code you choose> npm start`, then open http://localhost:3000/advisor. Without the variable the inbox does not exist (404).
-- **Test:** `npm test` (34 checks, prints pass or fail, writes `model-calls.log` with a summary at the top)
-- **Prove the tests bite:** `npm run mutate` breaks 37 guards, at least one behind every acceptance criterion, one at a time in a scratch copy. It confirms the named check fails each time.
+- **Test:** `npm test` (35 checks, prints pass or fail, writes `model-calls.log` with a summary at the top)
+- **Prove the tests bite:** `npm run mutate` breaks 38 guards, at least one behind every acceptance criterion, one at a time in a scratch copy. It confirms the named check fails each time.
 - **The 30-minute version:** tag [`v0.1-30min`](https://github.com/mrcoven94/pathways-next-step/tree/v0.1-30min) is the slice as it stood 23 minutes after the repo started, before any review. To run it: `git checkout v0.1-30min && npm test && npm start` (15 checks, all passing). Compare it with `main` to see what review added.
 - Node 20 or newer. No `npm install`, no API key, no accounts, no database.
 
@@ -136,7 +136,7 @@ What isn't collected at all: age or birth date, last name, phone, email, address
 
 ## The checks
 
-`npm test` runs 34 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim: 37 deliberate breaks, every one caught. Writing it caught one weak test. AC5b had only checked the time zone it was handed, never the app's default (`docs/process.md`, entry 13).
+`npm test` runs 35 checks, one or more per acceptance criterion in `SPEC.md`. They run through the real HTTP API and through the browser's own request builder (`public/client.js`). Every model call is written to `model-calls.log`: the exact text sent, the exact reply and the verdict. A summary at the top lists every replaced call. `npm run verify` adds a smoke test of the running app, or of the live deployment with `BASE_URL` set. `npm run mutate` proves the checks catch what they claim: 38 deliberate breaks, every one caught. Writing it caught one weak test. AC5b had only checked the time zone it was handed, never the app's default (`docs/process.md`, entry 13).
 
 "Today" is the date in Pacific time, so Northline stays open until midnight on Nov 30 (AC5b). To replay a plan on another date, add `?today=2026-12-05` to the URL. The screen then says it's showing a replay.
 

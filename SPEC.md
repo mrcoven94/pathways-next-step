@@ -130,4 +130,4 @@ New acceptance criteria:
 21. Phone numbers and email addresses in a note are hidden from the advisor until switched on, one kind at a time, and the rest of the note is unchanged.
 10b. Crisis words in a note are still flagged once the note is sealed.
 
-`npm run mutate` now breaks 37 guards, 14 of them behind these criteria.
+`npm run mutate` now breaks 38 guards, 15 of them behind these criteria.

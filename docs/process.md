@@ -131,3 +131,12 @@ Tools: Claude Code (Opus 5.5) as the architect and builder. A Claude subagent re
 - **What changed:** The gateway now checks and sends a plain copy. Parser errors get a fixed reply. Codes are unique. AC8 reads the note the way an advisor does. The inbox loads nothing from another site, keeps the code in memory only, and a content security policy enforces it. Each of the five is a check, and each has a mutation.
 - **What I rejected:** Dropping the contact-details switch from the inbox. It stays, on built-in patterns, because hiding a phone number until the advisor asks for it costs nothing and needs no outside code.
 - **What I got wrong myself:** My first version of the hidden-getter check expected the gateway to refuse a field that answers truthfully once and lies afterwards. The gateway reads it once, for the copy it sends, so the right result is a clean call. The test was wrong, not the code.
+- **What the mutation run caught:** One of the new mutations survived on the first run. It put the parser's error message back in the reply, and AC18 still passed, because the parser quotes only the first ten characters of what it read and the check looked for the whole sentinel. A partial echo of a note is still a leak. AC18 now requires the reply to be the fixed sentence, word for word.
+
+## 15. The diff review: errors that quote what they refuse (Sol 6.1, 2026-11-10)
+
+- **Asked:** Sol 6.1 on high, read only, to review the finished branch. The three-model panel was also due, but OpenCode Go had reached its monthly usage cap, so Sol reviewed alone.
+- **What Sol produced:** The gateway refused the note in every position, and then quoted it in the error: `task: "<the note>" is not an allowed task`. AC19 only checked that an error was thrown. It also found that signing out of the inbox left the last note on the page and let a slow answer redraw it, that a local number like 555-0147 was shown unmasked, and that two replies in AC18 were never scanned for the sentinel.
+- **What changed:** Rejections say where the problem is and never what was there. AC19 reads every rejection for the sentinel. Sign-out clears the page and drops answers that arrive late. The phone pattern covers local and international numbers, with dates and other numbers left alone. AC18 scans every reply.
+- **What I didn't change:** The queue is still in memory, so on the live site a request can be missing from the inbox. That needs storage, which the spec rules out, and it is written up as its own decision.
+

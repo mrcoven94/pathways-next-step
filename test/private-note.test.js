@@ -58,16 +58,30 @@ test('AC18 private note: it reaches the advisor through the read path, and no mo
     await s.ask('are there seats left');
     // The note pushed at the two endpoints that do reach the model is refused before any call.
     const callsBefore = spy.prompts.length;
-    assert.equal((await s.post('/api/answer', { topic: NOTE, record_ids: ['PRG-02'] })).status, 400);
-    assert.equal((await s.post('/api/answer', { topic: 'PAY', record_ids: ['PRG-02'], note: NOTE })).status, 200);
-    assert.equal((await s.post('/api/plan', { answers: dani({ age18: 'yes', diploma: 'yes', lean: 'earn' }), note: NOTE })).status, 200);
+    const pushed = [
+      [400, await s.post('/api/answer', { topic: NOTE, record_ids: ['PRG-02'] })],
+      [400, await s.post('/api/answer', { topic: 'PAY', record_ids: [NOTE] })],
+      [200, await s.post('/api/answer', { cannot_confirm: 'UNKNOWN_SEATS', topic: NOTE, record_ids: NOTE })], // answered by code, no model call
+      [400, await s.post('/api/plan', { answers: { considering: ['PRG-02'], age18: NOTE, diploma: 'yes' } })],
+      [400, await s.post('/api/plan', { answers: { considering: [NOTE] } })],
+      [400, await s.post('/api/plan', { answers: dani({ age18: 'yes', diploma: 'yes', lean: 'earn' }), today: NOTE })],
+      [200, await s.post('/api/answer', { topic: 'PAY', record_ids: ['PRG-02'], note: NOTE })],
+      [200, await s.post('/api/plan', { answers: dani({ age18: 'yes', diploma: 'yes', lean: 'earn' }), note: NOTE })],
+    ];
+    pushed.forEach(([status, res], i) => {
+      assert.equal(res.status, status, `request ${i + 1} with the note pushed at a model endpoint`);
+      seen[`the reply to request ${i + 1} with the note pushed at a model endpoint`] = JSON.stringify(res.body);
+    });
     assert.equal(spy.prompts.length, callsBefore + 2, 'the two valid requests reach the model without the extra field');
 
     // A body that isn't JSON: the parser's own error message quotes what it read, so the reply must not repeat it.
     for (const path of ['/api/handoff', '/api/plan', '/api/answer']) {
       const res = await fetch(s.base + path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: NOTE });
       assert.equal(res.status, 400, `${path} with a body that isn't JSON`);
-      seen[`the reply to an unreadable body at ${path}`] = await res.text();
+      // The parser quotes only the first few characters, so the whole sentinel would never show. The reply must be the fixed sentence.
+      const reply = await res.text();
+      assert.equal(reply, JSON.stringify({ error: 'That request could not be read.' }), `${path} repeats nothing from an unreadable body`);
+      seen[`the reply to an unreadable body at ${path}`] = reply;
     }
 
     for (const path of ['/api/log', '/api/records', '/api/handoff', '/api/handoffs', '/api/advisor/requests', `/api/advisor/requests/${ticket.body.code}`]) {
@@ -151,7 +165,11 @@ test('AC19 the gateway refuses the note in every position of every payload, as t
     for (const value of [NOTE, seal(NOTE), { note: NOTE }]) {
       for (const bad of withNote(payload, value)) {
         tried++;
-        await assert.rejects(gateway.callModel(bad), PayloadRejected, JSON.stringify(bad).slice(0, 200));
+        await assert.rejects(gateway.callModel(bad), (err) => {
+          assert.ok(err instanceof PayloadRejected, JSON.stringify(bad).slice(0, 200));
+          clean(err.message, 'the error for a refused payload'); // the error says where, never what
+          return true;
+        });
       }
     }
   }
