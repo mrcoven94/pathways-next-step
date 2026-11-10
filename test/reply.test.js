@@ -188,9 +188,9 @@ test('AC25 the student answers back: her follow-up reaches both reads in order, 
     assert.equal((await back(s, 'ADV-ZZZZ', { text: 'hi' })).status, 404);
     studentRead = await (await fetch(`${s.base}/api/handoff/${code}`)).json();
     advisorRead = (await (await fetch(`${s.base}/api/advisor/requests/${code}`)).json()).request;
-    for (let i = 3; i <= 10; i++) assert.equal((await back(s, code, { text: `m${i}` })).status, 200);
-    assert.equal((await back(s, code, { text: 'm11' })).status, 400, 'ten messages across the thread');
-    assert.equal((await reply(s, code, { text: 'a11' })).status, 400);
+    for (let i = 3; i <= 6; i++) assert.equal((await back(s, code, { text: `m${i}` })).status, 200);
+    assert.equal((await back(s, code, { text: 'm7' })).status, 400, 'five messages from the student');
+    assert.equal((await reply(s, code, { text: 'a2' })).status, 200, 'the advisor still has room');
   } finally {
     cap.restore();
     await s?.close();
@@ -233,5 +233,29 @@ test('AC25 the two samples arrive with an invented conversation, sealed like any
     assert.ok(!JSON.stringify(rows).includes(bit), 'no list row');
     assert.ok(spy.prompts.every((p) => !p.includes(bit)), 'no model prompt');
     assert.ok(!log.includes(bit), 'no model-calls.log line');
+  }
+});
+
+test('AC25 a student cannot fill the thread: she writes back only after an answer, five times at most, and the advisor always has room', async () => {
+  const s = await startApp();
+  try {
+    const code = (await s.post('/api/handoff', { first_name: 'Rio', note: NOTE, reasons: [] })).body.code;
+    const early = await back(s, code, { text: 'hello?' });
+    assert.equal(early.status, 400, 'no follow-up before an advisor has answered');
+    assert.match((await early.json()).error, /^[A-Z][^{}<>]*\.$/, 'a plain message');
+    assert.equal((await (await fetch(`${s.base}/api/handoff/${code}`)).json()).replies.length, 0, 'nothing was stored');
+
+    assert.equal((await reply(s, code, { text: 'First answer.' })).status, 200);
+    for (let i = 1; i <= 5; i++) assert.equal((await back(s, code, { text: `s${i}` })).status, 200, `student message ${i}`);
+    const sixth = await back(s, code, { text: 's6' });
+    assert.equal(sixth.status, 400, 'five student messages at most');
+    assert.ok(!(await sixth.text()).includes('s6'), 'the refusal does not repeat what was typed');
+
+    for (let i = 2; i <= 10; i++) assert.equal((await reply(s, code, { text: `a${i}` })).status, 200, `advisor reply ${i} still fits`);
+    assert.equal((await reply(s, code, { text: 'a11' })).status, 400, 'ten advisor replies at most');
+    const thread = (await (await fetch(`${s.base}/api/handoff/${code}`)).json()).replies;
+    assert.deepEqual([thread.filter((r) => r.from === 'advisor').length, thread.filter((r) => r.from === 'student').length], [10, 5]);
+  } finally {
+    await s.close();
   }
 });

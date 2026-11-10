@@ -41,7 +41,7 @@ const PAGES = { '/': 'index.html', '/how': 'how.html', '/advisor': 'advisor.html
 const INBOX_POLICY = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 
 /** A request as the inbox list shows it: everything but the note and the replies, which stay sealed. Replies are only counted. */
-const listed = ({ note, replies, ...rest }) => ({ ...rest, has_note: !note.empty, replies: replies.length });
+const listed = ({ note, replies, ...rest }) => ({ ...rest, has_note: !note.empty, replies: replies.length, answered: replies.some((r) => r.from === 'advisor') });
 const MAX_QUEUE = 500; // the demo queue is in memory, so it has a ceiling; the oldest requests go first
 
 // The inbox always shows two invented requests, so the page shows what an advisor sees at once.
@@ -62,7 +62,15 @@ const SAMPLES = [
       ['advisor', 60, 'Hi Marcus. The records don’t list award amounts, and the amount is different for each student, so I can’t give you a number yet. Start your FAFSA or state aid application this week and send me a message when it’s in. We’ll go through it together.'],
     ] },
 ];
-const MAX_REPLIES = 10; // messages after the note, from either side
+// Each side has its own room, so a student can never fill the thread and leave the advisor unable to answer.
+const MAX_ADVISOR_REPLIES = 10;
+const MAX_STUDENT_REPLIES = 5;
+const fromWho = (request, from) => request.replies.filter((r) => r.from === from).length;
+// The demo keeps a bounded history: only the latest MAX_OPENS records of each kind. The count an opened request
+// shows comes from a tally per request, kept only while the request is in the queue, so dropping old records
+// never makes a request still in the queue show a smaller count.
+const MAX_OPENS = 1000;
+const keepLatest = (log) => { if (log.length > MAX_OPENS) log.splice(0, log.length - MAX_OPENS); };
 
 /**
  * @param {{model?: object, logFile?: string|null, today?: () => string}} opts
@@ -85,6 +93,12 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
   const used = new Set(samples.map((s) => s.code)); // every code ever given out, so one is never given twice
   const opens = []; // every time a sealed note was opened: why, which request, when. Never the text.
   const replyOpens = []; // every time a sealed reply was read, by the advisor or the student. Kept apart so note opens stay a true count.
+  const noteTally = new Map(); // code -> { n, at }: how many times that request's note was opened, and when last
+  const readReplies = (request, purpose) => {
+    const replies = request.replies.map((r) => ({ from: r.from, text: Sealed.open(r.text, replyOpens, { purpose, code: request.code }), at: r.at }));
+    keepLatest(replyOpens);
+    return replies;
+  };
 
   async function plan({ answers, today: asOf }) {
     if (asOf !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(asOf)) throw new BadAnswers('today must look like 2026-12-05.');
@@ -140,7 +154,7 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
     };
     request.crisis = [request.first_name, raw, request.question].some(isCrisis);
     handoffs.push(request);
-    if (handoffs.length > MAX_QUEUE) handoffs.splice(0, handoffs.length - MAX_QUEUE);
+    if (handoffs.length > MAX_QUEUE) for (const gone of handoffs.splice(0, handoffs.length - MAX_QUEUE)) noteTally.delete(gone.code);
     return {
       code: request.code,
       crisis: request.crisis,
@@ -173,7 +187,7 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
       const text = typeof body.text === 'string' ? body.text.trim() : '';
       if (!text || text.length > 1000) return send(res, 400, { error: 'A reply must be 1 to 1000 characters.' });
       if (body.status !== undefined && !STATUSES.includes(body.status)) return send(res, 400, { error: 'Status must be new, in_progress or resolved.' });
-      if (request.replies.length >= MAX_REPLIES) return send(res, 400, { error: `A request holds ${MAX_REPLIES} replies at most.` });
+      if (fromWho(request, 'advisor') >= MAX_ADVISOR_REPLIES) return send(res, 400, { error: `A request holds ${MAX_ADVISOR_REPLIES} replies from the advisor at most.` });
       const at = new Date().toISOString();
       const first = !request.replies.some((r) => r.from === 'advisor');
       request.replies.push({ from: 'advisor', text: seal(text), at });
@@ -182,10 +196,13 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
       return send(res, 200, { request: listed(request), reply: { at } });
     }
     if (!action && req.method === 'GET') {
-      const before = opens.filter((o) => o.code === code); // earlier note opens: times only, never text
-      const note = Sealed.open(request.note, opens, { purpose: 'advisor_read', code });
-      const replies = request.replies.map((r) => ({ from: r.from, text: Sealed.open(r.text, replyOpens, { purpose: 'advisor_reply_read', code }), at: r.at }));
-      return send(res, 200, { request: { ...listed(request), note, replies, opens: before.length + 1, last_opened_at: before.at(-1)?.at ?? null } });
+      // An empty note is never opened, so reading a request without one counts no open.
+      const before = noteTally.get(code) ?? { n: 0, at: null }; // earlier note opens: times only, never text
+      const opened = !request.note.empty;
+      const note = opened ? Sealed.open(request.note, opens, { purpose: 'advisor_read', code }) : '';
+      if (opened) { noteTally.set(code, { n: before.n + 1, at: opens.at(-1).at }); keepLatest(opens); }
+      const replies = readReplies(request, 'advisor_reply_read');
+      return send(res, 200, { request: { ...listed(request), note, replies, opens: opened ? before.n + 1 : 0, last_opened_at: opened ? before.at : null } });
     }
     return send(res, 404, { error: 'Not found' });
   }
@@ -195,18 +212,19 @@ export function createApp({ model = mockModel, logFile = null, today = () => tod
   function studentRead(res, code) {
     const request = findRequest(code);
     if (!request) return send(res, 404, { error: 'Not found' });
-    const replies = request.replies.map((r) => ({ from: r.from, text: Sealed.open(r.text, replyOpens, { purpose: 'student_reply_read', code }), at: r.at }));
+    const replies = readReplies(request, 'student_reply_read');
     return send(res, 200, { code: request.code, status: request.status, replies });
   }
 
-  /** The student answers back. Same limits and sealing as the advisor's replies; a crisis word flags the request again. */
+  /** The student answers back once an advisor has answered, a few times at most. Sealed like the advisor's replies; a crisis word flags the request again. */
   async function studentReply(req, res, code) {
     const request = findRequest(code);
     if (!request) return send(res, 404, { error: 'Not found' });
     const body = await readJson(req);
     const text = typeof body.text === 'string' ? body.text.trim() : '';
     if (!text || text.length > 1000) return send(res, 400, { error: 'A reply must be 1 to 1000 characters.' });
-    if (request.replies.length >= MAX_REPLIES) return send(res, 400, { error: `A request holds ${MAX_REPLIES} replies at most.` });
+    if (!fromWho(request, 'advisor')) return send(res, 400, { error: 'You can write back once an advisor has answered.' });
+    if (fromWho(request, 'student') >= MAX_STUDENT_REPLIES) return send(res, 400, { error: `You can send ${MAX_STUDENT_REPLIES} messages in a conversation at most.` });
     const at = new Date().toISOString();
     request.replies.push({ from: 'student', text: seal(text), at });
     if (isCrisis(text)) request.crisis = true;

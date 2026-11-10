@@ -312,7 +312,8 @@ test('AC23 the criteria counts equal the committed mutations counted by hand', (
 
 test('AC23 a check with no mutations says not in this run yet, never zero of zero', () => {
   const r = finishedRun();
-  r.mutations = r.mutations.filter((m) => m.check !== 'AC20b');
+  // Built from the live data file, so the checks under test are taken out here rather than assumed absent.
+  r.mutations = r.mutations.filter((m) => !['AC20b', 'AC20c', 'AC25'].includes(m.check));
   r.planned = r.mutations.length;
   const a1 = criterionHtml(client.criteriaView({ runs: [r] }), 1);
   for (const id of ['AC20b', 'AC20c', 'AC25']) {
