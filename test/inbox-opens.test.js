@@ -44,3 +44,41 @@ test('AC20c the opened request says how many times its note was opened and when 
     await s.close();
   }
 });
+
+test('AC20c a request with no note never counts a note open, however often it is read', async () => {
+  const s = await startApp();
+  const get = async (path) => (await fetch(s.base + path)).json();
+  try {
+    const empty = (await s.post('/api/handoff', { first_name: 'Ana', note: '', reasons: [] })).body.code;
+    for (const code of [empty, 'ADV-SMPB']) { // ADV-SMPB is the sample Marcus, who left no note
+      for (let i = 0; i < 3; i++) {
+        const r = (await get(`/api/advisor/requests/${code}`)).request;
+        assert.deepEqual([r.note, r.opens, r.last_opened_at], ['', 0, null], `${code} read ${i + 1}`);
+      }
+    }
+    assert.equal(s.app.opens.length, 0, 'no note open was recorded');
+  } finally {
+    await s.close();
+  }
+});
+
+test('AC20c the demo keeps a bounded history of opens, and the count stays right for a request still in the queue', async () => {
+  const s = await startApp();
+  const get = async (path) => (await fetch(s.base + path)).json();
+  try {
+    const mine = (await s.post('/api/handoff', { first_name: 'Rio', note: NOTE, reasons: [] })).body.code;
+    const first = (await get(`/api/advisor/requests/${mine}`)).request;
+    const firstAt = s.app.opens.at(-1).at;
+    assert.equal(first.opens, 1);
+    // The sample Dani has a note and three messages: each read is one note open and three reply reads.
+    for (let i = 0; i < 1100; i++) await get('/api/advisor/requests/ADV-SMPA');
+    assert.ok(s.app.opens.length <= 1000, `note opens kept: ${s.app.opens.length}`);
+    assert.ok(s.app.replyOpens.length <= 1000, `reply reads kept: ${s.app.replyOpens.length}`);
+    const again = (await get(`/api/advisor/requests/${mine}`)).request;
+    assert.deepEqual([again.opens, again.last_opened_at], [2, firstAt], 'an early open still counts');
+    const dani = (await get('/api/advisor/requests/ADV-SMPA')).request;
+    assert.equal(dani.opens, 1101, "1100 reads, then this one");
+  } finally {
+    await s.close();
+  }
+});

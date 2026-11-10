@@ -118,7 +118,7 @@ const rank = (r) => (r.crisis && r.status !== 'resolved' ? 0 : 1 + Math.max(0, S
 
 export function sortRequests(requests) {
   return [...(requests ?? [])].sort((a, b) =>
-    rank(a) - rank(b) || Number(a.replies > 0) - Number(b.replies > 0) || Number(!!a.sample) - Number(!!b.sample)
+    rank(a) - rank(b) || Number(!!a.answered) - Number(!!b.answered) || Number(!!a.sample) - Number(!!b.sample)
       || String(b.at).localeCompare(String(a.at)));
 }
 
@@ -141,8 +141,24 @@ export function filterRequests(requests, view = 'all') {
 /** The one line a row uses to say why it is here. */
 export const rowReason = (r) => (r.crisis && r.status !== 'resolved' ? 'Used crisis words. Reach them first.' : reasonWords(r.reasons?.[0]));
 
-/** The small line under a row's reason: status, "Answered" once someone has, and whether there is a note. */
-export const rowMeta = (r) => [STATUS_WORDS[r.status] ?? 'New', r.replies > 0 ? 'Answered' : null, r.has_note ? 'Private note' : 'No note'].filter(Boolean).join(' · ');
+/** The small line under a row's reason: status, "Answered" once an advisor has, and whether there is a note. */
+export const rowMeta = (r) => [STATUS_WORDS[r.status] ?? 'New', r.answered ? 'Answered' : null, r.has_note ? 'Private note' : 'No note'].filter(Boolean).join(' · ');
+
+/**
+ * When a request is opened, what the server just sent replaces what the list had cached for that row, so a
+ * student's follow-up (a crisis word, a status back to in progress) shows at once and no stale status is sent back.
+ * `fresh` is a list row or an opened request; the note, the message texts and the open count never reach the list.
+ */
+export function mergeOpened(requests, fresh) {
+  const { note, replies, opens, last_opened_at, ...rest } = fresh ?? {};
+  let open = null;
+  const merged = (requests ?? []).map((r) => {
+    if (r.code !== rest.code) return r;
+    open = { ...r, ...rest, replies: Array.isArray(replies) ? replies.length : (replies ?? r.replies) };
+    return open;
+  });
+  return { requests: merged, open };
+}
 
 // The next step the planner gave the student, in the words the student saw.
 export const NEXT_STEP_WORDS = {

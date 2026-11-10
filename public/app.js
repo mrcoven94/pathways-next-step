@@ -495,7 +495,7 @@ async function checkAnswer() {
         ? `<h2>${answered ? 'Your conversation' : 'No answer yet'}</h2>
           <div class="thread">${replies.map((r) => `<div class="bubble ${mine(r) ? 'me' : 'them'}"><p class="reply-text">${esc(r.text)}</p><span class="source">${mine(r) ? 'You' : 'From the advisor inbox'} · ${esc(sentWords(r.at).replace(/^Sent /, ''))}</span></div>`).join('')}</div>
           <p class="label">Demo: anyone can type a reply in the public inbox, so this is not from a real advisor.</p>
-          ${replies.length < 10 ? `<form id="answer-form" class="ask-form answer-form" autocomplete="off">
+          ${answered && replies.filter(mine).length < 5 ? `<form id="answer-form" class="ask-form answer-form" autocomplete="off">
             <label class="visually-hidden" for="answer-input">Write back</label>
             <input id="answer-input" type="text" maxlength="1000" placeholder="Write back">
             <button class="button small" type="submit">Send</button>

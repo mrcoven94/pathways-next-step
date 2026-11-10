@@ -4,7 +4,7 @@
 
 import {
   esc, reasonWords, STATUS_WORDS, KIND_WORDS, builtinSpans, fromRampart, mergeSpans, maskNote, kindsIn, when,
-  countByStatus, filterRequests, rowReason, rowMeta, nextStepWords, handlingWords, sentWords,
+  countByStatus, filterRequests, rowReason, rowMeta, nextStepWords, handlingWords, sentWords, mergeOpened,
 } from './advisor-client.js';
 import { loadGate } from './rampart.js';
 
@@ -131,19 +131,19 @@ function noteSection(r) {
 // ---------- reply ----------
 // The answer is the end of the opened request. It shows once the request has been read: the note opened,
 // or straight away when there is no note. Replies are sealed on the server like the note.
-const MAX_REPLIES = 10;
+const MAX_ADVISOR_REPLIES = 10; // the server's own limit; the student's messages have their own room
 function replySection(r) {
   if (!isRead()) {
     return r.replies ? `<section class="part reply-part"><h3>Conversation</h3><p class="none">${r.replies === 1 ? 'One message' : `${r.replies} messages`} after the note. Open the note to read ${r.replies === 1 ? 'it' : 'them'}.</p></section>` : '';
   }
   const replies = state.note.replies ?? [];
   const thread = replies.map((x) => `<li class="from-${x.from === 'student' ? 'student' : 'advisor'}"><p class="reply-text">${esc(x.text)}</p><p class="reply-at">${esc(x.from === 'student' ? nameOf(r) : 'Advisor')} · ${esc(sentWords(x.at).replace(/^Sent /, ''))}</p></li>`).join('');
-  const full = replies.length >= MAX_REPLIES;
+  const full = replies.filter((x) => x.from === 'advisor').length >= MAX_ADVISOR_REPLIES;
   const resolve = !replies.some((x) => x.from !== 'student') && r.status !== 'resolved';
   return `<section class="part reply-part" aria-labelledby="reply-title">
     <h3 id="reply-title">${replies.length ? 'Conversation' : `Reply to ${esc(nameOf(r))}`}</h3>
     ${thread ? `<ol class="replies">${thread}</ol>` : ''}
-    ${full ? `<p class="none">This conversation holds ${MAX_REPLIES} messages, the most it can.</p>` : `
+    ${full ? `<p class="none">You have sent ${MAX_ADVISOR_REPLIES} messages here, the most a conversation holds.</p>` : `
     <form id="reply-form" class="reply-form" autocomplete="off">
       <label class="visually-hidden" for="reply-text">${replies.length ? 'Follow-up' : 'Reply'} to ${esc(nameOf(r))}</label>
       <textarea id="reply-text" rows="${replies.length ? 3 : 5}" maxlength="1000" placeholder="${replies.length ? `Write to ${esc(nameOf(r))}` : `Write to ${esc(nameOf(r))}. They read it in Pathways and can write back.`}"></textarea>
@@ -202,6 +202,29 @@ function syncRow(request) {
   for (const b of document.querySelectorAll('[data-status]')) b.setAttribute('aria-pressed', String(b.dataset.status === state.open?.status));
 }
 
+// What the server just sent replaces the cached row and the opened request, and the detail is drawn again from it,
+// keeping any reply being typed and the focus.
+function applyFresh(fresh) {
+  const { requests, open } = mergeOpened(state.requests, fresh);
+  state.requests = requests;
+  state.open = open ?? mergeOpened([state.open], fresh).open ?? state.open;
+  renderList();
+  const draft = $('#reply-text')?.value ?? '';
+  const focused = document.activeElement?.id;
+  renderDetail();
+  if (draft && $('#reply-text')) { $('#reply-text').value = draft; $('#reply-form .send').disabled = !draft.trim(); }
+  if (focused) document.getElementById(focused)?.focus({ preventScroll: true });
+}
+
+// The list may be minutes old: a student may have written back since. Opening a request fetches its row again.
+async function refreshRow(code, ticket) {
+  try {
+    const { requests } = await api('/api/advisor/requests');
+    const row = (requests ?? []).find((r) => r.code === code);
+    if (ticket === state.ticket && row) applyFresh(row);
+  } catch {} // the opened request still shows what the list held
+}
+
 function openRequest(code) {
   const row = state.requests.find((r) => r.code === code);
   state.ticket++;
@@ -216,6 +239,7 @@ function openRequest(code) {
   $('#who').focus({ preventScroll: true });
   window.scrollTo({ top: 0 });
   if (!row.has_note) openNote({ quiet: true }); // nothing sealed to ask about: load the replies straight away
+  else refreshRow(code, state.ticket);
 }
 
 async function openNote({ quiet = false } = {}) {
@@ -226,9 +250,9 @@ async function openNote({ quiet = false } = {}) {
   try {
     const { request } = await api(`/api/advisor/requests/${encodeURIComponent(code)}`);
     if (ticket !== state.ticket) return; // the advisor moved to another request meanwhile
-    state.note = { phase: 'hiding', text: request.note, replies: request.replies ?? [], opens: request.opens, last: request.last_opened_at };
-    if (!request.note) { state.note.phase = 'open'; return renderReply(); }
-    renderNote();
+    state.note = { phase: request.note ? 'hiding' : 'open', text: request.note, replies: request.replies ?? [], opens: request.opens, last: request.last_opened_at };
+    applyFresh(request);
+    if (!request.note) return;
     const { spans, full } = await findSpans(request.note);
     if (ticket !== state.ticket) return;
     Object.assign(state, { spans, full });

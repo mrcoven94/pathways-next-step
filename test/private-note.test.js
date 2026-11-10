@@ -212,8 +212,8 @@ test('AC20 the inbox list never carries a note, and only opening a request opens
     // The list: her request, then the two invented samples that are always there. No note in any row.
     const rows = await list();
     assert.deepEqual(rows.map((r) => [r.first_name, r.sample]), [['Dani', false], ['Dani', true], ['Marcus', true]]);
-    assert.deepEqual(Object.keys(rows[0]).sort(), ['at', 'code', 'crisis', 'first_name', 'has_note', 'next_step', 'question', 'reasons', 'replies', 'sample', 'status']);
-    assert.deepEqual({ ...rows[0], at: null }, { code: hers.body.code, first_name: 'Dani', question: 'are there seats left?', reasons: ['UNKNOWN_SEATS'], next_step: null, at: null, status: 'new', sample: false, has_note: true, crisis: false, replies: 0 });
+    assert.deepEqual(Object.keys(rows[0]).sort(), ['answered', 'at', 'code', 'crisis', 'first_name', 'has_note', 'next_step', 'question', 'reasons', 'replies', 'sample', 'status']);
+    assert.deepEqual({ ...rows[0], at: null }, { code: hers.body.code, first_name: 'Dani', question: 'are there seats left?', reasons: ['UNKNOWN_SEATS'], next_step: null, at: null, status: 'new', sample: false, has_note: true, crisis: false, replies: 0, answered: false });
     assert.equal(s.app.opens.length, 0, 'listing opens nothing');
 
     // Triage without reading: a status change answers without the note and opens nothing.

@@ -159,12 +159,39 @@ test('AC21 the opened request says when it was sent in a plain sentence', async 
 
 test('AC21 unanswered work comes first inside each group, and the row says whether anyone answered', () => {
   const rows = [
-    req('A1', 'new', { replies: 1, at: '2026-11-10T12:00:00.000Z' }),
+    req('A1', 'new', { replies: 1, answered: true, at: '2026-11-10T12:00:00.000Z' }),
     req('U1', 'new', { replies: 0, at: '2026-11-10T09:00:00.000Z' }),
-    req('C1', 'new', { crisis: true, replies: 2 }),
+    req('C1', 'new', { crisis: true, replies: 2, answered: true }),
     req('P1', 'in_progress', { replies: 0 }),
   ];
   assert.deepEqual(sortRequests(rows).map((r) => r.code), ['C1', 'U1', 'A1', 'P1']);
-  assert.equal(rowMeta({ status: 'resolved', replies: 2, has_note: true }), 'Resolved · Answered · Private note');
+  assert.equal(rowMeta({ status: 'resolved', replies: 2, answered: true, has_note: true }), 'Resolved · Answered · Private note');
   assert.equal(rowMeta({ status: 'new', replies: 0, has_note: false }), 'New · No note');
+});
+
+test('AC21 a thread with only student messages is not answered: it says so and stays first in its group', () => {
+  const rows = [
+    req('A1', 'in_progress', { replies: 1, answered: true, at: '2026-11-10T12:00:00.000Z' }),
+    req('S1', 'in_progress', { replies: 3, answered: false, at: '2026-11-10T09:00:00.000Z' }),
+  ];
+  assert.deepEqual(sortRequests(rows).map((r) => r.code), ['S1', 'A1']);
+  assert.equal(rowMeta({ status: 'in_progress', replies: 3, answered: false, has_note: false }), 'In progress · No note');
+  assert.equal(rowMeta({ status: 'in_progress', replies: 1, answered: true, has_note: false }), 'In progress · Answered · No note');
+});
+
+test('AC21 opening a request replaces the cached row with the fresh crisis flag, status and counts, and never copies the note into the list', async () => {
+  const { mergeOpened } = await import('../public/advisor-client.js');
+  const list = [req('R1', 'resolved', { replies: 1, answered: true, has_note: true }), req('R2', 'new', { replies: 0, answered: false })];
+  const fresh = { ...list[0], status: 'in_progress', crisis: true, note: 'MERGE-CANARY', opens: 3, last_opened_at: null,
+    replies: [{ from: 'advisor', text: 'a', at: 'x' }, { from: 'student', text: 'MERGE-CANARY', at: 'y' }] };
+  const { requests, open } = mergeOpened(list, fresh);
+  assert.deepEqual([open.status, open.crisis, open.replies, open.answered], ['in_progress', true, 2, true]);
+  assert.deepEqual(requests[0], open, 'the list row is the fresh one');
+  assert.equal(requests[1], list[1], 'other rows are left alone');
+  assert.ok(!JSON.stringify(requests).includes('MERGE-CANARY'), 'no note or message text reaches the list');
+  assert.ok(!('opens' in open) && !('last_opened_at' in open) && !('note' in open));
+  assert.equal(list[0].status, 'resolved', 'the input is left alone');
+  // A fresh list row (replies as a count) merges the same way.
+  assert.equal(mergeOpened(list, { ...list[1], crisis: true }).open.crisis, true);
+  assert.equal(mergeOpened(list, { code: 'GONE' }).open, null);
 });
