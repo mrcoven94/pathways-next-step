@@ -6,7 +6,7 @@ This repo is a small slice of Pathways (CampusEvolve) for one persona: Dani, 17,
 
 - **Grounded or silent.** Only `src/core/records.js` may state facts. Anything else is "I can't confirm that" plus the advisor hand-off.
 - **Code decides, the model words it.** Decisions live in `src/core/planner.js` and `src/core/topics.js`. Never move a decision into a prompt.
-- **Nothing about a student reaches the model.** Every model call goes through `callModel` in `src/core/gateway.js`, which accepts only a closed set of strings. Never add a field to a payload without adding it to the schema there, and never add a field that carries typed text, a name or an age.
+- **Nothing about a student reaches the model.** Every model call goes through `callModel` in `src/core/gateway.js`, which accepts only a closed set of strings. Never add a field to a payload without adding it to the schema there, and never add a field that carries typed text, a name or an age. Never open a sealed note anywhere but the advisor read path in `src/app.js`.
 - **Never "eligible", "accepted", "enrolled", "approved" or "awarded".** A saved plan is never an application.
 - **No dependencies, no paid services, no accounts.** `npm start` and `npm test` must work right after `git clone`.
 
@@ -19,10 +19,12 @@ This repo is a small slice of Pathways (CampusEvolve) for one persona: Dani, 17,
 | `src/core/topics.js` | Typed question → topic code. Runs in the browser. Crisis words first, then unknowns. |
 | `src/core/gateway.js` | Payload allowlist, reply checks, template fallback, `model-calls.log`. |
 | `src/core/mock-model.js` | The scripted stand-in model. Not AI. |
+| `src/core/private.js` | The sealed note. Prints as "[private]"; only the advisor read opens it, and every open is recorded. |
 | `src/core/templates.js` | Code-written replies and every "can't confirm" answer. |
 | `src/app.js` | HTTP API and static files. `api/index.js` wraps it for Vercel. |
 | `public/client.js` | What the browser sends, without the DOM, so tests run the page's own logic. |
 | `public/app.js` | The screens. |
+| `public/advisor.js`, `public/advisor-client.js` | The advisor inbox at `/advisor`. Loads nothing from another site. |
 | `test/` | One test per acceptance criterion in SPEC.md, named `AC<n>`. |
 | `docs/process.md` | Every time a person or a check corrected the AI. Append, never rewrite. |
 

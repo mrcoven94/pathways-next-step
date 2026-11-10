@@ -76,7 +76,7 @@ The replacement is a plain template built by code, logged as `replaced`.
 5. With the clock after Nov 30, 2026, Northline shows `DEADLINE_PASSED`. With the clock more than 45 days after Oct 20, 2026, `STALE_RECORD` appears.
 6. Questions about seats, her own eligibility, exact aid amounts and an unlisted start date each return "can't confirm" with the advisor hand-off, and make no model call.
 7. No reply in any scenario says she is eligible, accepted, enrolled, approved or awarded. A scripted bad model that says so, invents a dollar figure, or cites PRG-99 is caught and replaced.
-8. A canary first name, a canary advisor note and a canary typed question appear in the hand-off and nowhere in `model-calls.log`.
+8. A canary first name, a canary advisor note and a canary typed question appear in the hand-off and nowhere in `model-calls.log`. (amended 2026-11-10: the note is read through the advisor path with the access code, because it is now sealed in the queue. 8b now reads "never served without the advisor access code".)
 9. The gateway throws when a payload carries an unknown field or a string outside the closed set.
 10. A crisis phrase returns the 988 and 911 card and makes no model call.
 11. Every model call made during the run appears in `model-calls.log`, with what was sent, what came back and the verdict.
@@ -109,3 +109,25 @@ New acceptance criteria:
 17. Her next step is concrete for this week. When asking an advisor comes first, code works out when the answer arrives (ADV-01: 2 business days, skipping weekends and federal holidays) and says whether that's before the deadline. If she said she'd rather learn by doing, the plan says that's why Northline comes first.
 
 `npm run mutate` breaks at least one guard behind every criterion above (23 in all) and confirms the named check fails each time.
+
+## Amendments (2026-11-10): the private note and the advisor inbox
+
+The task: "A student wants to leave a private note for their advisor. The note should be available through the intended advisor workflow but must never be sent to an AI model. Make the smallest safe change and show how you would verify it."
+
+What was already true: the note was captured, it went only to the hand-off queue, and the gateway refused any text outside its closed set. What was missing: no advisor could read it, nothing but a convention kept it out of a log line or an error, and the check only read the log file.
+
+1. **The note is sealed where it arrives.** `src/core/private.js` holds it in a private field. As JSON, a string, a template or a log line it reads "[private]". The only way to read it is `Sealed.open`, which needs a list to record the open in. The request keeps its shape; `status` and `crisis` are added for triage.
+2. **An advisor read path, closed by default.** `GET /api/advisor/requests` lists requests without notes. `GET /api/advisor/requests/<code>` opens one note and records it. `POST .../status` sets new, in_progress or resolved. All of them return 404 unless `ADVISOR_CODE` is set on the server, and 401 without that code. This replaces "never exposed over HTTP" with "never without the access code". Hard constraint 8 (no accounts) still holds: a shared code is a stand-in for the district's sign-in, and the README says so.
+3. **The gateway checks the copy it sends.** It used to check the object it was handed and then serialize it, so an object with a `toJSON` hook could pass the check and write something else into the prompt. Found by Sol 6.1 reviewing this plan. It now copies the payload to plain data, checks the copy and sends the copy.
+4. **Errors never quote the request.** A body that isn't JSON used to get the parser's message back, which quotes the body. The reply is now a fixed sentence. Also found by Sol.
+5. **The inbox page** (`/advisor`) is hand-built, loads nothing from another site (a content security policy enforces it), keeps the access code in memory only, and hides phone numbers and email addresses in a note until the advisor switches each kind on. Rampart Edge stays on the student's send screen. It is measured by `npm run eval:rampart`, which needs an install and so is not part of `npm test`.
+
+New acceptance criteria:
+
+18. A sentinel note reaches the advisor through the read path, word for word, and appears nowhere else: no prompt handed to the model (recorded by a spy, including calls made after the hand-off), no line of `model-calls.log`, no response without the access code, no reply to an unreadable request, nothing the server printed, and no JSON, string, template or inspect form of the queue. One advisor read is exactly one recorded open, and nothing else opens the note.
+19. The gateway refuses the note in every position of both payload shapes, as text, as a sealed value, and hidden behind a `toJSON` hook or a getter, before the model is called.
+20. The advisor routes are 404 with no code configured and 401 with a wrong one. The list never carries a note. Listing and triage open nothing. (20b: two requests never share a code.)
+21. Phone numbers and email addresses in a note are hidden from the advisor until switched on, one kind at a time, and the rest of the note is unchanged.
+10b. Crisis words in a note are still flagged once the note is sealed.
+
+`npm run mutate` now breaks 38 guards, 15 of them behind these criteria.

@@ -10,8 +10,8 @@ import { STUDENT_PROGRAMS, ANSWERS, LEANS, questionsFor } from '../src/core/plan
 export const LOG_FILE = fileURLToPath(new URL('../model-calls.log', import.meta.url));
 export const TODAY = '2026-11-03';
 
-export async function startApp({ model = mockModel, today = TODAY } = {}) {
-  const app = createApp({ model, logFile: LOG_FILE, today: () => today });
+export async function startApp({ model = mockModel, today = TODAY, ...options } = {}) {
+  const app = createApp({ model, logFile: LOG_FILE, today: () => today, ...options });
   const server = createServer(app.handle);
   await new Promise((resolve) => server.listen(0, resolve));
   const base = `http://localhost:${server.address().port}`;

@@ -123,3 +123,20 @@ Tools: Claude Code (Opus 5.5) as the architect and builder. A Claude subagent re
 - **What happened:** Extending `npm run mutate` to every acceptance criterion, one mutation survived. It changed the app's default time zone from Pacific to UTC, and AC5b still passed.
 - **Why:** AC5b called `todayIn('America/Los_Angeles', ...)` with the time zone spelled out, so it proved the function works for Pacific when asked. It never proved the app asks for Pacific. That default is exactly the line that keeps Northline open on its last evening.
 - **What changed:** AC5b now uses the app's own default. The mutation is caught, and every acceptance criterion has a guard that `npm run mutate` breaks on purpose.
+
+## 14. The plan had two holes before any code was written (Sol 6.1, plan review, 2026-11-10)
+
+- **Asked:** Sol 6.1 on high, read only, to attack the plan for the private note before a line of it was built: seal the note, add an advisor read path, leave the gateway alone, and test with a spy model.
+- **What Sol produced:** Two reproduced leaks in code the plan said was fine. First, the gateway checked the object it was handed and then serialized it, so an object with a hidden `toJSON` passed the check and wrote the sentinel into the prompt. Second, posting a body that isn't JSON to `/api/handoff` returned the parser's error, which quotes the body, so the note came back in an error message. It also flagged that two requests could share a four-character code, that the plan broke AC8 without saying so, and that loading a detector from a CDN on a page holding the access code hands that page to a third party.
+- **What changed:** The gateway now checks and sends a plain copy. Parser errors get a fixed reply. Codes are unique. AC8 reads the note the way an advisor does. The inbox loads nothing from another site, keeps the code in memory only, and a content security policy enforces it. Each of the five is a check, and each has a mutation.
+- **What I rejected:** Dropping the contact-details switch from the inbox. It stays, on built-in patterns, because hiding a phone number until the advisor asks for it costs nothing and needs no outside code.
+- **What I got wrong myself:** My first version of the hidden-getter check expected the gateway to refuse a field that answers truthfully once and lies afterwards. The gateway reads it once, for the copy it sends, so the right result is a clean call. The test was wrong, not the code.
+- **What the mutation run caught:** One of the new mutations survived on the first run. It put the parser's error message back in the reply, and AC18 still passed, because the parser quotes only the first ten characters of what it read and the check looked for the whole sentinel. A partial echo of a note is still a leak. AC18 now requires the reply to be the fixed sentence, word for word.
+
+## 15. The diff review: errors that quote what they refuse (Sol 6.1, 2026-11-10)
+
+- **Asked:** Sol 6.1 on high, read only, to review the finished branch. The three-model panel was also due, but OpenCode Go had reached its monthly usage cap, so Sol reviewed alone.
+- **What Sol produced:** The gateway refused the note in every position, and then quoted it in the error: `task: "<the note>" is not an allowed task`. AC19 only checked that an error was thrown. It also found that signing out of the inbox left the last note on the page and let a slow answer redraw it, that a local number like 555-0147 was shown unmasked, and that two replies in AC18 were never scanned for the sentinel.
+- **What changed:** Rejections say where the problem is and never what was there. AC19 reads every rejection for the sentinel. Sign-out clears the page and drops answers that arrive late. The phone pattern covers local and international numbers, with dates and other numbers left alone. AC18 scans every reply.
+- **What I didn't change:** The queue is still in memory, so on the live site a request can be missing from the inbox. That needs storage, which the spec rules out, and it is written up as its own decision.
+

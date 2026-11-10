@@ -10,6 +10,7 @@
     "start": "node src/server.js",
     "test": "node scripts/test.mjs",
     "verify": "node scripts/verify.mjs",
-    "mutate": "node scripts/mutate.mjs"
+    "mutate": "node scripts/mutate.mjs",
+    "eval:rampart": "node scripts/rampart-eval.mjs"
   }
 }
